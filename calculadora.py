@@ -1,4 +1,4 @@
-import resta
+import resta,suma,multiplicacion,division
 def calcular(operacion, num_uno, num_dos):
     if(operacion == "+"):
         return suma.sumar(num_uno,num_dos)
