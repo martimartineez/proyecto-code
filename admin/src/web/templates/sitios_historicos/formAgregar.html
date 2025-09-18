@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% block title %}Agregar Sitio{% endblock %}
+{% block content %}
+<h2>Agregar Sitio Histórico</h2>
+
+<a href="{{ url_for('sitios_historicos.index') }}">Volver</a>
+
+<form method="post">
+    <label>Nombre:</label>
+    <input type="text" name="nombre" required><br>
+
+    <label>Descripción:</label>
+    <input type="text" name="descripcion" required><br>
+
+    <label>Descripción Completa:</label>
+    <input type="text" name="descripcion_completa"><br>
+
+    <label>Ciudad:</label>
+    <input type="text" name="ciudad"><br>
+
+    <label>Provincia:</label>
+    <input type="text" name="provincia"><br>
+
+    <label>Latitud:</label>
+    <input type="text" name="latitud"><br>
+
+    <label>Longitud:</label>
+    <input type="text" name="longitud"><br>
+
+    <label>Estado Conservación:</label>
+    <input type="text" name="estado_conservacion"><br>
+
+    <label>Año Fundación:</label>
+    <input type="number" name="anio_fundacion"><br>
+
+    <label>Categoría:</label>
+    <input type="text" name="categoria"><br>
+
+    <label>Fecha Registro:</label>
+    <input type="date" name="fecha_registro"><br>
+
+    <label>Visible:</label>
+    <select name="visible">
+        <option value="True">Sí</option>
+        <option value="False">No</option>
+    </select><br>
+
+    <button type="submit">Guardar</button>
+</form>
+
+{% endblock %}

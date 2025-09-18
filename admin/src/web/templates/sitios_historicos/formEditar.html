@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% block title %}Editar Sitio{% endblock %}
+{% block content %}
+<h2>Editar Sitio Histórico</h2>
+
+<a href="{{ url_for('sitios_historicos.index') }}">Volver</a>
+
+<form method="post" action="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id) }}">
+    <label>Nombre:</label>
+    <input type="text" name="nombre" value="{{ sitio.nombre }}" required><br>
+
+    <label>Descripción:</label>
+    <input type="text" name="descripcion" value="{{ sitio.descripcion }}" required><br>
+
+    <label>Descripción Completa:</label>
+    <input type="text" name="descripcion_completa" value="{{ sitio.descripcion_completa }}"><br>
+
+    <label>Ciudad:</label>
+    <input type="text" name="ciudad" value="{{ sitio.ciudad }}"><br>
+
+    <label>Provincia:</label>
+    <input type="text" name="provincia" value="{{ sitio.provincia }}"><br>
+
+    <label>Latitud:</label>
+    <input type="text" name="latitud" value="{{ sitio.ubicacion.latitud }}"><br>
+
+    <label>Longitud:</label>
+    <input type="text" name="longitud" value="{{ sitio.ubicacion.longitud }}"><br>
+
+    <label>Estado Conservación:</label>
+    <input type="text" name="estado_conservacion" value="{{ sitio.estado_conservacion }}"><br>
+
+    <label>Año Fundación:</label>
+    <input type="number" name="anio_fundacion" value="{{ sitio.anio_fundacion }}"><br>
+
+    <label>Categoría:</label>
+    <input type="text" name="categoria" value="{{ sitio.categoria }}"><br>
+
+    <label>Fecha Registro:</label>
+    <input type="date" name="fecha_registro" value="{{ sitio.fecha_registro }}"><br>
+
+    <label>Visible:</label>
+    <select name="visible">
+        <option value="True" {% if sitio.visible %}selected{% endif %}>Sí</option>
+        <option value="False" {% if not sitio.visible %}selected{% endif %}>No</option>
+    </select><br>
+
+    <button type="submit">Guardar cambios</button>
+</form>
+
+{% endblock %}
