@@ -1,4 +1,4 @@
-from src.core import board
+from core import board
 from flask import Blueprint, render_template, request, redirect, url_for
 
 bp = Blueprint('sitios_historicos', __name__, url_prefix='/sitioshistoricos')
