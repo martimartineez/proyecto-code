@@ -1,9 +1,14 @@
 from flask import Flask
 from flask import render_template
 from src.web.handlers import error
+from src.web.config import config
+from src.core import database
 
 def create_app(env="development", static_folder = "../../static"):
     app = Flask(__name__, static_folder = static_folder)
+    app.config.from_object(config[env])
+    
+    database.init_db(app)
 
     @app.route('/')
     def home():
