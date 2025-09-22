@@ -7,10 +7,10 @@ def create_app(env="development", static_folder = "../../static"):
 
     @app.route('/')
     def home():
-        return render_template('home.html')
+        return render_template('home.html', permisos = "true", username= "admin", idRol = "admin")  #consultar
     
     app.register_error_handler(404, error.not_found)
     app.register_error_handler(401, error.unauthorized) 
     app.register_error_handler(500, error.server_error)
-
+    
     return app
