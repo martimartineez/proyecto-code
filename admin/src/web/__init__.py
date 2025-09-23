@@ -1,13 +1,22 @@
 from flask import Flask
 from flask import render_template
 from src.web.handlers import error
+from src.web.config import config
+from src.core import database
+from src.web.controllers.user_management import bp as user_bp
 
 def create_app(env="development", static_folder = "../../static"):
     app = Flask(__name__, static_folder = static_folder)
+    app.config.from_object(config[env])
+
+    database.init_db(app)
 
     @app.route('/')
     def home():
         return render_template('home.html')
+    
+    #Register blueprints
+    app.register_blueprint(user_bp)
     
     app.register_error_handler(404, error.not_found)
     app.register_error_handler(401, error.unauthorized) 

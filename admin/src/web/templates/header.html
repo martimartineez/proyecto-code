@@ -1,0 +1,47 @@
+<h1>
+    <a class="title" href="/">
+        Programa Nacional de Registro y Preservacion de Sitios Historicos
+    </a>
+</h1>
+<div class="left-menu">
+    <nav>
+        <input type="checkbox" id="dropbtn">
+        <label for="dropbtn">
+            <svg class="menuicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+                <path
+                    d="M96 160C96 142.3 110.3 128 128 128L512 128C529.7 128 544 142.3 544 160C544 177.7 529.7 192 512 192L128 192C110.3 192 96 177.7 96 160zM96 320C96 302.3 110.3 288 128 288L512 288C529.7 288 544 302.3 544 320C544 337.7 529.7 352 512 352L128 352C110.3 352 96 337.7 96 320zM544 480C544 497.7 529.7 512 512 512L128 512C110.3 512 96 497.7 96 480C96 462.3 110.3 448 128 448L512 448C529.7 448 544 462.3 544 480z" />
+            </svg>
+        </label>
+        <div id="dropdown-content">
+            <a href="#1">Gestion de sitios Historicos</a>
+            <a href="#2">Validacion de propuestas</a>
+            <a href="#3">Moderacion de reseñas</a>
+            {% if permisos == "true" %}
+            <a href="#4">Gestion de Usuarios</a>
+            {%endif%}
+        </div>
+    </nav>
+</div>
+<div class="user-menu">
+    <nav>
+        {% if idRol != "visitante" %}
+        <input type="checkbox" id="userbtn">
+        <label for="userbtn">
+            <svg class="menuicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+                <path
+                    d="M224 192C224 139 267 96 320 96C373 96 416 139 416 192C416 245 373 288 320 288C267 288 224 245 224 192zM448 192C448 121.3 390.7 64 320 64C249.3 64 192 121.3 192 192C192 262.7 249.3 320 320 320C390.7 320 448 262.7 448 192zM128 544C128 464.5 192.5 400 272 400L368 400C447.5 400 512 464.5 512 544L512 560C512 568.8 519.2 576 528 576C536.8 576 544 568.8 544 560L544 544C544 446.8 465.2 368 368 368L272 368C174.8 368 96 446.8 96 544L96 560C96 568.8 103.2 576 112 576C120.8 576 128 568.8 128 560L128 544z" />
+            </svg>
+        </label>
+        <div id="user-content">
+            <p class="username"> {{ username }} </p>
+            <a href="/settings">Configuracion</a>
+            <a href="/logout">Cerrar Sesion</a>
+        </div>
+        {% else %}
+        <div id="guest-user">
+            <a href="/login">Iniciar Sesion</a>
+            <a href="/register">Registrarse</a>
+        </div>
+        {% endif %}
+    </nav>
+</div>
