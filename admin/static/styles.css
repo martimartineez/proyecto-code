@@ -1,57 +1,163 @@
+:root{
+    --pri-color: #ff6906;
+    --sec-color: #ec843f;
+}
+
+html{
+    font-family: "Lora", serif;
+}
+
+
 body{
-    background-color:rgb(243, 226, 212);
+    background-color: white;
     text-align: center;
     font-size: larger;
     padding: 0px;
     margin: 0px;
-    display: flexbox;
 }
 header{
-    display: flex;
+    display: grid;
+    grid-template-rows: repeat(1, 100px);
+    grid-template-columns: repeat(3, 33%);
+    align-self: center;
+    place-items: center;
     font-size: 15px;
-    border: 5px solid rgb(243, 226, 212);
-    border-left-width: 0px;
-    border-bottom-color: rgb(23, 49, 62);
-    border-top-color: rgb(23, 49, 62);
     height: fit-content;
     width: 100%;
     padding: 5px;
-    background-color: rgb(197, 176, 205);
+    background-color: var(--pri-color);
+    color: white;
 }
 
-nav{
+.title, .title:visited{
+    grid-column-start: 2;
+    text-decoration: none;
+    color: white;
+}
+
+.user-menu{
     font-size: 25px;
     padding: 20px;
     text-decoration: none;
+    grid-column-start: 3;
+    grid-row-start: 1;
+    justify-self: right;
 }
 
-nav, a{
-    color: rgb(65, 94, 114);
+.left-menu{
+    grid-row-start: 1;
+    grid-column-start: 1;
+    justify-self: left;
+}
+
+.menuicon{
+    padding-top: 20px;
+    width: 60x;
+    height: 60px;
+}
+
+#dropbtn{
+    background-color: var(--pri-color);
+    border: none;
+    display: none;
+}
+
+#dropbtn:checked ~ #dropdown-content{
+    left: 0;
+}
+
+#dropdown-content{
+    display: grid;
+    grid-template-columns: repeat(1,18.75em);
+    grid-template-rows: repeat(4,25%);
+    position: absolute;
+    background-color: var(--sec-color);
+    min-width: 15%;
+    transition: 200ms ease;
+    height: 90%;
+    margin: 0.7em auto;
+    border: 1px solid var(--pri-color);
+    left: -100%;
+    z-index: 1001;
+}
+
+#dropdown-content a{
     text-decoration: none;
+    font-weight: 700;
+    padding: 0.5em;
+    border: 5px solid var(--pri-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 22px;
 }
 
-nav, a:visited{
-    color: rgb(65, 94, 114);
+#userbtn{
+    background-color: var(--pri-color);
+    border: none;
+    display: none;
 }
 
-nav, a{
-    padding: 25px;
+#user-content{
+    display: none;
 }
 
-h1{
-    color: rgb(65, 94, 114);
+#userbtn:checked ~ #user-content{
+    display: grid;
+    grid-template-columns: repeat(1,300px);
+    grid-template-rows: repeat(3,33%);
+    position: absolute;
+    background-color: var(--sec-color);
+    min-width: 10%;
+    height: fit-content;
+    margin: 1em auto;
+    right: 10px;
+    top: 70px;
+    z-index: 1001;
 }
+
+#user-content *{
+    display: flex;
+    text-align: center;
+    justify-content: left;
+    text-decoration: none;
+    font-weight: 700;
+    padding: 0.5em;    
+    color: white;
+    font-size: 20px;
+    margin: 0px;
+}
+
+#user-content .username{
+    border-bottom: 4px solid var(--pri-color);
+}
+
+#guest-user{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    font-size: 20px;
+    padding: 10px;
+    margin-top: 20px;
+}
+
+#guest-user a{
+    text-decoration: none;
+    color: white;
+    padding: 10px;
+}   
 
 footer{
-    color: rgb(65, 94, 114);
-    margin-top: 100%;
-    display: flex;
-    font-size: 20px;
-    border: 5px solid rgb(23, 49, 62);
-    border-left-width: 0px;
     height: fit-content;
+    background-color: var(--pri-color);
+    color: white;
+    padding: 2px;
+    position: fixed;
+    bottom: 0;
     width: 100%;
-    padding: 5px;
-    background-color: rgb(23, 49, 62);
+    text-align: center;
+    z-index: 1000;
 }
-
