@@ -31,7 +31,7 @@
             <td>{{ sitio.ciudad.provincia.nombre if sitio.ciudad and sitio.ciudad.provincia else 'N/A' }}</td>
             <td>{{ sitio.estadoConservacion }}</td>
             <td>{{ sitio.fechaRegistro.strftime('%Y-%m-%d') if sitio.fechaRegistro else 'N/A' }}</td>
-            <td>{{ 'No' if sitio.baja else 'Sí' }}</td>
+            <td>{{ 'Sí' if sitio.visible else 'No' }}</td>
         </tr>
         {% endfor %}
     </tbody>

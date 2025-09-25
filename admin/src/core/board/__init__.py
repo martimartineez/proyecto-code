@@ -64,7 +64,8 @@ def crear_sitio(form):
         estadoConservacion=form.get("estado_conservacion"),
         anioInauguracion=_parse_date(form.get("fecha_inauguracion")),
         fechaRegistro=_parse_date(form.get("fecha_registro")) or datetime.now(),
-        baja=False if form.get("visible") in ("True", True, None) else True,
+        visible=True,
+        baja=False,
     )
     db.session.add(nuevo)
     db.session.commit()
@@ -95,7 +96,7 @@ def editar_sitio(sitio_id: int, form):
     if fecha_reg:
         sitio.fechaRegistro = fecha_reg
     if form.get("visible") is not None:
-        sitio.baja = False if form.get("visible") in ("True", True) else True
+        sitio.visible = True if form.get("visible") in ("True", True) else False
 
     db.session.commit()
     return True

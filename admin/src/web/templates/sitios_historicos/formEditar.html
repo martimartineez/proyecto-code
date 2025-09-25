@@ -66,7 +66,9 @@
     <input type="date" name="fecha_registro" 
        value="{{ sitio.fechaRegistro.strftime('%Y-%m-%d') if sitio.fechaRegistro else '' }}"><br>
 
-    {# Campo de visibilidad removido. Visibilidad por defecto se maneja en backend al crear. #}
+    <label>Visible a los usuarios:</label>
+    <input type="hidden" name="visible" value="False">
+    <input type="checkbox" name="visible" value="True" {% if sitio.visible %}checked{% endif %}><br>
 
     <input type="hidden" name="latitud" id="latitud" value="{{ sitio.latitud }}">
     <input type="hidden" name="longitud" id="longitud" value="{{ sitio.longitud }}">
