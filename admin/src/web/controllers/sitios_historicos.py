@@ -23,7 +23,6 @@ def agregar_sitio():
 def editar_sitio(sitio_id):
     if request.method == "POST":
         # Procesar edición del sitio
-        print('entro xdxd')
         board.editar_sitio(sitio_id, request.form)
         return redirect(url_for("sitios_historicos.index"))
     sitio = board.obtener_sitio(sitio_id)
