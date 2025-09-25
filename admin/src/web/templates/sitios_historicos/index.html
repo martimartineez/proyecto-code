@@ -27,11 +27,11 @@
                 </form>
             </td>
             <td>{{ sitio.nombre }}</td>
-            <td>{{ sitio.ciudad }}</td>
-            <td>{{ sitio.provincia }}</td>
-            <td>{{ sitio.estado_conservacion }}</td>
-            <td>{{ sitio.fecha_registro }}</td>
-            <td>{{ sitio.visible }}</td>
+            <td>{{ sitio.ciudad.nombre if sitio.ciudad else 'N/A' }}</td>
+            <td>{{ sitio.ciudad.provincia.nombre if sitio.ciudad and sitio.ciudad.provincia else 'N/A' }}</td>
+            <td>{{ sitio.estadoConservacion }}</td>
+            <td>{{ sitio.fechaRegistro.strftime('%Y-%m-%d') if sitio.fechaRegistro else 'N/A' }}</td>
+            <td>{{ 'No' if sitio.baja else 'Sí' }}</td>
         </tr>
         {% endfor %}
     </tbody>
