@@ -7,17 +7,10 @@
     <thead>
         <tr>
             <th>Acciones</th>
-            <th>ID</th>
             <th>Nombre</th>
-            <th>Descripción</th>
-            <th>Descripción Completa</th>
             <th>Ciudad</th>
             <th>Provincia</th>
-            <th>Latitud</th>
-            <th>Longitud</th>
             <th>Estado Conservación</th>
-            <th>Año Fundación</th>
-            <th>Categoría</th>
             <th>Fecha Registro</th>
             <th>Visible</th>
         </tr>
@@ -26,22 +19,17 @@
         {% for sitio in sitios %}
         <tr>
             <td>
-                <a href="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id) }}">Editar</a>
+                <a href="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id) }}">
+                     <button type="button">Editar</button>
+                </a>
                 <form action="{{ url_for('sitios_historicos.eliminar_sitio', sitio_id=sitio.id) }}" method="post" style="display:inline;">
                     <button type="submit">Eliminar</button>
                 </form>
             </td>
-            <td>{{ sitio.id }}</td>
             <td>{{ sitio.nombre }}</td>
-            <td>{{ sitio.descripcion }}</td>
-            <td>{{ sitio.descripcion_completa }}</td>
             <td>{{ sitio.ciudad }}</td>
             <td>{{ sitio.provincia }}</td>
-            <td>{{ sitio.latitud }}</td>
-            <td>{{ sitio.longitud }}</td>
             <td>{{ sitio.estado_conservacion }}</td>
-            <td>{{ sitio.anio_fundacion }}</td>
-            <td>{{ sitio.categoria }}</td>
             <td>{{ sitio.fecha_registro }}</td>
             <td>{{ sitio.visible }}</td>
         </tr>
