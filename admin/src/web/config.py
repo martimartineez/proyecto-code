@@ -1,5 +1,7 @@
 from os import environ
 
+from sqlalchemy import sql
+
 class Config:
     TESTING = False
     SECRET_KEY = ''

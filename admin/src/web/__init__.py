@@ -18,4 +18,9 @@ def create_app(env="development", static_folder = "../../static"):
     app.register_error_handler(401, error.unauthorized) 
     app.register_error_handler(500, error.server_error)
 
+    # register commands
+    @app.cli.command('reset_db')
+    def reset_db():
+        database.reset_db()
+
     return app
