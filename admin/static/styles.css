@@ -1,3 +1,8 @@
+:root{
+    --pri-color: #ff6906;
+    --sec-color: #ec843f;
+}
+
 html{
     font-family: "Lora", serif;
 }
@@ -20,7 +25,7 @@ header{
     height: fit-content;
     width: 100%;
     padding: 5px;
-    background-color: #ff6906;
+    background-color: var(--pri-color);
     color: white;
 }
 
@@ -52,7 +57,7 @@ header{
 }
 
 #dropbtn{
-    background-color: #ff6906;
+    background-color: var(--pri-color);
     border: none;
     display: none;
 }
@@ -63,15 +68,15 @@ header{
 
 #dropdown-content{
     display: grid;
-    grid-template-columns: repeat(1,340px);
+    grid-template-columns: repeat(1,18.75em);
     grid-template-rows: repeat(4,25%);
     position: absolute;
-    background-color:#ec843f;
+    background-color: var(--sec-color);
     min-width: 15%;
     transition: 200ms ease;
     height: 90%;
     margin: 0.7em auto;
-    border: 1px solid #ff6906;
+    border: 1px solid var(--pri-color);
     left: -100%;
     z-index: 1001;
 }
@@ -80,7 +85,7 @@ header{
     text-decoration: none;
     font-weight: 700;
     padding: 0.5em;
-    border: 5px solid #ff6906;
+    border: 5px solid var(--pri-color);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -89,7 +94,7 @@ header{
 }
 
 #userbtn{
-    background-color: #ff6906;
+    background-color: var(--pri-color);
     border: none;
     display: none;
 }
@@ -103,7 +108,7 @@ header{
     grid-template-columns: repeat(1,300px);
     grid-template-rows: repeat(3,33%);
     position: absolute;
-    background-color:#ec843f;
+    background-color: var(--sec-color);
     min-width: 10%;
     height: fit-content;
     margin: 1em auto;
@@ -125,7 +130,7 @@ header{
 }
 
 #user-content .username{
-    border-bottom: 4px solid #ff6906;
+    border-bottom: 4px solid var(--pri-color);
 }
 
 #guest-user{
@@ -147,7 +152,7 @@ header{
 
 footer{
     height: fit-content;
-    background-color: #ff6906;
+    background-color: var(--pri-color);
     color: white;
     padding: 2px;
     position: fixed;
