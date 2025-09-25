@@ -18,7 +18,7 @@ class SitioHistorico(Base):
     descBreve: Mapped[str | None] = mapped_column(String(255), nullable=True)
     descCompleta: Mapped[str | None] = mapped_column(Text, nullable=True)
     idCiudad: Mapped[int | None] = mapped_column(Integer, ForeignKey("ciudades.id"), nullable=True)
-    ciudad: Mapped[Ciudad | None] = relationship(back_populates="sitios")
+    ciudad: Mapped[Ciudad | None] = relationship("Ciudad", back_populates="sitios")
 
     latitud: Mapped[float | None] = mapped_column(Float, nullable=True)
     longitud: Mapped[float | None] = mapped_column(Float, nullable=True)
@@ -27,7 +27,7 @@ class SitioHistorico(Base):
     anioInauguracion: Mapped[Date | None] = mapped_column(Date, nullable=True)
 
     idCategoria: Mapped[int | None] = mapped_column(Integer, ForeignKey('categorias_sitios.id'), nullable=True)
-    categoria: Mapped[CategoriaSitio | None] = relationship(back_populates="sitios")
+    categoria: Mapped[CategoriaSitio | None] = relationship("CategoriaSitio", back_populates="sitios")
 
     fechaRegistro: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
@@ -42,7 +42,7 @@ class SitioHistorico(Base):
 
     def __repr__(self):
         return (
-            f"<SitioHistorico(id={self.id}, nombre={self.nombre}, ciudad={self.ciudad}, provincia={self.provincia}, "
+            f"<SitioHistorico(id={self.id}, nombre={self.nombre}, ciudad={self.ciudad}, "
             f"latitud={self.latitud}, longitud={self.longitud}, baja={self.baja})>"
         )
 

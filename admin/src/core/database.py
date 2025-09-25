@@ -21,10 +21,15 @@ def reset_db():
     from src.core.board.ciudad import Ciudad # noqa: F401
     from src.core.board.feature_flag import FeatureFlag # noqa: F401
     from src.core.board.historial_sitio import HistorialSitio # noqa: F401
+    from src.core.board.seeds import seed_geografia, seed_categorias
     
     Base.metadata.drop_all(bind=db.engine)
     Base.metadata.create_all(bind=db.engine)
     print("reset successfully")
+    # Seed initial Provincias and Ciudades
+    seed_geografia()
+    # Seed initial Categorias
+    seed_categorias()
 
  
 
