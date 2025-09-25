@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+{% block title %}Agregar Sitio{% endblock %}
+{% block content %}
+
+<!-- Leaflet CSS y JS -->
+<link rel="stylesheet" href="{{ url_for('static', filename='dist/leaflet.css') }}">
+<script src="{{ url_for('static', filename='dist/leaflet.js') }}"></script>
+
+<style>
+  #map { height: 400px; width: 100%; margin-bottom: 10px; border: 1px solid #ccc; }
+</style>
+
+
+
+<h2>Agregar Sitio Histórico</h2>
+
+<a href="{{ url_for('sitios_historicos.index') }}">Volver</a>
+
+<form method="post">
+    <label>Nombre:</label>
+    <input type="text" name="nombre" required><br>
+
+    <label>Descripción:</label>
+    <input type="text" name="descripcion" required><br>
+
+    <label>Descripción Completa:</label>
+    <input type="text" name="descripcion_completa"><br>
+
+    <label>Ciudad:</label>
+    <input type="text" name="ciudad"><br>
+
+    <label>Provincia:</label>
+    <input type="text" name="provincia"><br>
+
+    <label>Estado Conservación:</label>
+    <input type="text" name="estado_conservacion"><br>
+
+    <label>Fecha Inauguracion:</label>
+    <input type="date" name="fecha_inauguracion"><br>
+
+    <label>Categoría:</label>
+    <input type="text" name="categoria"><br>
+
+    <label>Fecha Registro:</label>
+    <input type="date" name="fecha_registro"><br>
+
+    <label>Visible:</label>
+    <select name="visible">
+        <option value="True">Sí</option>
+        <option value="False">No</option>
+    </select><br>
+
+    <div style="max-width: 600px; margin: 10px auto;">
+        <label>Ubicación (seleccione en el mapa):</label>
+        <div id="map"></div>
+        <input type="hidden" name="ubicacion" id="ubicacion">
+    </div>
+
+    <button type="submit">Guardar</button>
+</form>
+
+<script>
+  // Inicializa el mapa centrado en La Plata por defecto
+  var map = L.map('map').setView([-34.921, -57.954], 13);
+
+  // Capa OpenStreetMap
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+  }).addTo(map);
+
+  var marker;
+
+  // Captura clic del usuario
+  map.on('click', function(e) {
+      var lat = e.latlng.lat.toFixed(6);
+      var lng = e.latlng.lng.toFixed(6);
+
+      // Coloca o mueve el marcador
+      if (marker) {
+          marker.setLatLng(e.latlng);
+      } else {
+          marker = L.marker(e.latlng).addTo(map);
+      }
+
+      // Guardar coordenadas en inputs ocultos
+      document.getElementById('ubicacion').value = lat + ',' + lng;
+  });
+</script>
+
+{% endblock %}
