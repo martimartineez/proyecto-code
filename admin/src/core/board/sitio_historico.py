@@ -33,6 +33,7 @@ class SitioHistorico(Base):
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
+    visible: Mapped[bool] = mapped_column(Boolean, default=True)
     baja: Mapped[bool] = mapped_column(Boolean, default=False)
 
     tags: Mapped[List["Tag"]] = relationship(
