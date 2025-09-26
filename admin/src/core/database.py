@@ -11,3 +11,12 @@ def init_db(app):
 
 class Base(DeclarativeBase):
     pass
+
+def reset_db():
+    from src.core.issue import Issue #noqa: F401
+
+    print("Resetting database...")
+    Base.metadata.drop_all(bind=db.engine)
+    Base.metadata.create_all(bind=db.engine)
+    print("Database reset complete.")
+

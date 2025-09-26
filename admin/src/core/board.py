@@ -1,10 +1,15 @@
-
+from src.core.database import db
+from src.core.issue import Issue
 
 
 def list_issues():
-    issues = [
-        {"id": 1, "email": "ejemplo@gmail.com", "description": "Description for issue 1", "rol": "Admin"},
-        {"id": 2, "email": "ejemplo@gmail.com", "description": "Description for issue 2", "rol": "Admin"},
-        {"id": 3, "email": "ejemplo@gmail.com", "description": "Description for issue 3", "rol": "Editor"}
-    ]
+    issues = db.session.query(Issue).all()
     return issues
+
+def create_issue(**kwargs):
+    issue = Issue(**kwargs)
+    db.session.add(issue)
+    db.session.commit()
+    
+    return issue
+
