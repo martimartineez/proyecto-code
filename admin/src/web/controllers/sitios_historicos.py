@@ -12,6 +12,8 @@ def index():
 
 @bp.route("/nuevo", methods=["GET", "POST"])
 def agregar_sitio():
+    next_url = request.args.get("next", url_for("sitios_historicos.index"))
+
     if request.method == "POST":
         # Procesar datos y agregar sitio
         board.crear_sitio(request.form)
@@ -24,11 +26,14 @@ def agregar_sitio():
         provincias=provincias,
         ciudades=ciudades,
         categorias=categorias,
+        next_url=next_url,
     )
 
 
 @bp.route("/<int:sitio_id>/editar", methods=["GET", "POST"])
 def editar_sitio(sitio_id):
+    next_url = request.args.get("next", url_for("sitios_historicos.index"))
+
     if request.method == "POST":
         # Procesar edición del sitio
         board.editar_sitio(sitio_id, request.form)
@@ -43,6 +48,7 @@ def editar_sitio(sitio_id):
         provincias=provincias,
         ciudades=ciudades,
         categorias=categorias,
+        next_url=next_url,
     )
 
 
@@ -50,3 +56,8 @@ def editar_sitio(sitio_id):
 def eliminar_sitio(sitio_id):
     board.eliminar_sitio(sitio_id)
     return redirect(url_for("sitios_historicos.index"))
+
+@bp.route("/sitio/<int:sitio_id>")
+def ver_sitio(sitio_id):
+    sitio = board.obtener_sitio(sitio_id)
+    return render_template("sitios_historicos/ver_sitio.html", sitio=sitio)
