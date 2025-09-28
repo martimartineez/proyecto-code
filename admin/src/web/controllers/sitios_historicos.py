@@ -1,4 +1,4 @@
-from core import board
+from src.core import board
 from flask import Blueprint, render_template, request, redirect, url_for
 
 bp = Blueprint("sitios_historicos", __name__, url_prefix="/sitioshistoricos")
@@ -6,31 +6,58 @@ bp = Blueprint("sitios_historicos", __name__, url_prefix="/sitioshistoricos")
 
 @bp.get("/")
 def index():
-    sitios_historicos = board.mostrar_sitios()
+    sitios_historicos = board.listar_sitios()
     return render_template("sitios_historicos/index.html", sitios=sitios_historicos)
 
 
 @bp.route("/nuevo", methods=["GET", "POST"])
 def agregar_sitio():
+    next_url = request.args.get("next", url_for("sitios_historicos.index"))
+
     if request.method == "POST":
         # Procesar datos y agregar sitio
-        board.agregar_sitio(request.form)
+        board.crear_sitio(request.form)
         return redirect(url_for("sitios_historicos.index"))
-    return render_template("sitios_historicos/formAgregar.html")
+    provincias = board.listar_provincias()
+    ciudades = board.listar_ciudades()
+    categorias = board.listar_categorias()
+    return render_template(
+        "sitios_historicos/formAgregar.html",
+        provincias=provincias,
+        ciudades=ciudades,
+        categorias=categorias,
+        next_url=next_url,
+    )
 
 
 @bp.route("/<int:sitio_id>/editar", methods=["GET", "POST"])
 def editar_sitio(sitio_id):
+    next_url = request.args.get("next", url_for("sitios_historicos.index"))
+
     if request.method == "POST":
         # Procesar edición del sitio
-        print('entro xdxd')
         board.editar_sitio(sitio_id, request.form)
         return redirect(url_for("sitios_historicos.index"))
     sitio = board.obtener_sitio(sitio_id)
-    return render_template("sitios_historicos/formEditar.html", sitio=sitio)
+    provincias = board.listar_provincias()
+    ciudades = board.listar_ciudades()
+    categorias = board.listar_categorias()
+    return render_template(
+        "sitios_historicos/formEditar.html",
+        sitio=sitio,
+        provincias=provincias,
+        ciudades=ciudades,
+        categorias=categorias,
+        next_url=next_url,
+    )
 
 
 @bp.post("/<int:sitio_id>/eliminar")
 def eliminar_sitio(sitio_id):
     board.eliminar_sitio(sitio_id)
     return redirect(url_for("sitios_historicos.index"))
+
+@bp.route("/sitio/<int:sitio_id>")
+def ver_sitio(sitio_id):
+    sitio = board.obtener_sitio(sitio_id)
+    return render_template("sitios_historicos/ver_sitio.html", sitio=sitio)

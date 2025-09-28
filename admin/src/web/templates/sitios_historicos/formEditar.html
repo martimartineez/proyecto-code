@@ -12,56 +12,87 @@
 
 <h2>Editar Sitio Histórico</h2>
 
-<a href="{{ url_for('sitios_historicos.index') }}">Volver</a>
+<a href="{{ next_url }}">Volver</a>
 
 <form method="post" action="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id) }}">
     <label>Nombre:</label>
     <input type="text" name="nombre" value="{{ sitio.nombre }}" required><br>
 
     <label>Descripción:</label>
-    <input type="text" name="descripcion" value="{{ sitio.descripcion }}" required><br>
+    <input type="text" name="descripcion" value="{{ sitio.descBreve }}" required><br>
 
     <label>Descripción Completa:</label>
-    <input type="text" name="descripcion_completa" value="{{ sitio.descripcion_completa }}"><br>
+    <input type="text" name="descripcion_completa" value="{{ sitio.descCompleta }}"><br>
+
+    {# Provincia y Ciudad como selects dependientes #}
+    <label>Provincia:</label>
+    <select id="provinciaSelect">
+        <option value="">Seleccione provincia</option>
+        {% set selectedProv = sitio.ciudad.provincia.id if sitio.ciudad and sitio.ciudad.provincia else '' %}
+        {% for p in provincias %}
+        <option value="{{ p.id }}" {% if selectedProv == p.id %}selected{% endif %}>{{ p.nombre }}</option>
+        {% endfor %}
+    </select><br>
 
     <label>Ciudad:</label>
-    <input type="text" name="ciudad" value="{{ sitio.ciudad }}"><br>
-
-    <label>Provincia:</label>
-    <input type="text" name="provincia" value="{{ sitio.provincia }}"><br>
+    <select id="ciudadSelect" name="ciudad">
+        <option value="">Seleccione ciudad</option>
+        {% for c in ciudades %}
+        <option value="{{ c.id }}" data-provincia="{{ c.idProvincia }}" {% if sitio.idCiudad == c.id %}selected{% endif %}>{{ c.nombre }}</option>
+        {% endfor %}
+    </select><br>
 
     <label>Estado Conservación:</label>
-    <input type="text" name="estado_conservacion" value="{{ sitio.estado_conservacion }}"><br>
+    <select name="estado_conservacion" required>
+        <option value="">Seleccione estado</option>
+        <option value="Bueno" {% if sitio.estadoConservacion == 'Bueno' %}selected{% endif %}>Bueno</option>
+        <option value="Regular" {% if sitio.estadoConservacion == 'Regular' %}selected{% endif %}>Regular</option>
+        <option value="Malo" {% if sitio.estadoConservacion == 'Malo' %}selected{% endif %}>Malo</option>
+    </select><br>
 
     <label>Fecha Inauguracion:</label>
     <input type="date" name="fecha_inauguracion" 
-       value="{{ sitio.fecha_inauguracion.strftime('%Y-%m-%d') if sitio.fecha_inauguracion else '' }}"><br>
+       value="{{ sitio.anioInauguracion.strftime('%Y-%m-%d') if sitio.anioInauguracion else '' }}"><br>
 
     <label>Categoría:</label>
-    <input type="text" name="categoria" value="{{ sitio.categoria }}"><br>
+    <select name="categoria" required>
+        <option value="">Seleccione categoría</option>
+        {% for c in categorias %}
+        <option value="{{ c.id }}" {% if sitio.idCategoria == c.id %}selected{% endif %}>{{ c.nombre }}</option>
+        {% endfor %}
+    </select><br>
 
     <label>Fecha Registro:</label>
     <input type="date" name="fecha_registro" 
-       value="{{ sitio.fecha_registro.strftime('%Y-%m-%d') if sitio.fecha_registro else '' }}"><br>
+       value="{{ sitio.fechaRegistro.strftime('%Y-%m-%d') if sitio.fechaRegistro else '' }}"><br>
 
-    <label>Visible:</label>
-    <select name="visible">
-        <option value="True" {% if sitio.visible %}selected{% endif %}>Sí</option>
-        <option value="False" {% if not sitio.visible %}selected{% endif %}>No</option>
-    </select><br>
+    <label>Visible a los usuarios:</label>
+    <input type="hidden" name="visible" value="False">
+    <input type="checkbox" name="visible" value="True" {% if sitio.visible %}checked{% endif %}><br>
+
+    <input type="hidden" name="latitud" id="latitud" value="{{ sitio.latitud }}">
+    <input type="hidden" name="longitud" id="longitud" value="{{ sitio.longitud }}">
 
     <div style="max-width: 600px; margin: 10px auto;">
         <label>Ubicación (seleccione en el mapa):</label>
         <div id="map"></div>
-        <input type="hidden" name="ubicacion" id="ubicacion">
     </div>
 
     <button type="submit">Guardar cambios</button>
 </form>
 
 <script>
-  // Inicializa el mapa centrado en La Plata por defecto
-  var map = L.map('map').setView([-34.921, -57.954], 13);
+  // Obtener coordenadas desde los inputs del formulario (evitar Jinja en JS)
+  var latInput = document.getElementById('latitud');
+  var lngInput = document.getElementById('longitud');
+  var latStr = latInput && latInput.value ? latInput.value : '';
+  var lngStr = lngInput && lngInput.value ? lngInput.value : '';
+  var hasCoords = latStr !== '' && lngStr !== '';
+  var existingLat = hasCoords ? parseFloat(latStr) : -34.921;
+  var existingLng = hasCoords ? parseFloat(lngStr) : -57.954;
+
+  // Inicializa el mapa centrado en las coordenadas existentes o La Plata por defecto
+  var map = L.map('map').setView([existingLat, existingLng], 13);
 
   // Capa OpenStreetMap
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -69,6 +100,11 @@
   }).addTo(map);
 
   var marker;
+
+  // Si hay coordenadas existentes, mostrar marcador
+  if (hasCoords) {
+    marker = L.marker([existingLat, existingLng]).addTo(map);
+  }
 
   // Captura clic del usuario
   map.on('click', function(e) {
@@ -82,9 +118,56 @@
           marker = L.marker(e.latlng).addTo(map);
       }
 
-      // Guardar coordenadas en inputs ocultos
-      document.getElementById('ubicacion').value = lat + ',' + lng;
+      latInput.value = lat;
+      lngInput.value = lng;
   });
+</script>
+
+<script>
+  // Filtrar ciudades por provincia (edición)
+  (function() {
+    var provSel = document.getElementById('provinciaSelect');
+    var ciudadSel = document.getElementById('ciudadSelect');
+    if (!provSel || !ciudadSel) return;
+
+    // Guardamos una copia de todas las opciones iniciales
+    var allCityOptions = Array.from(ciudadSel.querySelectorAll('option'));
+
+    function actualizarCiudades() {
+      var provId = provSel.value;
+      var selectedCiudad = ciudadSel.value; // recordar selección actual
+
+      // Resetear opciones dejando placeholder
+      ciudadSel.innerHTML = '';
+      var placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = 'Seleccione ciudad';
+      ciudadSel.appendChild(placeholder);
+
+      // Agregar solo las ciudades de la provincia seleccionada
+      allCityOptions.forEach(function(opt) {
+        var pid = opt.getAttribute('data-provincia');
+        if (opt.value === '' || pid === provId) {
+          ciudadSel.appendChild(opt.cloneNode(true));
+        }
+      });
+
+      // Restaurar selección si sigue siendo válida
+      if (selectedCiudad) {
+        ciudadSel.value = selectedCiudad;
+        // Si no existe en la nueva lista, queda placeholder
+        if (ciudadSel.value !== selectedCiudad) {
+          ciudadSel.value = '';
+        }
+      }
+    }
+
+    // Inicializar segun provincia ya seleccionada
+    actualizarCiudades();
+
+    // Refiltrar al cambiar la provincia
+    provSel.addEventListener('change', actualizarCiudades);
+  })();
 </script>
 
 {% endblock %}

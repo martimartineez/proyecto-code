@@ -1,70 +1,112 @@
 from datetime import datetime
 from src.core.database import db
-from core.sitio import Sitio
+from src.core.board.sitio_historico import SitioHistorico
+from src.core.board.provincia import Provincia
+from src.core.board.ciudad import Ciudad
+from src.core.board.categoria_sitio import CategoriaSitio  # noqa: F401
+from src.core.board.tag import Tag  # noqa: F401
 
 
-def mostrar_sitios():
-    sitios = db.session.query(Sitio).order_by(Sitio.id).filter_by(activo=True).all()
-    return sitios
+def _parse_float(value):
+    try:
+        return float(value) if value not in (None, "") else None
+    except Exception:
+        return None
 
 
-def agregar_sitioseed(**kwargs):
-    nuevo_sitio = Sitio(**kwargs)
-    db.session.add(nuevo_sitio)
-    db.session.commit()
+def _parse_int(value):
+    try:
+        return int(value) if value not in (None, "") else None
+    except Exception:
+        return None
 
-    return nuevo_sitio
+
+def _parse_date(value):
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date() if value else None
+    except Exception:
+        return None
 
 
-def agregar_sitio(form):
-    nuevo_sitio = Sitio(
-        nombre=form.get("nombre"),
-        descripcion=form.get("descripcion"),
-        descripcion_completa=form.get("descripcion_completa"),
-        ciudad=form.get("ciudad"),
-        provincia=form.get("provincia"),
-        ubicacion=form.get("ubicacion"),
-        estado_conservacion=form.get("estado_conservacion"),
-        fecha_inauguracion=datetime.strptime(form.get("fecha_inauguracion"), "%Y-%m-%d") if form.get("fecha_inauguracion") else None,
-        categoria=form.get("categoria"),
-        fecha_registro=datetime.strptime(form.get("fecha_registro"), "%Y-%m-%d") if form.get("fecha_registro") else None,
-        visible=True if form.get("visible") == "True" else False
+def listar_sitios():
+    return (
+        db.session.query(SitioHistorico)
+        .order_by(SitioHistorico.id)
+        .filter_by(baja=False)
+        .all()
     )
-    db.session.add(nuevo_sitio)
+
+
+def listar_provincias():
+    return db.session.query(Provincia).order_by(Provincia.nombre).all()
+
+
+def listar_ciudades(id_provincia: int | None = None):
+    q = db.session.query(Ciudad)
+    if id_provincia is not None:
+        q = q.filter(Ciudad.idProvincia == id_provincia)
+    return q.order_by(Ciudad.nombre).all()
+
+
+def listar_categorias():
+    return db.session.query(CategoriaSitio).order_by(CategoriaSitio.nombre).all()
+
+
+def crear_sitio(form):
+    nuevo = SitioHistorico(
+        nombre=form.get("nombre"),
+        descBreve=form.get("descripcion"),
+        descCompleta=form.get("descripcion_completa"),
+        idCiudad=_parse_int(form.get("ciudad")),
+        idCategoria=_parse_int(form.get("categoria")),
+        latitud=_parse_float(form.get("latitud")),
+        longitud=_parse_float(form.get("longitud")),
+        estadoConservacion=form.get("estado_conservacion"),
+        anioInauguracion=_parse_date(form.get("fecha_inauguracion")),
+        fechaRegistro=_parse_date(form.get("fecha_registro")) or datetime.now(),
+        visible=True,
+        baja=False,
+    )
+    db.session.add(nuevo)
     db.session.commit()
-    return nuevo_sitio
-
-def obtener_sitio(sitio_id):
-    sitio = db.session.get(Sitio, sitio_id)
-    return sitio
+    return nuevo
 
 
-def editar_sitio(sitio_id, form):
+def obtener_sitio(sitio_id: int):
+    return db.session.get(SitioHistorico, sitio_id)
+
+
+def editar_sitio(sitio_id: int, form):
     sitio = obtener_sitio(sitio_id)
-    if sitio:
-        sitio.nombre=form.get("nombre"),
-        sitio.descripcion=form.get("descripcion"),
-        sitio.descripcion_completa=form.get("descripcion_completa"),
-        sitio.ciudad=form.get("ciudad"),
-        sitio.provincia=form.get("provincia"),
-        sitio.ubicacion=form.get("ubicacion"),
-        sitio.estado_conservacion=form.get("estado_conservacion"),
-        sitio.fecha_inauguracion=datetime.strptime(form.get("fecha_inauguracion"), "%Y-%m-%d") if form.get("fecha_inauguracion") else None,
-        sitio.categoria=form.get("categoria"),
-        sitio.fecha_registro=datetime.strptime(form.get("fecha_registro"), "%Y-%m-%d") if form.get("fecha_registro") else None,
-        sitio.visible=True if form.get("visible") == "True" else False
-        db.session.commit()
-        return True
-    return False
-
-
-def eliminar_sitio(sitio_id):
-    sitio = obtener_sitio(sitio_id)
-    if sitio:
-        sitio.activo = False
-        db.session.commit()
-        return True
-    else:
+    if not sitio:
         return False
 
+    sitio.nombre = form.get("nombre") or sitio.nombre
+    sitio.descBreve = form.get("descripcion") or sitio.descBreve
+    sitio.descCompleta = form.get("descripcion_completa") or sitio.descCompleta
+    sitio.idCiudad = _parse_int(form.get("ciudad")) or sitio.idCiudad
+    sitio.idCategoria = _parse_int(form.get("categoria")) or sitio.idCategoria
+    sitio.latitud = _parse_float(form.get("latitud")) if form.get("latitud") is not None else sitio.latitud
+    sitio.longitud = _parse_float(form.get("longitud")) if form.get("longitud") is not None else sitio.longitud
+    sitio.estadoConservacion = form.get("estado_conservacion") or sitio.estadoConservacion
+    anio = _parse_date(form.get("fecha_inauguracion"))
+    if anio:
+        sitio.anioInauguracion = anio
+    fecha_reg = _parse_date(form.get("fecha_registro"))
+    if fecha_reg:
+        sitio.fechaRegistro = fecha_reg
+    if form.get("visible") is not None:
+        sitio.visible = True if form.get("visible") in ("True", True) else False
+
+    db.session.commit()
+    return True
+
+
+def eliminar_sitio(sitio_id: int):
+    sitio = obtener_sitio(sitio_id)
+    if not sitio:
+        return False
+    sitio.baja = True
+    db.session.commit()
+    return True
 

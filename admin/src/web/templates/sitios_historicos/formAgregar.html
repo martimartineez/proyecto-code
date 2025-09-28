@@ -14,7 +14,7 @@
 
 <h2>Agregar Sitio Histórico</h2>
 
-<a href="{{ url_for('sitios_historicos.index') }}">Volver</a>
+<a href="{{ next_url }}">Volver</a>
 
 <form method="post">
     <label>Nombre:</label>
@@ -26,34 +26,50 @@
     <label>Descripción Completa:</label>
     <input type="text" name="descripcion_completa"><br>
 
-    <label>Ciudad:</label>
-    <input type="text" name="ciudad"><br>
-
     <label>Provincia:</label>
-    <input type="text" name="provincia"><br>
+    <select id="provinciaSelect">
+        <option value="">Seleccione provincia</option>
+        {% for p in provincias %}
+        <option value="{{ p.id }}">{{ p.nombre }}</option>
+        {% endfor %}
+    </select><br>
+
+    <label>Ciudad:</label>
+    <select id="ciudadSelect" name="ciudad" disabled>
+        <option value="">Seleccione ciudad</option>
+        {% for c in ciudades %}
+        <option value="{{ c.id }}" data-provincia="{{ c.idProvincia }}">{{ c.nombre }}</option>
+        {% endfor %}
+    </select><br>
 
     <label>Estado Conservación:</label>
-    <input type="text" name="estado_conservacion"><br>
+    <select name="estado_conservacion" required>
+        <option value="">Seleccione estado</option>
+        <option value="Bueno">Bueno</option>
+        <option value="Regular">Regular</option>
+        <option value="Malo">Malo</option>
+    </select><br>
 
     <label>Fecha Inauguracion:</label>
     <input type="date" name="fecha_inauguracion"><br>
 
     <label>Categoría:</label>
-    <input type="text" name="categoria"><br>
+    <select name="categoria" required>
+        <option value="">Seleccione categoría</option>
+        {% for c in categorias %}
+        <option value="{{ c.id }}">{{ c.nombre }}</option>
+        {% endfor %}
+    </select><br>
 
     <label>Fecha Registro:</label>
     <input type="date" name="fecha_registro"><br>
 
-    <label>Visible:</label>
-    <select name="visible">
-        <option value="True">Sí</option>
-        <option value="False">No</option>
-    </select><br>
+    <input type="hidden" name="latitud" id="latitud">
+    <input type="hidden" name="longitud" id="longitud">
 
     <div style="max-width: 600px; margin: 10px auto;">
         <label>Ubicación (seleccione en el mapa):</label>
         <div id="map"></div>
-        <input type="hidden" name="ubicacion" id="ubicacion">
     </div>
 
     <button type="submit">Guardar</button>
@@ -82,9 +98,52 @@
           marker = L.marker(e.latlng).addTo(map);
       }
 
-      // Guardar coordenadas en inputs ocultos
-      document.getElementById('ubicacion').value = lat + ',' + lng;
+      // Guardar coordenadas en inputs separados
+      document.getElementById('latitud').value = lat;
+      document.getElementById('longitud').value = lng;
   });
+</script>
+
+<script>
+  // Filtrado de ciudades por provincia (alta)
+  (function() {
+    var provSel = document.getElementById('provinciaSelect');
+    var ciudadSel = document.getElementById('ciudadSelect');
+    if (!provSel || !ciudadSel) return;
+
+    // Guardamos una copia de todas las opciones iniciales (incluye placeholder y todas las ciudades)
+    var allCityOptions = Array.from(ciudadSel.querySelectorAll('option'));
+
+    function actualizarCiudades() {
+      var provId = provSel.value;
+
+      // Resetear opciones dejando placeholder
+      ciudadSel.innerHTML = '';
+      var placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = 'Seleccione ciudad';
+      ciudadSel.appendChild(placeholder);
+
+      if (!provId) {
+        ciudadSel.disabled = true;
+        return;
+      }
+
+      // Agregar solo las ciudades de la provincia elegida
+      allCityOptions.forEach(function(opt) {
+        var pid = opt.getAttribute('data-provincia');
+        if (pid === provId) {
+          ciudadSel.appendChild(opt.cloneNode(true));
+        }
+      });
+
+      ciudadSel.disabled = false;
+    }
+
+    // Inicializa estado deshabilitado hasta que elijan provincia
+    ciudadSel.disabled = true;
+    provSel.addEventListener('change', actualizarCiudades);
+  })();
 </script>
 
 {% endblock %}

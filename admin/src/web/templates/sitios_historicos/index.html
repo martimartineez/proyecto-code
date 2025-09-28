@@ -2,7 +2,7 @@
 {% block title %}Sitios Históricos{% endblock %}
 {% block content %}
 <h1>Sitios Históricos</h1>
-<a href="{{ url_for('sitios_historicos.agregar_sitio') }}">Agregar sitio</a>
+<a href="{{ url_for('sitios_historicos.agregar_sitio', next=request.path) }}">Agregar sitio</a>
 <table>
     <thead>
         <tr>
@@ -19,19 +19,22 @@
         {% for sitio in sitios %}
         <tr>
             <td>
-                <a href="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id) }}">
+                <a href="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id, next=request.path) }}">
                      <button type="button">Editar</button>
                 </a>
-                <form action="{{ url_for('sitios_historicos.eliminar_sitio', sitio_id=sitio.id) }}" method="post" style="display:inline;">
+                <form action="{{ url_for('sitios_historicos.eliminar_sitio', sitio_id=sitio.id)}}" method="post" style="display:inline;">
                     <button type="submit">Eliminar</button>
                 </form>
+                <a href="{{ url_for('sitios_historicos.ver_sitio', sitio_id=sitio.id) }}">
+                    <button type="button">Ver detalle</button>
+                </a>
             </td>
             <td>{{ sitio.nombre }}</td>
-            <td>{{ sitio.ciudad }}</td>
-            <td>{{ sitio.provincia }}</td>
-            <td>{{ sitio.estado_conservacion }}</td>
-            <td>{{ sitio.fecha_registro }}</td>
-            <td>{{ sitio.visible }}</td>
+            <td>{{ sitio.ciudad.nombre if sitio.ciudad else 'N/A' }}</td>
+            <td>{{ sitio.ciudad.provincia.nombre if sitio.ciudad and sitio.ciudad.provincia else 'N/A' }}</td>
+            <td>{{ sitio.estadoConservacion }}</td>
+            <td>{{ sitio.fechaRegistro.strftime('%Y-%m-%d') if sitio.fechaRegistro else 'N/A' }}</td>
+            <td>{{ 'Sí' if sitio.visible else 'No' }}</td>
         </tr>
         {% endfor %}
     </tbody>
