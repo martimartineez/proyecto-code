@@ -41,6 +41,17 @@ class SitioHistorico(Base):
         back_populates="sitios",
     )
 
+    inserted_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+
     def __repr__(self):
         return (
             f"<SitioHistorico(id={self.id}, nombre={self.nombre}, ciudad={self.ciudad}, "
