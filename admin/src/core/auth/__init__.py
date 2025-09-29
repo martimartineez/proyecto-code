@@ -8,11 +8,21 @@ def list_usuarios():
     return db.session.query(Usuario).all()
 
     
-
+def delete_user(user: Usuario):
+    db.session.delete(user)
+    db.session.commit()
 
 def create_user(**kwargs):
     user = Usuario(**kwargs)
     db.session.add(user)
     db.session.commit()
 
+    return user
+
+def get_user_by_id(user_id):
+    return db.session.query(Usuario).filter(Usuario.id == user_id).first()
+
+def baja_logica_usuario(user: Usuario):
+    user.activo = False
+    db.session.commit()
     return user
