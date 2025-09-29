@@ -21,11 +21,13 @@ def agregar_sitio():
     provincias = board.listar_provincias()
     ciudades = board.listar_ciudades()
     categorias = board.listar_categorias()
+    tags = board.listar_tags()
     return render_template(
         "sitios_historicos/formAgregar.html",
         provincias=provincias,
         ciudades=ciudades,
         categorias=categorias,
+        tags=tags,
         next_url=next_url,
     )
 
@@ -42,12 +44,14 @@ def editar_sitio(sitio_id):
     provincias = board.listar_provincias()
     ciudades = board.listar_ciudades()
     categorias = board.listar_categorias()
+    tags = board.listar_tags()
     return render_template(
         "sitios_historicos/formEditar.html",
         sitio=sitio,
         provincias=provincias,
         ciudades=ciudades,
         categorias=categorias,
+        tags=tags,
         next_url=next_url,
     )
 
