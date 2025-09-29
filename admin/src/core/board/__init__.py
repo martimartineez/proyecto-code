@@ -52,6 +52,26 @@ def listar_categorias():
     return db.session.query(CategoriaSitio).order_by(CategoriaSitio.nombre).all()
 
 
+def crear_sitio_seed(form):
+    nuevo = SitioHistorico(
+        nombre=form.get("nombre"),
+        descBreve=form.get("descripcion"),
+        descCompleta=form.get("descripcion_completa"),
+        idCiudad=_parse_int(form.get("ciudad")),
+        idCategoria=_parse_int(form.get("categoria")),
+        latitud=_parse_float(form.get("latitud")),
+        longitud=_parse_float(form.get("longitud")),
+        estadoConservacion=form.get("estado_conservacion"),
+        anioInauguracion=_parse_date(form.get("fecha_inauguracion")),
+        fechaRegistro=_parse_date(form.get("fecha_registro")) or datetime.now(),
+        visible=True,
+        baja=False,
+    )
+
+    db.session.add(nuevo)
+    db.session.commit()
+    return nuevo
+
 def crear_sitio(form):
     nuevo = SitioHistorico(
         nombre=form.get("nombre"),
