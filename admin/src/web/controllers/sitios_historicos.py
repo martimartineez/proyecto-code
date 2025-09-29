@@ -5,6 +5,8 @@ from src.core.database import db
 from src.core.board.ciudad import Ciudad
 from flask import flash
 from datetime import datetime
+from sqlalchemy import or_
+from src.core.board.tag import Tag
 
 
 bp = Blueprint("sitios_historicos", __name__, url_prefix="/sitioshistoricos")
@@ -138,6 +140,16 @@ def busqueda_avanzada():
     else:
         query = query.order_by(column.asc())
 
+    from sqlalchemy import or_
+
+    tags_input = request.args.get("tags", "").strip()
+
+    if tags_input:
+        tag_nombres = [t.strip() for t in tags_input.split(",") if t.strip()]
+        if tag_nombres:
+            query = query.join(SitioHistorico.tags).filter(
+                or_(*[Tag.nombre.ilike(f"%{t}%") for t in tag_nombres])
+            )
     total_results = 0
     total_pages = 0
     query_result = None
