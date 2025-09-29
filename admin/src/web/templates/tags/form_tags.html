@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% block title %}{{ 'Agregar' if action == 'agregar' else 'Editar' }} Tag{% endblock %}
+{% block content %}
+
+{% set title = 'Agregar Tag' if action == 'agregar' else 'Editar Tag' %}
+{% set form_action = url_for('tags.agregar_tag') if action == 'agregar' else url_for('tags.editar_tag', tag_id=tag.id) %}
+{% set tag_nombre = tag.nombre if tag else '' %}
+
+<h2>{{ title }}</h2>
+
+<a href="{{ url_for('tags.index') }}">Volver a lista de Tags</a>
+
+<form method="post" action="{{ form_action }}">
+    <label for="nombre">Nombre del Tag:</label>
+    <input type="text" id="nombre" name="nombre" value="{{ tag_nombre }}" required><br>
+
+    <button type="submit">{{ 'Guardar' if action == 'agregar' else 'Guardar cambios' }}</button>
+</form>
+
+{% endblock %}

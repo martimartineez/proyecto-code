@@ -67,6 +67,12 @@ def crear_sitio(form):
         visible=True,
         baja=False,
     )
+
+    tag_ids = form.getlist("tags") # Obtener lista de IDs de tags
+    if tag_ids:
+        tags_seleccionados = db.session.query(Tag).filter(Tag.id.in_([_parse_int(tid) for tid in tag_ids])).all()
+        nuevo.tags = tags_seleccionados
+
     db.session.add(nuevo)
     db.session.commit()
     return nuevo
@@ -97,6 +103,12 @@ def editar_sitio(sitio_id: int, form):
         sitio.fechaRegistro = fecha_reg
     if form.get("visible") is not None:
         sitio.visible = True if form.get("visible") in ("True", True) else False
+    
+    tag_ids = form.getlist("tags")
+    # Buscar los objetos Tag correspondientes a los IDs seleccionados
+    tags_seleccionados = db.session.query(Tag).filter(Tag.id.in_([_parse_int(tid) for tid in tag_ids])).all()
+    # Asignar la nueva lista de tags. SQLAlchemy maneja la desvinculación de los anteriores.
+    sitio.tags = tags_seleccionados
 
     db.session.commit()
     return True
@@ -110,3 +122,41 @@ def eliminar_sitio(sitio_id: int):
     db.session.commit()
     return True
 
+
+def listar_tags():
+    return db.session.query(Tag).order_by(Tag.nombre).all()
+
+def obtener_tag(tag_id: int):
+    return db.session.get(Tag, tag_id)
+
+def crear_tag(form):
+    nombre_tag = form.get("nombre")
+    if not nombre_tag:
+        return None
+    nuevo_tag = Tag(nombre=nombre_tag)
+    db.session.add(nuevo_tag)
+    db.session.commit()
+    return nuevo_tag
+
+def editar_tag(tag_id: int, form):
+    tag = obtener_tag(tag_id)
+    if not tag:
+        return False
+    
+    nuevo_nombre = form.get("nombre")
+    if nuevo_nombre and nuevo_nombre != tag.nombre:
+        tag.nombre = nuevo_nombre
+        db.session.commit()
+        return True
+    return False
+
+def eliminar_tag(tag_id: int):
+    tag = obtener_tag(tag_id)
+    if not tag:
+        return False
+    # No se puede eliminar si hay sitios asociados (esto lo manejará la DB con restricciones)
+    # Por simplicidad, asumimos que la relación muchos a muchos se limpia automáticamente
+    # o que la BD tiene ON DELETE CASCADE. Aquí solo intentamos borrar el objeto.
+    db.session.delete(tag)
+    db.session.commit()
+    return True

@@ -64,6 +64,18 @@
     <label>Fecha Registro:</label>
     <input type="date" name="fecha_registro"><br>
 
+    <label>Tags:</label><br>
+    <div style="border: 1px solid #ccc; padding: 10px; max-height: 150px; overflow-y: auto;">
+        {% for tag in tags %}
+            <input type="checkbox" id="tag_{{ tag.id }}" name="tags" value="{{ tag.id }}">
+            <label for="tag_{{ tag.id }}">{{ tag.nombre }}</label><br>
+        {% endfor %}
+        {% if not tags %}
+          <p>No hay tags disponibles.</p>
+        {% endif %}
+    </div>
+    <br>
+
     <input type="hidden" name="latitud" id="latitud">
     <input type="hidden" name="longitud" id="longitud">
 
