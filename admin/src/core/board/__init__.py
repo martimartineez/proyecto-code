@@ -5,6 +5,7 @@ from src.core.board.provincia import Provincia
 from src.core.board.ciudad import Ciudad
 from src.core.board.categoria_sitio import CategoriaSitio  # noqa: F401
 from src.core.board.tag import Tag  # noqa: F401
+from src.core.auth.usuario import Usuario
 
 
 def _parse_float(value):
@@ -86,9 +87,19 @@ def editar_sitio(sitio_id: int, form):
     sitio.descCompleta = form.get("descripcion_completa") or sitio.descCompleta
     sitio.idCiudad = _parse_int(form.get("ciudad")) or sitio.idCiudad
     sitio.idCategoria = _parse_int(form.get("categoria")) or sitio.idCategoria
-    sitio.latitud = _parse_float(form.get("latitud")) if form.get("latitud") is not None else sitio.latitud
-    sitio.longitud = _parse_float(form.get("longitud")) if form.get("longitud") is not None else sitio.longitud
-    sitio.estadoConservacion = form.get("estado_conservacion") or sitio.estadoConservacion
+    sitio.latitud = (
+        _parse_float(form.get("latitud"))
+        if form.get("latitud") is not None
+        else sitio.latitud
+    )
+    sitio.longitud = (
+        _parse_float(form.get("longitud"))
+        if form.get("longitud") is not None
+        else sitio.longitud
+    )
+    sitio.estadoConservacion = (
+        form.get("estado_conservacion") or sitio.estadoConservacion
+    )
     anio = _parse_date(form.get("fecha_inauguracion"))
     if anio:
         sitio.anioInauguracion = anio
@@ -110,3 +121,15 @@ def eliminar_sitio(sitio_id: int):
     db.session.commit()
     return True
 
+def create_rol(nombre: str):
+    from src.core.board.rol import Rol
+
+    nuevo = Rol(nombre=nombre)
+    db.session.add(nuevo)
+    db.session.commit()
+    return nuevo
+
+def list_roles():
+    from src.core.board.rol import Rol
+
+    return db.session.query(Rol).order_by(Rol.id).all()

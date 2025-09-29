@@ -1,0 +1,124 @@
+{% extends "layout.html" %}
+
+{% block title %}Manejo usuarios{% endblock %}
+
+{% block content %}
+
+<head>
+    <meta charset="UTF-8">
+    <title>Botón con formulario toggle</title>
+    <style>
+        /* El formulario empieza oculto */
+        #miFormulario {
+            display: none;
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            width: 250px;
+        }
+
+        label {
+            display: block;
+            margin: 5px 0 3px;
+        }
+
+        input {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        .center-btn {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<h1>Usuarios</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>nombre</th>
+            <th>Email</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for usuario in usuarios %}
+        <tr>
+            <td>{{ usuario.nombre}}</td>
+            <td>{{ usuario.email}}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Botones -->
+<div class="center-btn">
+
+    <button onclick="toggleFormulario()">Agregar usuario</button>
+    <button onclick="toggleFormulario()">Modificar usuario</button>
+    <button onclick="toggleFormulario()">Eliminar usuario</button>
+    <button onclick="toggleFormulario()">Ver detalles de usuario</button>
+
+</div>
+
+<!-- Formulario oculto -->
+<form id="miFormulario" action="{{ url_for('usuarios.agregar') }}" method="post">
+
+    <div style="display: flex; gap: 10px;">
+        <div style="flex: 1;">
+            <label for="nombre">Nombre:</label>
+            <input type="text" id="nombre" name="nombre">
+        </div>
+        <div style="flex: 1;">
+            <label for="apellido">Apellido:</label>
+            <input type="text" id="apellido" name="apellido">
+        </div>
+    </div>
+
+    <label for="password">Contraseña:</label>
+    <input type="text" id="password" name="password">
+
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email">
+
+    <label>Rol:</label>
+    <div style="display: flex; gap: 20px; margin-bottom: 10px;">
+        {% for rol in roles %}
+        <div>
+            <input type="checkbox" id="rol_{{ rol.id }}" name="roles" value="{{ rol.id }}">
+            <label for="rol_{{ rol.id }}">{{ rol.nombre }}</label>
+        </div>
+        {% endfor %}
+    </div>
+
+    <button type="submit">Enviar</button>
+</form>
+
+<script>
+    function toggleFormulario() {
+        const form = document.getElementById("miFormulario");
+        const boton = document.querySelector("button");
+
+        if (form.style.display === "none" || form.style.display === "") {
+            form.style.display = "block";
+            boton.textContent = "Ocultar formulario";
+        } else {
+            form.style.display = "none";
+            boton.textContent = "Mostrar formulario";
+        }
+    }
+</script>
+
+
+<a href="{{ url_for('home') }}">Volver al inicio</a>
+{% endblock %}

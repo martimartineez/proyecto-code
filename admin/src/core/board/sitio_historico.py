@@ -4,6 +4,7 @@ from sqlalchemy import String, Integer, Boolean, Date, DateTime, Float, ForeignK
 from typing import List, TYPE_CHECKING
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.core.database import Base
+
 if TYPE_CHECKING:
     from src.core.board.tag import Tag
     from src.core.board.categoria_sitio import CategoriaSitio
@@ -11,13 +12,15 @@ if TYPE_CHECKING:
 
 
 class SitioHistorico(Base):
-    __tablename__ = 'sitios_historicos'
+    __tablename__ = "sitios_historicos"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     nombre: Mapped[str] = mapped_column(String(150), nullable=False)
     descBreve: Mapped[str | None] = mapped_column(String(255), nullable=True)
     descCompleta: Mapped[str | None] = mapped_column(Text, nullable=True)
-    idCiudad: Mapped[int | None] = mapped_column(Integer, ForeignKey("ciudades.id"), nullable=True)
+    idCiudad: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("ciudades.id"), nullable=True
+    )
     ciudad: Mapped[Ciudad | None] = relationship("Ciudad", back_populates="sitios")
 
     latitud: Mapped[float | None] = mapped_column(Float, nullable=True)
@@ -26,8 +29,12 @@ class SitioHistorico(Base):
     estadoConservacion: Mapped[str | None] = mapped_column(String(50), nullable=True)
     anioInauguracion: Mapped[Date | None] = mapped_column(Date, nullable=True)
 
-    idCategoria: Mapped[int | None] = mapped_column(Integer, ForeignKey('categorias_sitios.id'), nullable=True)
-    categoria: Mapped[CategoriaSitio | None] = relationship("CategoriaSitio", back_populates="sitios")
+    idCategoria: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("categorias_sitios.id"), nullable=True
+    )
+    categoria: Mapped[CategoriaSitio | None] = relationship(
+        "CategoriaSitio", back_populates="sitios"
+    )
 
     fechaRegistro: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
@@ -46,5 +53,3 @@ class SitioHistorico(Base):
             f"<SitioHistorico(id={self.id}, nombre={self.nombre}, ciudad={self.ciudad}, "
             f"latitud={self.latitud}, longitud={self.longitud}, baja={self.baja})>"
         )
-
-
