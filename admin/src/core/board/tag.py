@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import List, TYPE_CHECKING
-from sqlalchemy import String, Integer, Table, Column, ForeignKey
+from datetime import datetime, timezone
+from sqlalchemy import String, Integer, Table, Column, ForeignKey, Date, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.core.database import Base
 if TYPE_CHECKING:
@@ -25,6 +26,17 @@ class Tag(Base):
         secondary=tags_sitios,
         back_populates="tags",
     )
+
+    inserted_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
 
     def __repr__(self):
         return f"<Tag(id={self.id}, nombre={self.nombre})>"
