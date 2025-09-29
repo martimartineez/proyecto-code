@@ -79,7 +79,7 @@ def run():
             "fecha_inauguracion": item["fecha_inauguracion"],
             "fecha_registro": item["fecha_registro"],
         }
-        created.append(board.crear_sitio(form_like))
+        created.append(board.crear_sitio_seed(form_like))
 
     print("Seeded sitios:")
     for s in created:
