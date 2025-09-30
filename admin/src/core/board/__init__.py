@@ -53,6 +53,26 @@ def listar_categorias():
     return db.session.query(CategoriaSitio).order_by(CategoriaSitio.nombre).all()
 
 
+def crear_sitio_seed(form):
+    nuevo = SitioHistorico(
+        nombre=form.get("nombre"),
+        descBreve=form.get("descripcion"),
+        descCompleta=form.get("descripcion_completa"),
+        idCiudad=_parse_int(form.get("ciudad")),
+        idCategoria=_parse_int(form.get("categoria")),
+        latitud=_parse_float(form.get("latitud")),
+        longitud=_parse_float(form.get("longitud")),
+        estadoConservacion=form.get("estado_conservacion"),
+        anioInauguracion=_parse_date(form.get("fecha_inauguracion")),
+        fechaRegistro=_parse_date(form.get("fecha_registro")) or datetime.now(),
+        visible=True,
+        baja=False,
+    )
+
+    db.session.add(nuevo)
+    db.session.commit()
+    return nuevo
+
 def registrar_evento_historial(
     id_sitio: int,
     id_usuario: int,
@@ -71,7 +91,6 @@ def registrar_evento_historial(
     db.session.commit()
     return evento
 
-
 def crear_sitio(form, id_usuario: int | None = None):
     nuevo = SitioHistorico(
         nombre=form.get("nombre"),
@@ -84,9 +103,21 @@ def crear_sitio(form, id_usuario: int | None = None):
         estadoConservacion=form.get("estado_conservacion"),
         anioInauguracion=_parse_date(form.get("fecha_inauguracion")),
         fechaRegistro=_parse_date(form.get("fecha_registro")) or datetime.now(),
-        visible=True,
+        # Manejar hidden + checkbox (dos valores). True si cualquiera es truthy
+        visible=(
+            any(
+                str(v).lower() in ("true", "1", "yes", "on", "t")
+                for v in form.getlist("visible")
+            )
+        ),
         baja=False,
     )
+
+    tag_ids = form.getlist("tags") # Obtener lista de IDs de tags
+    if tag_ids:
+        tags_seleccionados = db.session.query(Tag).filter(Tag.id.in_([_parse_int(tid) for tid in tag_ids])).all()
+        nuevo.tags = tags_seleccionados
+
     db.session.add(nuevo)
     db.session.commit()
     # Registro de historial
@@ -152,8 +183,15 @@ def editar_sitio(sitio_id: int, form, id_usuario: int | None = None):
     fecha_reg = _parse_date(form.get("fecha_registro"))
     if fecha_reg:
         sitio.fechaRegistro = fecha_reg
-    if form.get("visible") is not None:
-        sitio.visible = True if form.get("visible") in ("True", True) else False
+    # Checkbox HTML + hidden: se reciben 0, 1 o 2 valores. True si cualquiera es truthy
+    vals_visible = form.getlist("visible")
+    sitio.visible = any(str(v).lower() in ("true", "1", "yes", "on", "t") for v in vals_visible)
+    
+    tag_ids = form.getlist("tags")
+    # Buscar los objetos Tag correspondientes a los IDs seleccionados
+    tags_seleccionados = db.session.query(Tag).filter(Tag.id.in_([_parse_int(tid) for tid in tag_ids])).all()
+    # Asignar la nueva lista de tags. SQLAlchemy maneja la desvinculación de los anteriores.
+    sitio.tags = tags_seleccionados
 
     db.session.commit()
     # Registro de historial
@@ -192,6 +230,138 @@ def eliminar_sitio(sitio_id: int, id_usuario: int | None = None):
     prev_baja = sitio.baja
     sitio.baja = True
     db.session.commit()
+    # Registro de historial
+    if id_usuario is None:
+        id_usuario = 1  # TODO: reemplazar por usuario autenticado
+    try:
+        registrar_evento_historial(
+            id_sitio=sitio.id,
+            id_usuario=id_usuario,
+            accion="DELETED" if not prev_baja and sitio.baja else "STATE_CHANGED",
+            valores_anteriores={"baja": prev_baja},
+            valores_nuevos={"baja": sitio.baja},
+        )
+    except Exception:
+        db.session.rollback()
+        raise
+
+
+def listar_historial_sitio(
+    id_sitio: int,
+    usuario_id: int | None = None,
+    accion: str | None = None,
+    desde: str | None = None,
+    hasta: str | None = None,
+    page: int = 1,
+    per_page: int = 25,
+):
+    q = db.session.query(HistorialSitio).filter(HistorialSitio.idSitio == id_sitio)
+    if usuario_id:
+        q = q.filter(HistorialSitio.idUsuario == usuario_id)
+    if accion:
+        q = q.filter(HistorialSitio.accion == accion)
+    # Parse fechas YYYY-MM-DD
+    if desde:
+        try:
+            d = datetime.strptime(desde, "%Y-%m-%d")
+            q = q.filter(HistorialSitio.fechaAccion >= d)
+        except Exception:
+            pass
+    if hasta:
+        try:
+            h = datetime.strptime(hasta, "%Y-%m-%d") + timedelta(days=1)
+            q = q.filter(HistorialSitio.fechaAccion < h)
+        except Exception:
+            pass
+
+    q = q.order_by(HistorialSitio.fechaAccion.desc())
+    total = q.count()
+    if page < 1:
+        page = 1
+    items = q.offset((page - 1) * per_page).limit(per_page).all()
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "pages": (total + per_page - 1) // per_page if per_page else 1,
+    }
+def listar_tags():
+    return db.session.query(Tag).order_by(Tag.nombre).all()
+
+def obtener_tag(tag_id: int):
+    return db.session.get(Tag, tag_id)
+
+def crear_tag(form):
+    nombre_tag = form.get("nombre")
+    if not nombre_tag:
+        return None
+    nuevo_tag = Tag(nombre=nombre_tag)
+    db.session.add(nuevo_tag)
+    db.session.commit()
+    return nuevo_tag
+
+def editar_tag(tag_id: int, form):
+    tag = obtener_tag(tag_id)
+    if not tag:
+        return False
+    
+    nuevo_nombre = form.get("nombre")
+    if nuevo_nombre and nuevo_nombre != tag.nombre:
+        tag.nombre = nuevo_nombre
+        db.session.commit()
+        return True
+    return False
+
+def eliminar_tag(tag_id: int):
+    tag = obtener_tag(tag_id)
+    if not tag:
+        return False
+    # No se puede eliminar si hay sitios asociados (esto lo manejará la DB con restricciones)
+    # Por simplicidad, asumimos que la relación muchos a muchos se limpia automáticamente
+    # o que la BD tiene ON DELETE CASCADE. Aquí solo intentamos borrar el objeto.
+    db.session.delete(tag)
+    db.session.commit()
+    return True
+
+
+def listar_tags():
+    return db.session.query(Tag).order_by(Tag.nombre).all()
+
+def obtener_tag(tag_id: int):
+    return db.session.get(Tag, tag_id)
+
+def crear_tag(form):
+    nombre_tag = form.get("nombre")
+    if not nombre_tag:
+        return None
+    nuevo_tag = Tag(nombre=nombre_tag)
+    db.session.add(nuevo_tag)
+    db.session.commit()
+    return nuevo_tag
+
+def editar_tag(tag_id: int, form):
+    tag = obtener_tag(tag_id)
+    if not tag:
+        return False
+    
+    nuevo_nombre = form.get("nombre")
+    if nuevo_nombre and nuevo_nombre != tag.nombre:
+        tag.nombre = nuevo_nombre
+        db.session.commit()
+        return True
+    return False
+
+def eliminar_tag(tag_id: int):
+    tag = obtener_tag(tag_id)
+    if not tag:
+        return False
+    # No se puede eliminar si hay sitios asociados (esto lo manejará la DB con restricciones)
+    # Por simplicidad, asumimos que la relación muchos a muchos se limpia automáticamente
+    # o que la BD tiene ON DELETE CASCADE. Aquí solo intentamos borrar el objeto.
+    db.session.delete(tag)
+    db.session.commit()
+    return True
     # Registro de historial
     if id_usuario is None:
         id_usuario = 1  # TODO: reemplazar por usuario autenticado

@@ -4,6 +4,7 @@ from src.core.board.ciudad import Ciudad
 from src.core.board.categoria_sitio import CategoriaSitio
 from src.core.board.rol import Rol
 from src.core.board.usuario import Usuario
+from src.core.board.sitio_historico import SitioHistorico
 
 
 def _get_ciudad_id(nombre_ciudad: str) -> int | None:
@@ -46,6 +47,8 @@ def run():
 
     # Crear sitios con el esquema actual utilizando board.crear_sitio
     # Asegúrate de haber corrido reset-db para tener ciudades y categorías seed-eadas
+    if db.session.query(SitioHistorico).count() > 0:
+        return
     data = [
         {
             "nombre": "Sitio Histórico 1",
@@ -109,7 +112,7 @@ def run():
             "visible": item["visible"],
             "baja": item["baja"],
         }
-        created.append(board.crear_sitio(form_like, id_usuario=system_user.id))
+        created.append(board.crear_sitio_seed(form_like))
 
     print("Seeded sitios:")
     for s in created:

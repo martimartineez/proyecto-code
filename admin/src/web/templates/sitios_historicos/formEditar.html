@@ -70,6 +70,20 @@
     <input type="hidden" name="visible" value="False">
     <input type="checkbox" name="visible" value="True" {% if sitio.visible %}checked{% endif %}><br>
 
+    <label>Tags:</label><br>
+    {% set sitio_tags = sitio.tags|map(attribute='id')|list %}
+    <div style="border: 1px solid #ccc; padding: 10px; max-height: 150px; overflow-y: auto;">
+        {% for tag in tags %}
+            <input type="checkbox" id="tag_{{ tag.id }}" name="tags" value="{{ tag.id }}"
+                {% if tag.id in sitio_tags %}checked{% endif %}>
+            <label for="tag_{{ tag.id }}">{{ tag.nombre }}</label><br>
+        {% endfor %}
+        {% if not tags %}
+          <p>No hay tags disponibles.</p>
+        {% endif %}
+    </div>
+    <br>
+
     <input type="hidden" name="latitud" id="latitud" value="{{ sitio.latitud }}">
     <input type="hidden" name="longitud" id="longitud" value="{{ sitio.longitud }}">
 

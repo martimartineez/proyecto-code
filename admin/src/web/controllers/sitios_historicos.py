@@ -105,11 +105,13 @@ def agregar_sitio():
     provincias = board.listar_provincias()
     ciudades = board.listar_ciudades()
     categorias = board.listar_categorias()
+    tags = board.listar_tags()
     return render_template(
         "sitios_historicos/formAgregar.html",
         provincias=provincias,
         ciudades=ciudades,
         categorias=categorias,
+        tags=tags,
         next_url=next_url,
     )
 
@@ -152,6 +154,7 @@ def editar_sitio(sitio_id):
         for u in usuarios
     ]
     historial_view = _build_historial_view(historial, ciudades, categorias, usuarios_by_id)
+    tags = board.listar_tags()
     return render_template(
         "sitios_historicos/formEditar.html",
         sitio=sitio,
@@ -168,6 +171,7 @@ def editar_sitio(sitio_id):
             "hasta": hasta,
             "page": page,
         },
+        tags=tags,
         next_url=next_url,
     )
 
