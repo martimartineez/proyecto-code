@@ -14,11 +14,7 @@ class CategoriaSitio(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     nombre: Mapped[str] = mapped_column(String(120), nullable=False, unique=True)
 
-    sitios: Mapped[List["SitioHistorico"]] = relationship(
-        back_populates="categoria"
-    )
+    sitios: Mapped[List["SitioHistorico"]] = relationship(back_populates="categoria")
 
     def __repr__(self):
         return f"<CategoriaSitio(id={self.id}, nombre={self.nombre})>"
-
-

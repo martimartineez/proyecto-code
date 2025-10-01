@@ -1,6 +1,6 @@
 from src.core import board
 from flask import Blueprint, render_template, request, redirect, url_for
-from src.core.board.usuario import Usuario
+from src.core.auth import Usuario
 from src.core.board import SitioHistorico
 from src.core.database import db
 from src.core.board.ciudad import Ciudad

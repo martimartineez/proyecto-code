@@ -5,6 +5,7 @@ from src.web.handlers import error
 from src.web.config import config
 from src.core import database
 from src.web.controllers.sitios_historicos import bp as sitios_historicos_bp
+from src.web.controllers.user_management import bp as user_management_bp
 from src.web.controllers.tags import bp as tags_bp
 from src.core import seeds
 
@@ -22,6 +23,7 @@ def create_app(env="development", static_folder="../../static"):
 
     # register blueprints
     app.register_blueprint(sitios_historicos_bp)
+    app.register_blueprint(user_management_bp)
     app.register_blueprint(tags_bp)
 
     app.register_error_handler(404, error.not_found)
