@@ -67,7 +67,14 @@
   <select name="accion">
     <option value="">Todas</option>
     {% for a in ['CREATED', 'UPDATED', 'DELETED', 'STATE_CHANGED', 'TAGS_CHANGED', 'IMAGES_CHANGED'] %}
-    <option value="{{ a }}" {% if filtros.accion == a %}selected{% endif %}>{{ a }}</option>
+    {% set a_label =
+      'Creado' if a=='CREATED' else
+      'Actualizado' if a=='UPDATED' else
+      'Eliminado' if a=='DELETED' else
+      'Cambio de estado' if a=='STATE_CHANGED' else
+      'Cambio de etiquetas' if a=='TAGS_CHANGED' else
+      'Imágenes actualizadas' if a=='IMAGES_CHANGED' else a %}
+    <option value="{{ a }}" {% if filtros.accion == a %}selected{% endif %}>{{ a_label }}</option>
     {% endfor %}
   </select>
 
@@ -80,38 +87,7 @@
   <button type="submit">Filtrar</button>
 </form>
 
-<table border="1" cellspacing="0" cellpadding="4" style="width:100%; max-width:1000px;">
-  <thead>
-    <tr>
-      <th>Fecha</th>
-      <th>Usuario</th>
-      <th>Acción</th>
-      <th>Cambios</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for e in historial_view['items'] %}
-    <tr>
-      <td>{{ e.fecha.strftime('%Y-%m-%d %H:%M') if e.fecha else '' }}</td>
-      <td>{{ e.usuario }}</td>
-      <td>{{ e.accion }}</td>
-      <td>
-        {% if e.cambios and e.cambios|length > 0 %}
-          <ul style="text-align:left; margin:0; padding-left:18px;">
-            {% for c in e.cambios %}
-              <li><strong>{{ c.campo }}:</strong> {{ c.antes }} → {{ c.despues }}</li>
-            {% endfor %}
-          </ul>
-        {% else %}
-          —
-        {% endif %}
-      </td>
-    </tr>
-    {% else %}
-    <tr><td colspan="4">Sin registros</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+{% include 'sitios_historicos/_tabla_historial.html' %}
 
 {% set page = historial.page %}
 {% set pages = historial.pages %}
