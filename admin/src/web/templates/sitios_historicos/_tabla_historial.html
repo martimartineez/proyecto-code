@@ -1,0 +1,87 @@
+{# Parcial reusable: tabla de historial de cambios #}
+<style>
+  /* Estilos locales SOLO para la tabla de historial */
+  .historial-wrap { max-width: 1600px; margin: 0 auto; padding: 0 16px; }
+  .historial-card { border:1px solid #e5e7eb; border-radius:8px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,0.04); overflow:auto; }
+  .historial-table { width:100%; border-collapse:collapse; min-width:640px; line-height:1.2; }
+  .historial-table thead th { background:#f8f9fb; color:#374151; font-weight:600; font-size:0.9rem; padding:6px 8px; text-align:left; border-bottom:1px solid #e5e7eb; }
+  .historial-table tbody td { padding:6px 8px; border-bottom:1px solid #f1f3f5; vertical-align:top; text-align:left; }
+  .historial-table tbody tr:nth-child(even) { background:#fcfdff; }
+  .historial-table tbody tr:hover { background:#f5faff; }
+  .historial-badge { display:inline-block; padding:1px 6px; border-radius:999px; font-size:0.7rem; font-weight:600; color:#fff; }
+  .badge-created { background:#16a34a; }
+  .badge-updated { background:#2563eb; }
+  .badge-deleted { background:#dc2626; }
+  .badge-state { background:#ca8a04; }
+  .badge-tags { background:#0891b2; }
+  .badge-images { background:#6b7280; }
+  .historial-cambios { margin:0; padding-left:16px; font-size:0.85rem; }
+  .historial-cambios li { margin:0 0 2px 0; }
+  .historial-fecha { white-space:nowrap; color:#111827; }
+  .historial-empty { text-align:center; color:#6b7280; padding:12px; }
+
+  /* Responsive tweaks */
+  @media (max-width: 768px) {
+    .historial-table { min-width: 560px; }
+    .historial-table thead th { font-size: 0.85rem; padding: 5px 6px; }
+    .historial-table tbody td { padding: 5px 6px; }
+    .historial-badge { font-size: 0.65rem; padding: 1px 5px; }
+  }
+  @media (max-width: 480px) {
+    .historial-wrap { padding: 0 10px; }
+    .historial-table { min-width: 480px; line-height: 1.15; }
+    .historial-cambios { font-size: 0.8rem; padding-left: 14px; }
+  }
+</style>
+<div class="historial-wrap">
+  <div class="historial-card">
+  <table class="historial-table">
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Usuario</th>
+        <th>Acción</th>
+        <th>Cambios</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in historial_view['items'] %}
+      <tr>
+        <td class="historial-fecha">{{ e.fecha.strftime('%Y-%m-%d %H:%M') if e.fecha else '' }}</td>
+        <td>{{ e.usuario }}</td>
+        <td>
+          {% set badge_class =
+            'badge-created' if e.accion=='CREATED' else
+            'badge-updated' if e.accion=='UPDATED' else
+            'badge-deleted' if e.accion=='DELETED' else
+            'badge-state' if e.accion=='STATE_CHANGED' else
+            'badge-tags' if e.accion=='TAGS_CHANGED' else
+            'badge-images' %}
+          {% set accion_label =
+            'Creado' if e.accion=='CREATED' else
+            'Actualizado' if e.accion=='UPDATED' else
+            'Eliminado' if e.accion=='DELETED' else
+            'Cambio de estado' if e.accion=='STATE_CHANGED' else
+            'Cambio de etiquetas' if e.accion=='TAGS_CHANGED' else
+            'Imágenes actualizadas' %}
+          <span class="historial-badge {{ badge_class }}">{{ accion_label }}</span>
+        </td>
+        <td>
+          {% if e.cambios and e.cambios|length > 0 %}
+            <ul class="historial-cambios">
+              {% for c in e.cambios %}
+                <li><strong>{{ c.campo }}:</strong> {{ c.antes }} → {{ c.despues }}</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="historial-empty">Sin cambios</div>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4" class="historial-empty">Sin registros</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
