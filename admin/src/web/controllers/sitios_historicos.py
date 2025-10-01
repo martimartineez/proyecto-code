@@ -8,6 +8,8 @@ from flask import flash
 from datetime import datetime
 from sqlalchemy import or_
 from src.core.board.tag import Tag
+from src.web.handlers.auth import login_required
+
 
 
 bp = Blueprint("sitios_historicos", __name__, url_prefix="/sitioshistoricos")
@@ -96,6 +98,7 @@ def _build_historial_view(historial: dict, ciudades, categorias, usuarios_by_id:
 
 
 @bp.get("/")
+@login_required
 def index():
     sitios_historicos = board.listar_sitios()
     return render_template("sitios_historicos/index.html", sitios=sitios_historicos)
