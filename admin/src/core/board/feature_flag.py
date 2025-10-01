@@ -19,7 +19,9 @@ class FeatureFlag(Base):
     mensaje: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
 
     ultimaModificacion: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
     )
 
     idUsuarioModificacion: Mapped[Optional[int]] = mapped_column(
@@ -31,5 +33,3 @@ class FeatureFlag(Base):
             f"<FeatureFlag(id={self.id}, nombre={self.nombre}, valor={self.valor}, "
             f"ultima_modificacion={self.ultimaModificacion}, idUsuarioModificacion={self.idUsuarioModificacion})>"
         )
-
-
