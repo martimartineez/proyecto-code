@@ -187,8 +187,8 @@ def run():
             "estado_conservacion": item["estado_conservacion"],
             "fecha_inauguracion": item["fecha_inauguracion"],
             "fecha_registro": item["fecha_registro"],
-            "visible": item["visible"],
-            "baja": item["baja"],
+            "visible": item.get("visible", "True"),
+            "baja": item.get("baja", "False"),
         }
         created.append(board.crear_sitio_seed(form_like))
 
