@@ -1,4 +1,5 @@
 from src.core import board
+from src.core import auth
 from src.core.database import db
 from src.core.board.ciudad import Ciudad
 from src.core.board.categoria_sitio import CategoriaSitio
@@ -168,3 +169,43 @@ def run():
     print("Seeded sitios:")
     for s in created:
         print(" ", s)
+
+    print("Creating roles...")
+    rol_admin = board.create_rol(nombre="Admin")
+    rol_editor = board.create_rol(nombre="Editor")
+    rol_user = board.create_rol(nombre="User")
+    print("Created roles! 👍🏻")
+
+
+
+    print("Creating users...")
+
+    user1 = auth.create_user(
+        nombre="Pepe",
+        apellido="Argento",
+        password="secreto",
+        email="a@gmail.com",
+        activo=True,
+        esAdmin=True,
+        idRol=rol_admin.id
+    )
+    user2 = auth.create_user(
+        nombre="Moni",
+        apellido="Argento",
+        password="secreto",
+        email="b@gmail.com",
+        activo=True,
+        esAdmin=True,
+        idRol=rol_admin.id
+    )
+    user3 = auth.create_user(
+        nombre="Coqui",
+        apellido="Argento",
+        password="secreto",
+        email="c@gmail.com",
+        activo=True,
+        esAdmin=True,
+        idRol=rol_admin.id
+    )
+
+    print("Created users! 👍🏻")

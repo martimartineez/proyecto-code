@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from sqlalchemy import String, Integer, Table, Column, ForeignKey, Date, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.core.database import Base
+
 if TYPE_CHECKING:
     from src.core.board.sitio_historico import SitioHistorico
 
@@ -40,5 +41,3 @@ class Tag(Base):
 
     def __repr__(self):
         return f"<Tag(id={self.id}, nombre={self.nombre})>"
-
-
