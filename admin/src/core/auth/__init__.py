@@ -22,6 +22,9 @@ def create_user(**kwargs):
 def get_user_by_id(user_id):
     return db.session.query(Usuario).filter(Usuario.id == user_id).first()
 
+def find_user(email, password):
+    return db.session.query(Usuario).filter(Usuario.email == email, Usuario.password == password).first()
+
 def baja_logica_usuario(user: Usuario):
     user.activo = False
     db.session.commit()

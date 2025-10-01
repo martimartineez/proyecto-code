@@ -1,23 +1,27 @@
 <!DOCTYPE html>
 <html lang="es">
-    <head>
-        {% block head %} 
-        <meta charset="UTF-8">
-        <title>Proyecto Python Flask</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+<head>
+    {% block head %}
+    <meta charset="UTF-8">
+    <title>Proyecto Python Flask</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='flash.css') }}">
+    {% endblock %}
+</head>
+
+<body>
+    <header>
+        {% block header %}
         {% endblock %}
-    </head>
-    <body>
-        <header>
-            {% block header %}
-            {% endblock %}
-        </header>
-        <main>
-            {% block content %}
-            {% endblock %}
-        </main>
-        <footer>
-            <p>Facultad - Proyecto 2025</p>
-        </footer>
-    </body>
+    </header>
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+    <footer>
+        <p>Facultad - Proyecto 2025</p>
+    </footer>
+</body>
+
 </html>

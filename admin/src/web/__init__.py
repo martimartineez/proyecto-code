@@ -8,6 +8,7 @@ from src.web.controllers.sitios_historicos import bp as sitios_historicos_bp
 from src.web.controllers.user_management import bp as user_management_bp
 from src.web.controllers.tags import bp as tags_bp
 from src.core import seeds
+from src.web.controllers.auth import bp as auth_bp
 
 
 def create_app(env="development", static_folder="../../static"):
@@ -21,10 +22,11 @@ def create_app(env="development", static_folder="../../static"):
     def home():
         return render_template("home.html")
 
-    # register blueprints
+    # Register blueprints
     app.register_blueprint(sitios_historicos_bp)
     app.register_blueprint(user_management_bp)
     app.register_blueprint(tags_bp)
+    app.register_blueprint(auth_bp)
 
     app.register_error_handler(404, error.not_found)
     app.register_error_handler(401, error.unauthorized)
