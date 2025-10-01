@@ -12,7 +12,7 @@ def login():
 @bp.post('/authenticate')
 def authenticate():
     params = request.form
-    user = auth.find_user(params['email'], params['password'])
+    user = auth.check_user(params['email'], params['password'])
     if not user:
         flash('Usuario o contraseña incorrecto/a', 'error')
         return redirect(url_for('auth.login'))
@@ -23,4 +23,10 @@ def authenticate():
 
 @bp.get('/logout')
 def logout():
-    pass
+    if session.get('user'):
+        session.pop('user')
+        session.clear()
+        flash('Cierre de sesión exitoso', 'success')
+    else:
+        flash('No hay una sesión activa', 'error')
+    return redirect(url_for('auth.login'))

@@ -5,11 +5,11 @@ class Config:
     TESTING = False
     SECRET_KEY = "secret-key"
     SESSION_TYPE = "filesystem"
-    SQALCHEMY_ENGINE_OPTIONS = (
+    SQALCHEMY_ENGINE_OPTIONS = {
         "pool_size" : 10,
         "pool_recycle" : 60,
         "pool_pre_ping" : True,
-    )
+    }
 
 
 class ProductionConfig(Config):
