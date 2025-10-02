@@ -1,22 +1,27 @@
-<h1>
-    <a class="title" href="/">
-        Programa Nacional de Registro y Preservacion de Sitios Historicos
-    </a>
-</h1>
-<div class="left-menu">
-    <nav>
-        <input type="checkbox" id="dropbtn">
-        <label for="dropbtn">
-            <svg class="menuicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M96 160C96 142.3 110.3 128 128 128L512 128C529.7 128 544 142.3 544 160C544 177.7 529.7 192 512 192L128 192C110.3 192 96 177.7 96 160zM96 320C96 302.3 110.3 288 128 288L512 288C529.7 288 544 302.3 544 320C544 337.7 529.7 352 512 352L128 352C110.3 352 96 337.7 96 320zM544 480C544 497.7 529.7 512 512 512L128 512C110.3 512 96 497.7 96 480C96 462.3 110.3 448 128 448L512 448C529.7 448 544 462.3 544 480z"/></svg>
-        </label>
-        <div id="dropdown-content">
-            <a href="#1">Gestion de sitios Historicos</a>
-            <a href="#2">Validacion de propuestas</a>
-            <a href="#3">Moderacion de reseñas</a>
-            {% if permisos == "true" %}
-                <a href="/gestion_usuarios/">Gestion de Usuarios</a>
-            {%endif%}
+<div class="btn-group" id="left-menu">
+    <nav class="navbar navbar-expand-lg">
+    <div class="container-fluid">
+        <a class="navbar-brand text-white" id="title" href="/">Programa Nacional de Registro y Preservacion de Sitios Historicos</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+            <a class="nav-link text-white" href="/sitioshistoricos">Sitios Historicos</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link text-white" href="#">Validacion de Propuestas</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link text-white" href="#">Reseñas</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link text-white" href="/manejo_usuarios/"> Usuarios</a>
+            </li>
+        </ul>
         </div>
+    </div>
     </nav>
 </div>
 <div class="user-menu">
