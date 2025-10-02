@@ -28,14 +28,18 @@ def _parse_date(value):
         return None
 
 
-def listar_sitios():
+def listar_sitios(page=1, per_page=25):
     return (
         db.session.query(SitioHistorico)
         .order_by(SitioHistorico.id)
         .filter_by(baja=False)
+        .limit(per_page)
+        .offset((page - 1) * per_page)
         .all()
     )
 
+def contar_sitios():
+    return db.session.query(SitioHistorico).filter_by(baja=False).count()
 
 def listar_provincias():
     return db.session.query(Provincia).order_by(Provincia.nombre).all()
@@ -143,8 +147,18 @@ def eliminar_sitio(sitio_id: int):
     return True
 
 
-def listar_tags():
-    return db.session.query(Tag).order_by(Tag.nombre).all()
+def listar_tags(page=1, per_page=25):
+    return (
+        db.session.query(Tag)
+        .order_by(Tag.nombre)
+        .limit(per_page)
+        .offset((page - 1) * per_page)
+        .all()
+    )
+
+def contar_tags():
+    return db.session.query(Tag).count()
+
 
 def obtener_tag(tag_id: int):
     return db.session.get(Tag, tag_id)

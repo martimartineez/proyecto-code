@@ -6,8 +6,19 @@ bp = Blueprint("tags", __name__, url_prefix="/tags")
 
 @bp.get("/")
 def index():
-    tags = board.listar_tags()
-    return render_template("tags/index_tags.html", tags=tags)
+    page = request.args.get("page", 1, type=int)
+    per_page = 25
+    tags = board.listar_tags(page=page, per_page=per_page)
+    total = board.contar_tags()
+    total_pages = (total + per_page - 1) // per_page
+
+    return render_template(
+        "tags/index_tags.html",
+        tags=tags,
+        page=page,
+        total_pages=total_pages
+    )
+
 
 
 @bp.route("/nuevo", methods=["GET", "POST"])
