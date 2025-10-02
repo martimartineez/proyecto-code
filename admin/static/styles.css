@@ -3,14 +3,14 @@
     --sec-color: #ec843f;
 }
 
-html{
+html {
     font-family: "lora", serif;
     height: 100%;
     margin: 0px;
 }
 
 
-body{
+body {
     height: 100%;
     display: grid;
     grid-template-columns: 15% 85%;
@@ -32,7 +32,7 @@ main{
     margin: 2%;
 }
 
-header{
+header {
     grid-row-start: 1;
     grid-column-start: 1;
     grid-row-end: 1;
@@ -90,7 +90,7 @@ header{
 #dropdown-content{
     grid-row-start: 1;
     grid-column-start: 1;
-    grid-row-end: 4 ;
+    grid-row-end: 4;
     grid-column-end: 2;
     display: grid;
     grid-template-columns: repeat(1, 18.75em);
@@ -199,6 +199,7 @@ footer{
 
 /* Estilos básicos para tablas */
 table {
+    table-layout: auto;
     border-collapse: collapse;
     width: 80%;
     margin: 20px 0;
@@ -289,7 +290,7 @@ tr:hover {
     font-size: 20px;
     font-weight: bolder;
     display: inline-block;
-    margin-top: 240px;
+    margin-top: 5%;
     /* Aumenta este valor para bajarlo más */
 }
 

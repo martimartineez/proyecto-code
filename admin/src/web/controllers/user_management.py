@@ -1,14 +1,19 @@
 from flask import Blueprint
 from flask import render_template
 from flask import request, redirect, url_for
+from flask import session, flash
 
 from src.core import auth
 from src.core import board
+from src.web.handlers.auth import is_autenticated
+from src.web.handlers.auth import login_required
 
 bp = Blueprint("usuarios", __name__, url_prefix="/manejo_usuarios")
 
 
 @bp.get("/")
+#Este es para que no te deje entrar si no estas logueado
+@login_required
 def index():
     usuarios = auth.list_usuarios()
     roles = board.list_roles()
