@@ -138,6 +138,7 @@ def crear_sitio(form, id_usuario: int | None = None):
                 "longitud": nuevo.longitud,
                 "visible": nuevo.visible,
                 "baja": nuevo.baja,
+                "tags": [t.nombre for t in getattr(nuevo, "tags", [])],
             },
         )
     except Exception:
@@ -168,6 +169,8 @@ def editar_sitio(sitio_id: int, form, id_usuario: int | None = None):
         "fechaRegistro": sitio.fechaRegistro.isoformat() if getattr(sitio, "fechaRegistro", None) else None,
         "visible": sitio.visible,
         "baja": sitio.baja,
+        # Snapshot de tags como lista de nombres para facilitar la visualización
+        "tags": [t.nombre for t in getattr(sitio, "tags", [])],
     }
 
     sitio.nombre = form.get("nombre") or sitio.nombre
@@ -221,6 +224,7 @@ def editar_sitio(sitio_id: int, form, id_usuario: int | None = None):
         "fechaRegistro": sitio.fechaRegistro.isoformat() if getattr(sitio, "fechaRegistro", None) else None,
         "visible": sitio.visible,
         "baja": sitio.baja,
+        "tags": [t.nombre for t in getattr(sitio, "tags", [])],
     }
     try:
         registrar_evento_historial(
