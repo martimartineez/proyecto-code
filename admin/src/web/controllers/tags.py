@@ -8,15 +8,22 @@ bp = Blueprint("tags", __name__, url_prefix="/tags")
 def index():
     page = request.args.get("page", 1, type=int)
     per_page = 25
-    tags = board.listar_tags(page=page, per_page=per_page)
-    total = board.contar_tags()
+    q = request.args.get("q", None)
+    sort = request.args.get("sort", "nombre")  # puede ser "nombre,fecha"
+    order = request.args.get("order", "asc")
+
+    tags = board.listar_tags(page=page, per_page=per_page, q=q, sort=sort, order=order)
+    total = board.contar_tags(q=q)
     total_pages = (total + per_page - 1) // per_page
 
     return render_template(
         "tags/index_tags.html",
         tags=tags,
         page=page,
-        total_pages=total_pages
+        total_pages=total_pages,
+        q=q,
+        sort=sort,
+        order=order
     )
 
 
@@ -53,12 +60,14 @@ def editar_tag(tag_id):
 
 @bp.post("/<int:tag_id>/eliminar")
 def eliminar_tag(tag_id):
-    """Lógica para eliminar un tag."""
-    if board.eliminar_tag(tag_id):
-        # flash("Tag eliminado exitosamente.")
-        pass # Por si no usas flash
-    else:
-        # flash("Error al eliminar el tag o tag no encontrado.")
-        pass # Por si no usas flash
+    resultado = board.eliminar_tag(tag_id)
     
+    if resultado is True:
+        flash("Tag eliminado exitosamente.", "success")
+    elif resultado == "vinculado":
+        # Manejamos el error específico de la restricción M:N
+        flash("ERROR: El Tag no puede ser eliminado porque está asociado a uno o más Sitios Históricos. Desvincúlelo primero.", "error")
+    else: 
+        flash("ERROR: El Tag no pudo ser eliminado (no encontrado o error desconocido).", "error")
+        
     return redirect(url_for("tags.index"))

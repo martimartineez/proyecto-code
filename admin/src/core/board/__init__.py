@@ -5,7 +5,7 @@ from src.core.board.provincia import Provincia
 from src.core.board.ciudad import Ciudad
 from src.core.board.categoria_sitio import CategoriaSitio  # noqa: F401
 from src.core.board.tag import Tag  # noqa: F401
-
+import re
 
 def _parse_float(value):
     try:
@@ -27,6 +27,33 @@ def _parse_date(value):
     except Exception:
         return None
 
+def _generate_slug(text: str) -> str:
+    """
+    Genera un slug a partir de un texto usando solo librerías estándar.
+    Maneja tildes y 'ñ' mediante reemplazo manual.
+    """
+    # 1. Mapeo de caracteres especiales a sus equivalentes sin acento
+    replacements = {
+        'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u', 'ñ': 'n', 'ü': 'u',
+        'Á': 'a', 'É': 'e', 'Í': 'i', 'Ó': 'o', 'Ú': 'u', 'Ñ': 'n', 'Ü': 'u',
+    }
+    
+    # 2. Aplicar mapeo y convertir a minúsculas
+    text = text.lower()
+    for old, new in replacements.items():
+        text = text.replace(old, new)
+
+    # 3. Reemplazar caracteres no deseados (excepto a-z, 0-9 y guiones) con un guion.
+    # Esto también manejará los espacios.
+    text = re.sub(r'[^a-z0-9\-]+', '-', text) 
+    
+    # 4. Eliminar guiones duplicados (ej: 'sitio--historico' -> 'sitio-historico')
+    text = re.sub(r'-+', '-', text)
+    
+    # 5. Eliminar guiones al inicio y al final de la cadena
+    text = text.strip('-')
+    
+    return text
 
 def listar_sitios(page=1, per_page=25):
     return (
@@ -147,17 +174,53 @@ def eliminar_sitio(sitio_id: int):
     return True
 
 
-def listar_tags(page=1, per_page=25):
-    return (
-        db.session.query(Tag)
-        .order_by(Tag.nombre)
-        .limit(per_page)
-        .offset((page - 1) * per_page)
-        .all()
-    )
+def listar_tags(page=1, per_page=25, q=None, sort=None, order="asc"):
+    query = db.session.query(Tag)
 
-def contar_tags():
-    return db.session.query(Tag).count()
+    #Filtro excluir Tags con baja=True
+    query = query.filter(Tag.baja == False) 
+
+    # Filtro de búsqueda
+    if q:
+        query = query.filter(Tag.nombre.ilike(f"%{q}%"))
+    
+    
+
+    # Armamos lista de criterios de orden
+    order_by_list = []
+    if sort:
+        for criterio in sort.split(","):  # Ej: "nombre,fecha"
+            if criterio == "nombre":
+                column = Tag.nombre
+            elif criterio == "fecha":
+                column = Tag.inserted_at
+            else:
+                continue
+
+            if order == "desc":
+                order_by_list.append(column.desc())
+            else:
+                order_by_list.append(column.asc())
+
+    # Si no hay sort, por defecto nombre asc
+    if not order_by_list:
+        order_by_list = [Tag.nombre.asc()]
+
+    query = query.order_by(*order_by_list)
+
+    return query.limit(per_page).offset((page - 1) * per_page).all()
+
+
+def contar_tags(q=None):
+    query = db.session.query(Tag)
+
+    #Filtro excluir Tags con baja=True
+    query = query.filter(Tag.baja == False) 
+
+    if q:
+        query = query.filter(Tag.nombre.ilike(f"%{q}%"))
+    return query.count()
+
 
 
 def obtener_tag(tag_id: int):
@@ -167,10 +230,20 @@ def crear_tag(form):
     nombre_tag = form.get("nombre")
     if not nombre_tag:
         return None
-    nuevo_tag = Tag(nombre=nombre_tag)
+    
+    # GENERACIÓN DEL SLUG
+    slug_tag = _generate_slug(nombre_tag)
+    # NOTA: Deberías implementar aquí la lógica para asegurar que el slug sea único
+    # si ya existe (ej: consultar la DB y si existe, generar 'slug-1', 'slug-2', etc.)
+    
+    nuevo_tag = Tag(nombre=nombre_tag, slug=slug_tag) # <--- Asignar el slug
     db.session.add(nuevo_tag)
-    db.session.commit()
-    return nuevo_tag
+    try:
+        db.session.commit()
+        return nuevo_tag
+    except Exception:
+        db.session.rollback()
+        return None
 
 def editar_tag(tag_id: int, form):
     tag = obtener_tag(tag_id)
@@ -180,17 +253,37 @@ def editar_tag(tag_id: int, form):
     nuevo_nombre = form.get("nombre")
     if nuevo_nombre and nuevo_nombre != tag.nombre:
         tag.nombre = nuevo_nombre
-        db.session.commit()
-        return True
-    return False
+        
+        # REGENERACIÓN DEL SLUG si el nombre cambia
+        tag.slug = _generate_slug(nuevo_nombre) # <--- REGENERAR SLUG
+        
+        try:
+            db.session.commit()
+            return True
+        except Exception:
+            db.session.rollback()
+            return False
+            
+    return True
+
+# ... (dentro de __init__.py) ...
 
 def eliminar_tag(tag_id: int):
+    """
+    Realiza la eliminación lógica de un Tag (establece 'baja' en True).
+    Retorna: True (éxito), "vinculado" (error por vínculos), False (Tag no encontrado).
+    """
     tag = obtener_tag(tag_id)
     if not tag:
         return False
-    # No se puede eliminar si hay sitios asociados (esto lo manejará la DB con restricciones)
-    # Por simplicidad, asumimos que la relación muchos a muchos se limpia automáticamente
-    # o que la BD tiene ON DELETE CASCADE. Aquí solo intentamos borrar el objeto.
-    db.session.delete(tag)
+    
+    # OPCIONAL: Si quieres impedir la eliminación lógica mientras esté en uso:
+    if len(tag.sitios) > 0:
+        return "vinculado"
+    
+    # ELIMINACIÓN LÓGICA: Actualizar el campo 'baja'
+    tag.baja = True
     db.session.commit()
-    return True
+    return True 
+
+# ...
