@@ -20,17 +20,6 @@ def index():
 
     return render_template("manejo_usuarios/user_management.html", usuarios=usuarios, roles=roles)
 
-@bp.route("/register", methods=["GET"])
-def register():
-    roles = board.list_roles()
-    return render_template("manejo_usuarios/formAgregar.html", roles=roles)
-
-
-@bp.route("/register", methods=["POST"])
-def agregar():
-    while not(auth.crear_usuario(request.form)):
-        return redirect(url_for("usuarios.register"))
-    return redirect(url_for("usuarios.index"))
 
 @bp.route("/eliminar/<int:usuario_id>", methods=["POST"])
 def eliminar(usuario_id):
@@ -42,6 +31,39 @@ def eliminar(usuario_id):
     auth.baja_logica_usuario(auth.get_user_by_id(usuario_id))
 
     return redirect(url_for("usuarios.index"))
+
+
+@bp.route("/AgregarUsuario", methods=["GET","POST"])
+def agregar_usuario():
+    if request.method == "POST":
+        if (auth.comprobar_email(request.form["email"])):
+            flash("El email ya existe. Por favor, elija otro.", "error")
+            return redirect(url_for("usuarios.agregar_usuario"))
+        else:
+            nombre = request.form["nombre"]
+            apellido = request.form["apellido"]
+            email = request.form["email"]
+            password = request.form["password"]
+            rol = request.form.get("roles")
+            if rol == "Admin":
+                admin = True
+            else:
+                admin = False
+            #rol = request.form.get("rol") preguntarle al profe de los roles
+            auth.create_user(
+                nombre=nombre,
+                email=email,
+                password=password,
+                apellido=apellido,
+                activo=True,
+                esAdmin=admin,
+                idRol=rol,
+            )
+            # Redirigir al index dentro del blueprint
+            return redirect(url_for("usuarios.index"))
+    else:
+        roles = board.list_roles()
+        return render_template("manejo_usuarios/formAgregar.html", roles=roles)
 
 @bp.route("/modificar/<int:usuario_id>", methods=["GET", "POST"])
 def modificar(usuario_id):

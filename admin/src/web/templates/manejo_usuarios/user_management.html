@@ -1,14 +1,5 @@
 {% extends "layout.html" %}
 
-{%block head %}
-{{ super() }}
-{% endblock %}
-
-{%block header %}
-{% include 'header.html'%}
-{% endblock %}
-
-
 {% block title %}Manejo usuarios{% endblock %}
 
 {%block head %} 
@@ -114,46 +105,11 @@
 
 <!-- Botones -->
 <div class="center-btn">
-    <a href="{{ url_for('usuarios.register') }}">
+    <a href="{{ url_for('usuarios.agregar_usuario') }}">
         <button id="agregarUsuarioBtn">Agregar usuario</button>
     </a>
 </div>
 
-<<<<<<< HEAD
-=======
-<!-- Formulario oculto -->
-<form id="miFormulario" action="{{ url_for('usuarios.agregar') }}" method="post">
-
-    <div style="display: flex; gap: 10px;">
-        <div style="flex: 1;">
-            <label for="nombre">Nombre:</label>
-            <input type="text" id="nombre" name="nombre" required>
-        </div>
-        <div style="flex: 1;">
-            <label for="apellido">Apellido:</label>
-            <input type="text" id="apellido" name="apellido" required>
-        </div>
-    </div>
-
-    <label for="password">Contraseña:</label>
-    <input type="text" id="password" name="password" required>
-
-    <label for="email">Email:</label>
-    <input type="email" id="email" name="email" required>
-
-    <label>Rol:</label>
-    <div style="display: flex; gap: 20px; margin-bottom: 10px;">
-        {% for rol in roles %}
-        <div>
-            <input type="radio" id="rol_{{ rol.id }}" name="roles" value="{{ rol.id }}">
-            <label for="rol_{{ rol.id }}">{{ rol.nombre }}</label>
-        </div>
-        {% endfor %}
-    </div>
-
-    <button type="submit">Enviar</button>
-</form>
->>>>>>> 936d1e6452da0d7219c91d233dcde07ae06f9624
 
 <script>
     function toggleDetalles(id) {

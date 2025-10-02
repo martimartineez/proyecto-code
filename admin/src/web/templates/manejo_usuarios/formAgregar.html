@@ -10,6 +10,14 @@
 
 {%block content %}
 
+{%with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="flash {{ category }}">{{ message }}</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
 <form method="post">
     <label>Nombre:</label>
     <input type="text" name="nombre" required><br>
@@ -24,12 +32,15 @@
     <input type="email" name="email" required><br>
 
     <label>Rol:</label>
-    <select name="rol" required>
-        <option value="">Seleccione rol</option>
+    <div>
         {% for rol in roles %}
-        <option value="{{ rol.id }}">{{ rol.nombre }}</option>
+        <div>
+            <input type="checkbox" id="rol_{{ rol.id }}" name="roles" value="{{ rol.id }}">
+            <label for="rol_{{ rol.id }}">{{ rol.nombre }}</label>
+        </div>
         {% endfor %}
-    </select><br>
+    </div>
+
 
     <input type="submit" value="Agregar Usuario">
 </form>
