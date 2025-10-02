@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+{% block title %} agregarUsuario {% endblock %}
+{%block head %} 
+    {{ super() }}
+{% endblock %}
+
+{%block header %}
+    {% include 'header.html'%}
+{% endblock %}
+
+{%block content %}
+
+<form method="post">
+    <label>Nombre:</label>
+    <input type="text" name="nombre" required><br>
+
+    <label>Apellido:</label>
+    <input type="text" name="apellido" required><br>
+
+    <label>Password:</label>
+    <input type="password" name="password" required><br>
+
+    <label>Email:</label>
+    <input type="email" name="email" required><br>
+
+    <label>Rol:</label>
+    <select name="rol" required>
+        <option value="">Seleccione rol</option>
+        {% for rol in roles %}
+        <option value="{{ rol.id }}">{{ rol.nombre }}</option>
+        {% endfor %}
+    </select><br>
+
+    <input type="submit" value="Agregar Usuario">
+</form>
+
+{% endblock %}

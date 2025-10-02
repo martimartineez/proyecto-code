@@ -15,30 +15,16 @@ def index():
 
     return render_template("manejo_usuarios/user_management.html", usuarios=usuarios, roles=roles)
 
-@bp.route("/manejo_usuarios", methods=["POST"])
+@bp.route("/register", methods=["GET"])
+def register():
+    roles = board.list_roles()
+    return render_template("manejo_usuarios/formAgregar.html", roles=roles)
+
+
+@bp.route("/register", methods=["POST"])
 def agregar():
-    nombre = request.form["nombre"]
-    apellido = request.form["apellido"]
-    email = request.form["email"]
-    password = request.form["password"]
-    rol = request.form.get("roles")
-    if rol == "Admin":
-        admin = True
-    else:
-        admin = False
-    #rol = request.form.get("rol") preguntarle al profe de los roles
-
-    auth.create_user(
-        nombre=nombre,
-        email=email,
-        password=password,
-        apellido=apellido,
-        activo=True,
-        esAdmin=admin,
-        idRol=rol
-    )
-
-    # Redirigir al index dentro del blueprint
+    while not(auth.crear_usuario(request.form)):
+        return redirect(url_for("usuarios.register"))
     return redirect(url_for("usuarios.index"))
 
 @bp.route("/eliminar/<int:usuario_id>", methods=["POST"])
