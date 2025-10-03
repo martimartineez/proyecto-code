@@ -107,3 +107,40 @@ def ver_detalles(usuario_id):
     
     return redirect(url_for("usuarios.index"))
 
+
+@bp.route("/cambiar_contraseña/<int:usuario_id>", methods=["GET", "POST"])
+@login_required
+def cambiar_contraseña(usuario_id):
+    user = auth.get_user_by_id(usuario_id)
+    step = request.form.get("step")
+    # Paso 1: verificar contraseña actual
+    if step == "verify":
+        contraseña_actual = request.form.get("contraseña_actual")
+
+        if user and auth.check_password(user, contraseña_actual):
+            flash("Contraseña actual verificada.", "success")
+            return render_template("manejo_usuarios/cambiar_contraseña.html", verified=True)
+        else:
+            flash("La contraseña actual no es correcta.", "danger")
+
+
+    #return render_template("manejo_usuarios/cambiar_contraseña.html", usuario=user)
+
+    # Paso 2: guardar nueva contraseña
+    elif step == "change":
+        nueva = request.form.get("nueva_contraseña")
+        repetir = request.form.get("repetir_contraseña")
+
+        if nueva != repetir:
+            flash("Las contraseñas no coinciden.", "danger")
+            return render_template("manejo_usuarios/cambiar_contraseña.html", verified=True)
+
+        auth.update_password(usuario_id, nueva)
+
+        flash("Contraseña cambiada correctamente.", "success")
+        return redirect(url_for("usuarios.index"))
+
+    return render_template("manejo_usuarios/cambiar_contraseña.html", verified=False)
+
+
+

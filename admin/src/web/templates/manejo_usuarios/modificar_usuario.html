@@ -4,75 +4,41 @@
 
 {% block content %}
 <h1>Usuario</h1>
-<div class="modificar-usuario-container">
-    <table class="modificar-usuario-tabla">
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Apellido</th>
-                <th>Email</th>
-                <th>Rol</th>
-                <th>Activo</th>
-                <th>Es Admin</th>
-                <th>Fecha de creación</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>{{ usuario.nombre }}</td>
-                <td>{{ usuario.apellido }}</td>
-                <td>{{ usuario.email }}</td>
-                <td>
-                    {% for rol in roles %}
-                    {% if rol.id == usuario.idRol %}
-                    {{ rol.nombre }}
-                    {% endif %}
-                    {% endfor %}
-                </td>
-                <td>{{ usuario.activo }}</td>
-                <td>{{ usuario.esAdmin }}</td>
-                <td>{{ usuario.fechaCreacion }}</td>
-            </tr>
-        </tbody>
-    </table>
 
-    <!-- Formulario para modificar usuario -->
-    <form class="modificar-usuario-form" action="{{ url_for('usuarios.modificar', usuario_id=usuario.id) }}"
-        method="post">
-        <div class="modificar-usuario-flex">
-            <div style="flex: 1;">
-                <label for="nombre">Nombre:</label>
-                <input type="text" id="nombre" name="nombre" value="{{ usuario.nombre }}">
-            </div>
-            <div style="flex: 1;">
-                <label for="apellido">Apellido:</label>
-                <input type="text" id="apellido" name="apellido" value="{{ usuario.apellido }}">
-            </div>
+<!-- Formulario para modificar usuario -->
+<form class="modificar-usuario-form" action="{{ url_for('usuarios.modificar', usuario_id=usuario.id) }}" method="post">
+    <div class="modificar-usuario-flex">
+        <div style="flex: 1;">
+            <label for="nombre">Nombre:</label>
+            <input type="text" id="nombre" name="nombre" value="{{ usuario.nombre }}" required>
         </div>
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" value="{{ usuario.email }}">
-
-        <label for="password">Contraseña:</label>
-        <input type="text" id="password" name="password" placeholder="Nueva contraseña">
-
-        <label>Rol:</label>
-        <div style="display: flex; gap: 20px; margin-bottom: 10px;">
-            {% for rol in roles %}
-            <div>
-                <input type="radio" id="rol_{{ rol.id }}" name="rol" value="{{ rol.id }}" {% if rol.id==usuario.idRol
-                    %}checked{% endif %}>
-                <label for="rol_{{ rol.id }}">{{ rol.nombre }}</label>
-            </div>
-            {% endfor %}
+        <div style="flex: 1;">
+            <label for="apellido">Apellido:</label>
+            <input type="text" id="apellido" name="apellido" value="{{ usuario.apellido }}" required>
         </div>
+    </div>
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" value="{{ usuario.email }}" required>
 
-        <label for="activo">Activo:</label>
-        <select id="activo" name="activo">
-            <option value="True" {% if usuario.activo %}selected{% endif %}>Sí</option>
-            <option value="False" {% if not usuario.activo %}selected{% endif %}>No</option>
-        </select>
+    <label>Rol:</label>
+    <div style="display: flex; gap: 20px; margin-bottom: 10px;">
+        {% for rol in roles %}
+        <div>
+            <input type="checkbox" id="rol_{{ rol.id }}" name="rol" value="{{ rol.id }}" {% if rol.id==usuario.idRol
+                %}checked{% endif %}>
+            <label for="rol_{{ rol.id }}">{{ rol.nombre }}</label>
+        </div>
+        {% endfor %}
+    </div>
 
-        <button type="submit" style="margin-top: 15px;">Guardar cambios</button>
-    </form>
+    <button type="submit" style="margin-top: 15px;">Guardar cambios</button>
+</form>
+
+<form class="modificar-usuario-form" action="{{ url_for('usuarios.cambiar_contraseña', usuario_id=usuario.id) }}"
+    method="get">
+    <label for="">Contraseña</label>
+    <button type="submit">Cambiar contraseña</button>
+</form>
+
 </div>
 {% endblock %}

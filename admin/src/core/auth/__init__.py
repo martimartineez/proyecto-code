@@ -22,6 +22,14 @@ def create_user(**kwargs):
 
     return user
 
+def update_password(usuario_id, new_password):
+    user = get_user_by_id(usuario_id)
+    hash_password = bcrypt.generate_password_hash(new_password).decode('utf-8')
+    user.password = hash_password
+    db.session.commit()
+    return user
+
+
 def get_user_by_id(user_id):
     return db.session.query(Usuario).filter(Usuario.id == user_id).first()
 
@@ -30,9 +38,12 @@ def find_user(email):
 
 def check_user(email,password):
     user = find_user(email)
-    if user and bcrypt.check_password_hash(user.password, password):
+    if user and check_password(user,password):
         return user
     return None
+
+def check_password(user,password):
+    return bcrypt.check_password_hash(user.password, password)
 
 
 def comprobar_email(email: str):
