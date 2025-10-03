@@ -18,7 +18,7 @@ def agregar_sitio():
     if request.method == "POST":
         # Procesar datos y agregar sitio
         board.crear_sitio(request.form)
-        return redirect(url_for("sitios_historicos.index"))
+        return redirect(url_for("sitios_historicos.busqueda_avanzada"))
     provincias = board.listar_provincias()
     ciudades = board.listar_ciudades()
     categorias = board.listar_categorias()
@@ -35,7 +35,7 @@ def editar_sitio(sitio_id):
     if request.method == "POST":
         # Procesar edición del sitio
         board.editar_sitio(sitio_id, request.form)
-        return redirect(url_for("sitios_historicos.index"))
+        return redirect(url_for("sitios_historicos.busqueda_avanzada"))
     sitio = board.obtener_sitio(sitio_id)
     provincias = board.listar_provincias()
     ciudades = board.listar_ciudades()
@@ -52,7 +52,7 @@ def editar_sitio(sitio_id):
 @bp.post("/<int:sitio_id>/eliminar")
 def eliminar_sitio(sitio_id):
     board.eliminar_sitio(sitio_id)
-    return redirect(url_for("sitios_historicos.index"))
+    return redirect(url_for("sitios_historicos.busqueda_avanzada"))
 
 
 @bp.route("/", methods=["GET"])

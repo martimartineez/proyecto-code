@@ -12,7 +12,7 @@
 
 <h2>Editar Sitio Histórico</h2>
 
-<a href="{{ url_for('sitios_historicos.index') }}">Volver</a>
+<a href="{{ url_for('sitios_historicos.busqueda_avanzada') }}">Volver</a>
 
 <form method="post" action="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id) }}">
     <label>Nombre:</label>
