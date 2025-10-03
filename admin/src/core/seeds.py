@@ -1,7 +1,11 @@
 from src.core import board
+from src.core import auth
 from src.core.database import db
 from src.core.board.ciudad import Ciudad
 from src.core.board.categoria_sitio import CategoriaSitio
+from src.core.board.rol import Rol
+from src.core.auth import Usuario
+from src.core.board.sitio_historico import SitioHistorico
 
 
 def _get_ciudad_id(nombre_ciudad: str) -> int | None:
@@ -19,44 +23,153 @@ def _get_categoria_id(nombre_categoria: str) -> int | None:
 
 
 def run():
+    # Crear rol y usuario "System" si no existen
+    admin_role = db.session.query(Rol).filter(Rol.nombre == "Admin").first()
+    if not admin_role:
+        admin_role = Rol(nombre="Admin")
+        db.session.add(admin_role)
+        db.session.flush()
+
+    system_user = db.session.query(Usuario).filter(Usuario.email == "system@example.com").first()
+    if not system_user:
+        system_user = Usuario(
+            nombre="System",
+            apellido="User",
+            password="changeme",
+            email="system@example.com",
+            activo=True,
+            esAdmin=True,
+            idRol=admin_role.id,
+        )
+        db.session.add(system_user)
+        db.session.flush()
+
+    db.session.commit()
+
     # Crear sitios con el esquema actual utilizando board.crear_sitio
     # Asegúrate de haber corrido reset-db para tener ciudades y categorías seed-eadas
+    if db.session.query(SitioHistorico).count() > 0:
+        return
     data = [
         {
-            "nombre": "Sitio Histórico 1",
-            "descripcion": "Descripción breve del sitio histórico 1",
-            "descripcion_completa": "Descripción completa del sitio histórico 1",
+            "nombre": "Casa Rosada",
+            "descripcion": "Sede del Poder Ejecutivo de la República Argentina",
+            "descripcion_completa": "Edificio gubernamental histórico, sede de la Presidencia de la Nación Argentina. Su característico color rosa y su ubicación en Plaza de Mayo la convierten en un ícono nacional.",
             "ciudad_nombre": "La Plata",
-            "categoria_nombre": "Monumento",
-            "latitud": -34.921,
-            "longitud": -57.954,
+            "categoria_nombre": "Edificio Histórico",
+            "latitud": -34.6083,
+            "longitud": -58.3712,
             "estado_conservacion": "Bueno",
-            "fecha_inauguracion": "1850-01-01",
+            "fecha_inauguracion": "1884-05-25",
             "fecha_registro": "2022-01-15",
         },
         {
-            "nombre": "Sitio Histórico 2",
-            "descripcion": "Descripción breve del sitio histórico 2",
-            "descripcion_completa": "Descripción completa del sitio histórico 2",
-            "ciudad_nombre": "Rosario",
+            "nombre": "Teatro Colón",
+            "descripcion": "Principal teatro de ópera de Argentina",
+            "descripcion_completa": "Considerado uno de los mejores teatros líricos del mundo por su acústica y arquitectura. Sede de importantes presentaciones de ópera, ballet y música clásica.",
+            "ciudad_nombre": "La Plata",
             "categoria_nombre": "Edificio Histórico",
-            "latitud": -32.944,
-            "longitud": -60.650,
-            "estado_conservacion": "Regular",
-            "fecha_inauguracion": "1900-01-01",
-            "fecha_registro": "2023-03-22",
+            "latitud": -34.6010,
+            "longitud": -58.3831,
+            "estado_conservacion": "Bueno",
+            "fecha_inauguracion": "1908-05-25",
+            "fecha_registro": "2022-02-20",
         },
         {
-            "nombre": "Sitio Histórico 3",
-            "descripcion": "Descripción breve del sitio histórico 3",
-            "descripcion_completa": "Descripción completa del sitio histórico 3",
+            "nombre": "Catedral de La Plata",
+            "descripcion": "Mayor templo neogótico de América del Sur",
+            "descripcion_completa": "Imponente catedral neogótica, una de las más grandes de América Latina. Sus torres alcanzan los 112 metros de altura y su construcción llevó casi 100 años.",
+            "ciudad_nombre": "La Plata",
+            "categoria_nombre": "Monumento",
+            "latitud": -34.9205,
+            "longitud": -57.9537,
+            "estado_conservacion": "Bueno",
+            "fecha_inauguracion": "1932-11-19",
+            "fecha_registro": "2022-03-10",
+        },
+        {
+            "nombre": "Monumento Nacional a la Bandera",
+            "descripcion": "Monumento histórico dedicado a la bandera argentina",
+            "descripcion_completa": "Complejo monumental que homenajea a la bandera nacional y a su creador Manuel Belgrano. Incluye una torre mirador y una llama votiva eterna.",
+            "ciudad_nombre": "Rosario",
+            "categoria_nombre": "Monumento",
+            "latitud": -32.9444,
+            "longitud": -60.6306,
+            "estado_conservacion": "Bueno",
+            "fecha_inauguracion": "1957-06-20",
+            "fecha_registro": "2022-06-15",
+        },
+        {
+            "nombre": "Plaza San Martín",
+            "descripcion": "Plaza histórica en el centro de Mendoza",
+            "descripcion_completa": "Plaza principal de la ciudad, nombrada en honor al General José de San Martín. Punto de encuentro histórico y centro cívico de la ciudad.",
             "ciudad_nombre": "Mendoza",
             "categoria_nombre": "Plaza",
-            "latitud": -32.889,
-            "longitud": -68.845,
-            "estado_conservacion": "Malo",
-            "fecha_inauguracion": "1750-01-01",
-            "fecha_registro": "2021-11-05",
+            "latitud": -32.8908,
+            "longitud": -68.8272,
+            "estado_conservacion": "Bueno",
+            "fecha_inauguracion": "1813-01-01",
+            "fecha_registro": "2022-07-20",
+        },
+        {
+            "nombre": "Basílica de San Francisco",
+            "descripcion": "Templo histórico del siglo XIX",
+            "descripcion_completa": "Iglesia de estilo neoclásico italiano, sobreviviente del terremoto de 1861. Importante centro religioso y cultural de la ciudad.",
+            "ciudad_nombre": "Mendoza",
+            "categoria_nombre": "Edificio Histórico",
+            "latitud": -32.8892,
+            "longitud": -68.8275,
+            "estado_conservacion": "Regular",
+            "fecha_inauguracion": "1875-10-15",
+            "fecha_registro": "2022-08-05",
+        },
+        {
+            "nombre": "Palacio Municipal de Rosario",
+            "descripcion": "Sede del gobierno municipal de Rosario",
+            "descripcion_completa": "Edificio de estilo ecléctico francés, sede del poder ejecutivo municipal. Su arquitectura refleja la prosperidad de principios del siglo XX.",
+            "ciudad_nombre": "Rosario",
+            "categoria_nombre": "Edificio Histórico",
+            "latitud": -32.9442,
+            "longitud": -60.6332,
+            "estado_conservacion": "Bueno",
+            "fecha_inauguracion": "1896-07-01",
+            "fecha_registro": "2022-09-12",
+        },
+        {
+            "nombre": "Plaza Independencia",
+            "descripcion": "Plaza principal de Mendoza",
+            "descripcion_completa": "Principal espacio verde de la ciudad, diseñada después del terremoto de 1861. Centro neurálgico de actividades culturales y recreativas.",
+            "ciudad_nombre": "Mendoza",
+            "categoria_nombre": "Plaza",
+            "latitud": -32.8894,
+            "longitud": -68.8457,
+            "estado_conservacion": "Bueno",
+            "fecha_inauguracion": "1861-12-01",
+            "fecha_registro": "2022-10-20",
+        },
+        {
+            "nombre": "Museo de La Plata",
+            "descripcion": "Principal museo de ciencias naturales del país",
+            "descripcion_completa": "Museo de historia natural y antropología más importante de Sudamérica. Su colección incluye fósiles, minerales y piezas arqueológicas.",
+            "ciudad_nombre": "La Plata",
+            "categoria_nombre": "Edificio Histórico",
+            "latitud": -34.9052,
+            "longitud": -57.9493,
+            "estado_conservacion": "Bueno",
+            "fecha_inauguracion": "1888-11-19",
+            "fecha_registro": "2022-11-15",
+        },
+        {
+            "nombre": "Antiguo Mercado Central",
+            "descripcion": "Ex mercado convertido en centro cultural",
+            "descripcion_completa": "Edificio histórico que funcionó como mercado central y ahora es un importante centro cultural. Conserva su arquitectura original del siglo XIX.",
+            "ciudad_nombre": "Rosario",
+            "categoria_nombre": "Edificio Histórico",
+            "latitud": -32.9465,
+            "longitud": -60.6393,
+            "estado_conservacion": "Regular",
+            "fecha_inauguracion": "1889-05-01",
+            "fecha_registro": "2022-12-01",
         },
     ]
 
@@ -75,9 +188,51 @@ def run():
             "estado_conservacion": item["estado_conservacion"],
             "fecha_inauguracion": item["fecha_inauguracion"],
             "fecha_registro": item["fecha_registro"],
+            "visible": item.get("visible", "True"),
+            "baja": item.get("baja", "False"),
         }
-        created.append(board.crear_sitio(form_like))
+        created.append(board.crear_sitio_seed(form_like))
 
     print("Seeded sitios:")
     for s in created:
         print(" ", s)
+
+    print("Creating roles...")
+    rol_admin = board.create_rol(nombre="Admin")
+    rol_editor = board.create_rol(nombre="Editor")
+    rol_user = board.create_rol(nombre="User")
+    print("Created roles! 👍🏻")
+
+
+
+    print("Creating users...")
+
+    user1 = auth.create_user(
+        nombre="Pepe",
+        apellido="Argento",
+        password="secreto",
+        email="a@gmail.com",
+        activo=True,
+        esAdmin=True,
+        idRol=rol_admin.id
+    )
+    user2 = auth.create_user(
+        nombre="Moni",
+        apellido="Argento",
+        password="secreto",
+        email="b@gmail.com",
+        activo=True,
+        esAdmin=True,
+        idRol=rol_admin.id
+    )
+    user3 = auth.create_user(
+        nombre="Coqui",
+        apellido="Argento",
+        password="secreto",
+        email="c@gmail.com",
+        activo=True,
+        esAdmin=True,
+        idRol=rol_admin.id
+    )
+
+    print("Created users! 👍🏻")

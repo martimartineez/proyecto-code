@@ -1,0 +1,36 @@
+.flashes {
+    margin: 20px auto;
+    max-width: 800px;
+    padding: 0;
+}
+
+.flash {
+    padding: 12px 18px;
+    margin-bottom: 12px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    color: #fff;
+}
+
+/* Colores según categoría */
+.flash.success {
+    background-color: #4CAF50;
+    /* verde */
+}
+
+.flash.error {
+    background-color: #F44336;
+    /* rojo */
+}
+
+.flash.warning {
+    background-color: #FF9800;
+    /* naranja */
+    color: #000;
+}
+
+.flash.info {
+    background-color: #2196F3;
+    /* azul */
+}

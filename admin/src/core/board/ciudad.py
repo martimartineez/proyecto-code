@@ -15,12 +15,12 @@ class Ciudad(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     nombre: Mapped[str] = mapped_column(String(120), nullable=False)
 
-    idProvincia: Mapped[int] = mapped_column(Integer, ForeignKey("provincias.id"), nullable=False)
+    idProvincia: Mapped[int] = mapped_column(
+        Integer, ForeignKey("provincias.id"), nullable=False
+    )
     provincia: Mapped["Provincia"] = relationship(back_populates="ciudades")
 
     sitios: Mapped[list["SitioHistorico"]] = relationship(back_populates="ciudad")
 
     def __repr__(self):
         return f"<Ciudad(id={self.id}, nombre={self.nombre}, idProvincia={self.idProvincia})>"
-
-

@@ -10,8 +10,8 @@
 {% block content %}
 
 <!-- Leaflet CSS y JS -->
-<link rel="stylesheet" href="{{ url_for('static', filename='dist/leaflet.css') }}">
-<script src="{{ url_for('static', filename='dist/leaflet.js') }}"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
 <style>
   #map { height: 400px; width: 100%; margin-bottom: 10px; border: 1px solid #ccc; }
@@ -21,7 +21,7 @@
 
 <h2>Agregar Sitio Histórico</h2>
 
-<a href="{{ url_for('sitios_historicos.index') }}">Volver</a>
+<a href="{{ url_for('sitios_historicos.busqueda_avanzada') }}">Volver</a>
 
 <form method="post">
     <label>Nombre:</label>
@@ -70,6 +70,18 @@
 
     <label>Fecha Registro:</label>
     <input type="date" name="fecha_registro"><br>
+
+    <label>Tags:</label><br>
+    <div style="border: 1px solid #ccc; padding: 10px; max-height: 150px; overflow-y: auto;">
+        {% for tag in tags %}
+            <input type="checkbox" id="tag_{{ tag.id }}" name="tags" value="{{ tag.id }}">
+            <label for="tag_{{ tag.id }}">{{ tag.nombre }}</label><br>
+        {% endfor %}
+        {% if not tags %}
+          <p>No hay tags disponibles.</p>
+        {% endif %}
+    </div>
+    <br>
 
     <input type="hidden" name="latitud" id="latitud">
     <input type="hidden" name="longitud" id="longitud">

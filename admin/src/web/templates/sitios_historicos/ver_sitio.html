@@ -1,0 +1,142 @@
+{% extends "layout.html" %}
+{% block title %}Detalle del sitio{% endblock %}
+{% block content %}
+<h1>Sitio Histórico</h1>
+<a href="{{ url_for('sitios_historicos.agregar_sitio', next=request.path) }}">Agregar sitio</a>
+
+<table>
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Descripción Completa</th>
+            <th>Ciudad</th>
+            <th>Provincia</th>
+            <th>Latitud</th>
+            <th>Longitud</th>
+            <th>Estado Conservación</th>
+            <th>Año de inauguración</th>
+            <th>Categoría</th>
+            <th>Fecha Registro</th>
+            <th>Visible</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ sitio.nombre }}</td>
+            <td>{{ sitio.descBreve }}</td>
+            <td>{{ sitio.descCompleta }}</td>
+            <td>{{ sitio.ciudad.nombre if sitio.ciudad else 'N/A' }}</td>
+            <td>{{ sitio.ciudad.provincia.nombre if sitio.ciudad and sitio.ciudad.provincia else 'N/A' }}</td>
+            <td>{{ sitio.latitud }}</td>
+            <td>{{ sitio.longitud }}</td>
+            <td>{{ sitio.estadoConservacion }}</td>
+            <td>{{ sitio.anioInauguracion }}</td>
+            <td>{{ sitio.categoria.nombre if sitio.categoria else 'N/A' }}</td>
+            <td>{{ sitio.fechaRegistro.strftime('%Y-%m-%d') if sitio.fechaRegistro else 'N/A' }}</td>
+            <td>{{ 'Sí' if sitio.visible else 'No' }}</td>
+             <td>
+                <a href="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id, next=request.path) }}">
+                     <button type="button">Editar</button>
+                </a>
+                <form action="{{ url_for('sitios_historicos.eliminar_sitio', sitio_id=sitio.id)}}" method="post" style="display:inline;">
+                    <button type="submit" onclick="return confirm('¿Estás seguro de que quieres eliminar el sitio historico: {{ sitio.nombre }}?');">Eliminar</button>
+                </form>
+            </td>
+        </tr>
+</table>
+
+<div style="max-width: 600px; margin: 20px auto;">
+    <h3>Ubicación en el mapa</h3>
+    <div id="map"
+         style="height: 400px; border: 1px solid #ccc;"
+         data-lat="{{ sitio.latitud or -34.921 }}"
+         data-lng="{{ sitio.longitud or -57.954 }}">
+    </div>
+</div>
+
+<a href="{{ url_for('sitios_historicos.busqueda_avanzada') }}">Volver</a>
+<a href="/">Volver a inicio</a>
+
+<!-- Leaflet CSS y JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+<script>
+  // Obtener coordenadas desde atributos data
+  var mapDiv = document.getElementById('map');
+  var lat = parseFloat(mapDiv.getAttribute('data-lat'));
+  var lng = parseFloat(mapDiv.getAttribute('data-lng'));
+
+  // Crear mapa en modo solo visualización
+  var map = L.map('map', {
+    center: [lat, lng],
+    zoom: 13,
+    dragging: false,
+    scrollWheelZoom: false,
+    doubleClickZoom: false,
+    boxZoom: false,
+    keyboard: false,
+    zoomControl: false
+  });
+
+  // Capa base OpenStreetMap
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+  }).addTo(map);
+
+  // Marcador fijo
+  L.marker([lat, lng]).addTo(map);
+</script>
+<hr>
+<h2>Historial de cambios</h2>
+
+<form method="get" action="{{ url_for('sitios_historicos.ver_sitio', sitio_id=sitio.id) }}" style="margin-bottom:10px;">
+  <label>Usuario:</label>
+  <select name="usuario_id" style="min-width:240px;">
+    <option value="">Todos</option>
+    {% if usuarios_historial %}
+      {% for u in usuarios_historial %}
+        <option value="{{ u.id }}" {% if filtros.usuario_id == u.id %}selected{% endif %}>{{ u.label }}</option>
+      {% endfor %}
+    {% endif %}
+  </select>
+
+  <label>Acción:</label>
+  <select name="accion">
+    <option value="">Todas</option>
+    {% for a in ['CREATED', 'UPDATED', 'DELETED', 'STATE_CHANGED', 'TAGS_CHANGED', 'IMAGES_CHANGED'] %}
+    {% set a_label =
+      'Creado' if a=='CREATED' else
+      'Actualizado' if a=='UPDATED' else
+      'Eliminado' if a=='DELETED' else
+      'Cambio de estado' if a=='STATE_CHANGED' else
+      'Cambio de etiquetas' if a=='TAGS_CHANGED' else
+      'Imágenes actualizadas' if a=='IMAGES_CHANGED' else a %}
+    <option value="{{ a }}" {% if filtros.accion == a %}selected{% endif %}>{{ a_label }}</option>
+    {% endfor %}
+  </select>
+
+  <label>Desde:</label>
+  <input type="date" name="desde" value="{{ filtros.desde or '' }}">
+
+  <label>Hasta:</label>
+  <input type="date" name="hasta" value="{{ filtros.hasta or '' }}">
+
+  <button type="submit">Filtrar</button>
+</form>
+
+{% include 'sitios_historicos/_tabla_historial.html' %}
+
+{% set page = historial.page %}
+{% set pages = historial.pages %}
+<div style="margin-top:10px;">
+  {% if page > 1 %}
+  {% endif %}
+  <span style="margin:0 8px;">Página {{ page }} de {{ pages }}</span>
+  {% if page < pages %}
+    <a href="{{ url_for('sitios_historicos.ver_sitio', sitio_id=sitio.id, usuario_id=filtros.usuario_id, accion=filtros.accion, desde=filtros.desde, hasta=filtros.hasta, page=page+1) }}">Siguiente &raquo;</a>
+  {% endif %}
+</div>
+{% endblock %}
