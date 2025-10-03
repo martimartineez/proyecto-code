@@ -1,6 +1,7 @@
-:root {
-    --pri-color: #ff6906;
-    --sec-color: #ec843f;
+:root{
+    --pri-color: #2a4d69;
+    --sec-color: #4b86b4;
+    --trd-color: #e7eff6;
 }
 
 html {
@@ -21,14 +22,14 @@ body {
     padding: 0px;
     margin: 0px;
 }
-
-main {
+    
+main{   
     grid-row-start: 2;
-    grid-column-start: 2;
+    grid-column-start: 1;
     grid-row-end: 3;
     grid-column-end: 3;
-    display: block;
-    justify-content: center;
+    display: flexbox;
+    justify-items: center;
 }
 
 header {
@@ -49,11 +50,18 @@ header {
     color: white;
 }
 
-.title,
-.title:visited {
-    grid-column-start: 2;
-    text-decoration: none;
-    color: white;
+.nav-item{
+    padding: 10px;
+    font-size: 15px;
+    align-content: center;
+}
+
+#title, #title:visited{
+    font-weight: 600;
+    line-height: 1.1;
+    font-size: 20px;
+    max-width: 200px;
+    white-space: normal !important;
 }
 
 .user-menu {
@@ -65,7 +73,7 @@ header {
     justify-self: right;
 }
 
-.left-menu {
+#left-menu{
     grid-row-start: 1;
     grid-column-start: 1;
     justify-self: left;
@@ -77,46 +85,6 @@ header {
     height: 60px;
 }
 
-#dropbtn {
-    background-color: var(--pri-color);
-    border: none;
-    display: none;
-}
-
-#dropbtn:checked~#dropdown-content {
-    left: 0;
-}
-
-#dropdown-content {
-    grid-row-start: 1;
-    grid-column-start: 1;
-    grid-row-end: 4;
-    grid-column-end: 2;
-    display: grid;
-    grid-template-columns: repeat(1, 18.75em);
-    grid-template-rows: repeat(4, 25%);
-    position: absolute;
-    background-color: var(--sec-color);
-    min-width: 15%;
-    transition: 200ms ease;
-    height: 90%;
-    margin: 0.7em auto;
-    border: 1px solid var(--pri-color);
-    left: -100%;
-    z-index: 1001;
-}
-
-#dropdown-content a {
-    text-decoration: none;
-    font-weight: 700;
-    padding: 0.5em;
-    border: 5px solid var(--pri-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 22px;
-}
 
 #userbtn {
     background-color: var(--pri-color);
