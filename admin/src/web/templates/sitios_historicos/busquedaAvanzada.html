@@ -5,6 +5,7 @@
 
 <button id="btnFiltros">Mostrar filtros avanzados</button>
 
+
 <form method="get">
     <div id="filtrosAvanzados" style="display: none;">
         <label>Provincia:</label>
@@ -121,9 +122,13 @@
     </tbody>
 </table>
     {% else %}
-        <p>No se encontraron sitios históricos con los filtros aplicados.</p>
+        {% if request_args %}
+            <p>No se encontraron sitios históricos con los filtros aplicados.</p>
+        {% endif %}
     {% endif %}
 {% endif %}
+
+
 
 
 {% if total_pages > 1 %}
@@ -140,11 +145,13 @@
         </li>
         {% endif %}
         
-        {% for p in range(1, total_pages + 1) %}
-        <li {% if p == page %}class="active"{% endif %}>
-            <a href="{{ url_for('sitios_historicos.busqueda_avanzada', page=p, **args) }}">{{ p }}</a>
-        </li>
-        {% endfor %}
+        <div class="page-numbers">
+            {% for p in range(1, total_pages + 1) %}
+                <div class="page-item {% if p == page %}active{% endif %}">
+                    <a href="{{ url_for('sitios_historicos.busqueda_avanzada', page=p, **args) }}">{{ p }}</a>
+                </div>
+            {% endfor %}
+        </div>
         
         {% if page < total_pages %}
         <li>
@@ -158,19 +165,19 @@
 
 
 <script>
-  // Filtrado de ciudades por provincia (alta)
+ 
   (function() {
     var provSel = document.getElementById('provinciaSelect');
     var ciudadSel = document.getElementById('ciudadSelect');
     if (!provSel || !ciudadSel) return;
 
-    // Guardamos una copia de todas las opciones iniciales (incluye placeholder y todas las ciudades)
+    
     var allCityOptions = Array.from(ciudadSel.querySelectorAll('option'));
 
     function actualizarCiudades() {
       var provId = provSel.value;
 
-      // Resetear opciones dejando placeholder
+      
       ciudadSel.innerHTML = '';
       var placeholder = document.createElement('option');
       placeholder.value = '';
@@ -182,7 +189,7 @@
         return;
       }
 
-      // Agregar solo las ciudades de la provincia elegida
+      
       allCityOptions.forEach(function(opt) {
         var pid = opt.getAttribute('data-provincia');
         if (pid === provId) {
@@ -193,7 +200,7 @@
       ciudadSel.disabled = false;
     }
 
-    // Inicializa estado deshabilitado hasta que elijan provincia
+    
     ciudadSel.disabled = true;
     provSel.addEventListener('change', actualizarCiudades);
   })();
@@ -205,10 +212,10 @@
 
     btn.addEventListener('click', () => {
         if (filtros.style.display === 'none') {
-            filtros.style.display = 'block';  // mostrar
+            filtros.style.display = 'block';  
             btn.textContent = 'Ocultar filtros';
         } else {
-            filtros.style.display = 'none';   // ocultar
+            filtros.style.display = 'none';   
             btn.textContent = 'Mostrar filtros avanzados';
         }
     });
@@ -219,21 +226,20 @@ const btnLimpiar = document.getElementById('btnLimpiar');
 const formFiltros = document.querySelector('form');
 
 btnLimpiar.addEventListener('click', () => {
-    // Resetear el formulario
+    
     formFiltros.reset();
 
-    // Forzar que los selects que tenés customizados se vacíen
     document.getElementById('provinciaSelect').value = "";
     document.getElementById('ciudadSelect').value = "";
-    document.getElementById('ciudadSelect').disabled = true; // vuelve al estado inicial
+    document.getElementById('ciudadSelect').disabled = true; 
     document.querySelector('[name="categoria"]').value = "";
     document.querySelector('[name="estado_conservacion"]').value = "";
     document.querySelector('[name="tags"]').value = "";
+    document.querySelector('[name="buscar"]').value = "";  // <--- esto limpia la barra de búsqueda
     document.querySelector('[name="fecha_desde"]').value = "";
     document.querySelector('[name="fecha_hasta"]').value = "";
     document.querySelector('[name="visibilidad"]').value = "";
 
-    // Opcional: también limpiar orden
     document.querySelector('#sort_by').value = "fecha_registro";
     document.querySelector('#order').value = "asc";
 });
