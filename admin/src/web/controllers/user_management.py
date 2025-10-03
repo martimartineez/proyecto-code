@@ -22,6 +22,7 @@ def index():
 
 
 @bp.route("/eliminar/<int:usuario_id>", methods=["POST"])
+@login_required
 def eliminar(usuario_id):
     user = auth.get_user_by_id(usuario_id)
     # Eliminacion fisica
@@ -32,8 +33,18 @@ def eliminar(usuario_id):
 
     return redirect(url_for("usuarios.index"))
 
+@bp.route("/desactivar/<int:usuario_id>", methods=["POST"])
+@login_required
+def desactivar(usuario_id):
+    user = auth.get_user_by_id(usuario_id)
+    user.activo = False
+    auth.db.session.commit()
+
+    return redirect(url_for("usuarios.index"))
+
 
 @bp.route("/AgregarUsuario", methods=["GET","POST"])
+@login_required
 def agregar_usuario():
     if request.method == "POST":
         if (auth.comprobar_email(request.form["email"])):
@@ -66,6 +77,7 @@ def agregar_usuario():
         return render_template("manejo_usuarios/formAgregar.html", roles=roles)
 
 @bp.route("/modificar/<int:usuario_id>", methods=["GET", "POST"])
+@login_required
 def modificar(usuario_id):
     user = auth.get_user_by_id(usuario_id)
     roles = board.list_roles()
@@ -83,3 +95,15 @@ def modificar(usuario_id):
         return redirect(url_for("usuarios.index"))
 
     return render_template("manejo_usuarios/modificar_usuario.html", usuario=user, roles=roles) 
+
+@bp.route("/detalles/<int:usuario_id>", methods=["GET", "POST"])
+@login_required
+def ver_detalles(usuario_id):
+
+    if request.method == "POST":
+        usuario = auth.get_user_by_id(usuario_id)
+        roles = board.list_roles()
+        return render_template("manejo_usuarios/detalles_usuario.html", usuario=usuario, roles=roles)
+    
+    return redirect(url_for("usuarios.index"))
+

@@ -2,42 +2,40 @@
 
 {% block title %}Manejo usuarios{% endblock %}
 
-{%block head %} 
-    {{ super() }}
-    <title>Botón con formulario toggle</title>
-    <style>
-        /* El formulario empieza oculto */
-        #miFormulario {
-            display: none;
-            margin-top: 20px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            width: 250px;
-        }
+{%block head %}
+{{ super() }}
+<title>Botón con formulario toggle</title>
+<style>
+    /* El formulario empieza oculto */
+    #miFormulario {
+        display: none;
+        margin-top: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        width: 250px;
+    }
 
-        label {
-            display: block;
-            margin: 5px 0 3px;
-        }
+    label {
+        display: block;
+        margin: 5px 0 3px;
+    }
 
-        input {
-            width: 100%;
-            padding: 5px;
-            margin-bottom: 10px;
-        }
+    input {
+        width: 100%;
+        padding: 5px;
+        margin-bottom: 10px;
+    }
 
-        button {
-            padding: 8px 12px;
-            cursor: pointer;
-        }
-
-
-    </style>
+    button {
+        padding: 8px 12px;
+        cursor: pointer;
+    }
+</style>
 {% endblock %}
-    
+
 {%block header %}
-    {% include 'header.html'%}
+{% include 'header.html'%}
 {% endblock %}
 
 {% block content %}
@@ -65,37 +63,29 @@
         <tr>
             <td>{{ usuario.nombre }}</td>
             <td>{{ usuario.email }}</td>
-            <!-- Boton de eliminar -->
             <td>
-                <button type="button" onclick="toggleDetalles('detalles-{{ usuario.id }}')">Ver detalles</button>
-                <form action="{{ url_for('usuarios.eliminar', usuario_id=usuario.id) }}" method="post"
+                <!-- Boton ver detalles -->
+                <form action="{{ url_for('usuarios.ver_detalles', usuario_id=usuario.id) }}" method="post"
                     style="display:inline;">
-                    <button type="submit"
-                        onclick="return confirm('¿Seguro que deseas eliminar este usuario?');">Eliminar usuario</button>
+                    <button type="submit">Ver detalles</button>
                 </form>
                 <!-- Boton de modificar -->
                 <form action="{{ url_for('usuarios.modificar', usuario_id=usuario.id) }}" method="get"
                     style="display:inline;">
                     <button type="submit">Modificar</button>
                 </form>
-            </td>
-        </tr>
-        <!-- Boton Usuario detallado -->
-        <tr id="detalles-{{ usuario.id }}" style="display:none; background:#fff3e6;">
-            <td colspan="3">
-                <strong>Nombre:</strong> {{ usuario.nombre }}<br>
-                <strong>Apellido:</strong> {{ usuario.apellido }}<br>
-                <strong>Email:</strong> {{ usuario.email }}<br>
-                <strong>Activo:</strong> {{ usuario.activo }}<br>
-                <strong>Es Admin:</strong> {{ usuario.esAdmin }}<br>
-                <strong>Rol:</strong>
-                {% for rol in roles %}
-                {% if rol.id == usuario.idRol %}
-                {{ rol.nombre }}
-                {% endif %}
-                {% endfor %}
-                <br>
-                <strong>Fecha de creación:</strong> {{ usuario.fechaCreacion }}<br>
+                <!-- Boton de modificar -->
+                <form action="{{ url_for('usuarios.desactivar', usuario_id=usuario.id) }}" method="post"
+                    style="display:inline;">
+                    <button type="submit"
+                        onclick="return confirm('¿Seguro que deseas desactivar este usuario?');">Desactivar</button>
+                </form>
+                <!-- Boton eliminar -->
+                <form action="{{ url_for('usuarios.eliminar', usuario_id=usuario.id) }}" method="post"
+                    style="display:inline;">
+                    <button type="submit"
+                        onclick="return confirm('¿Seguro que deseas eliminar este usuario?');">Eliminar usuario</button>
+                </form>
             </td>
         </tr>
         {% endif %}
@@ -108,10 +98,13 @@
     <a href="{{ url_for('usuarios.agregar_usuario') }}">
         <button id="agregarUsuarioBtn">Agregar usuario</button>
     </a>
+    <a href="{{ url_for('auth.logout') }}">
+        <button id="agregarUsuarioBtn">Cerrar Sesion</button> <!-- Poner bien este boton 🙏🏻 -->
+    </a>
 </div>
 
 
-<script>
+<!-- <script>
     function toggleDetalles(id) {
         const fila = document.getElementById(id);
         if (fila.style.display === "none" || fila.style.display === "") {
@@ -120,7 +113,7 @@
             fila.style.display = "none";
         }
     }
-</script>
+</script> -->
 
 
 <a href="{{ url_for('home') }}" class="Volver">Volver al inicio</a>
