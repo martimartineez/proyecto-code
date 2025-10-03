@@ -1,5 +1,5 @@
 from src.core import board
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, session
 from src.core.auth import Usuario
 from src.core.board import SitioHistorico
 from src.core.database import db
@@ -13,6 +13,20 @@ from src.web.handlers.auth import login_required
 
 
 bp = Blueprint("sitios_historicos", __name__, url_prefix="/sitioshistoricos")
+
+def _current_user_id() -> int | None:
+    """Return authenticated user id. Prefer session['user_id']; fallback to email lookup for legacy sessions."""
+    try:
+        uid = session.get("user_id")
+        if uid:
+            return uid
+        email = session.get("user")
+        if not email:
+            return None
+        u = db.session.query(Usuario).filter(Usuario.email == email).first()
+        return u.id if u else None
+    except Exception:
+        return None
 
 
 def _label_es(campo: str) -> str:
@@ -42,6 +56,16 @@ def _fmt_value(campo: str, valor, ciudades_by_id: dict[int, str], categorias_by_
         return categorias_by_id.get(int(valor)) if valor is not None else "—"
     if isinstance(valor, bool):
         return "Sí" if valor else "No"
+    # Mostrar listas (ej: tags) como texto separado por comas
+    try:
+        from collections.abc import Iterable
+        if isinstance(valor, list):
+            # Si la lista es de strings, unirlas; si no, convertir cada item a str
+            if len(valor) == 0:
+                return "—"
+            return ", ".join([str(v) for v in valor])
+    except Exception:
+        pass
     # valores fecha en iso string
     try:
         if isinstance(valor, str) and len(valor) >= 10 and valor[4] == "-" and valor[7] == "-":
@@ -100,17 +124,27 @@ def _build_historial_view(historial: dict, ciudades, categorias, usuarios_by_id:
 @bp.get("/")
 @login_required
 def index():
-    sitios_historicos = board.listar_sitios()
-    return render_template("sitios_historicos/index.html", sitios=sitios_historicos)
+    page = request.args.get("page", 1, type=int)
+    per_page = 25
+    sitios_historicos = board.listar_sitios(page=page, per_page=per_page)
+    total = board.contar_sitios()
+    total_pages = (total + per_page - 1) // per_page  # redondeo hacia arriba
 
+    return render_template(
+        "sitios_historicos/index.html",
+        sitios=sitios_historicos,
+        page=page,
+        total_pages=total_pages
+    )
 
 @bp.route("/nuevo", methods=["GET", "POST"])
+@login_required
 def agregar_sitio():
     next_url = request.args.get("next", url_for("sitios_historicos.index"))
 
     if request.method == "POST":
         # Procesar datos y agregar sitio
-        board.crear_sitio(request.form)
+        board.crear_sitio(request.form, id_usuario=_current_user_id())
         return redirect(url_for("sitios_historicos.index"))
     provincias = board.listar_provincias()
     ciudades = board.listar_ciudades()
@@ -127,12 +161,13 @@ def agregar_sitio():
 
 
 @bp.route("/<int:sitio_id>/editar", methods=["GET", "POST"])
+@login_required
 def editar_sitio(sitio_id):
     next_url = request.args.get("next", url_for("sitios_historicos.index"))
 
     if request.method == "POST":
         # Procesar edición del sitio
-        board.editar_sitio(sitio_id, request.form)
+        board.editar_sitio(sitio_id, request.form, id_usuario=_current_user_id())
         return redirect(url_for("sitios_historicos.index"))
     sitio = board.obtener_sitio(sitio_id)
     # Filtros de historial
@@ -187,8 +222,9 @@ def editar_sitio(sitio_id):
 
 
 @bp.post("/<int:sitio_id>/eliminar")
+@login_required
 def eliminar_sitio(sitio_id):
-    board.eliminar_sitio(sitio_id)
+    board.eliminar_sitio(sitio_id, id_usuario=_current_user_id())
     return redirect(url_for("sitios_historicos.index"))
 
 @bp.route("/sitio/<int:sitio_id>")
