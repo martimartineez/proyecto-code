@@ -343,7 +343,7 @@ def busqueda_avanzada():
         total_pages=total_pages,
         total_results=total_results,
         request_args=request.args,
-        tags=tags
+        tags=tags,
     )
 
 

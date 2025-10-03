@@ -4,7 +4,9 @@
 
 {% block content %}
 <h1>Sitios Históricos</h1>
-<a href="{{ url_for('sitios_historicos.agregar_sitio') }}">Agregar Sitio Histórico</a>
+<a href="{{ url_for('sitios_historicos.agregar_sitio') }}">
+    <button type="button">Agregar sitio histórico</button>
+</a>
 <button id="btnFiltros">Mostrar filtros avanzados</button>
 
 <a href="{{ url_for('sitios_historicos.exportar_csv', **request_args) }}" class="btn btn-success">
@@ -157,21 +159,27 @@
 
         {% if page > 1 %}
         <li>
-            <a href="{{ url_for('sitios_historicos.busqueda_avanzada', page=page-1, **args) }}">Anterior</a>
+            <a href="{{ url_for('sitios_historicos.busqueda_avanzada', page=page-1, **args) }}">
+                <button type="button">Anterior</button>
+            </a>
         </li>
         {% endif %}
         
         <div class="page-numbers">
             {% for p in range(1, total_pages + 1) %}
                 <div class="page-item {% if p == page %}active{% endif %}">
-                    <a href="{{ url_for('sitios_historicos.busqueda_avanzada', page=p, **args) }}">{{ p }}</a>
+                    <a href="{{ url_for('sitios_historicos.busqueda_avanzada', page=p, **args) }}">
+                        <button type="button">{{ p }}</button>
+                    </a>
                 </div>
             {% endfor %}
         </div>
         
         {% if page < total_pages %}
         <li>
-            <a href="{{ url_for('sitios_historicos.busqueda_avanzada', page=page+1, **args) }}">Siguiente</a>
+            <a href="{{ url_for('sitios_historicos.busqueda_avanzada', page=page+1, **args) }}">
+                <button type="button">Siguiente</button>
+            </a>
         </li>
         {% endif %}
     </ul>
