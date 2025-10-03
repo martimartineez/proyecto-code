@@ -5,8 +5,11 @@
 <a href="{{ url_for('sitios_historicos.agregar_sitio') }}">Agregar Sitio Histórico</a>
 <button id="btnFiltros">Mostrar filtros avanzados</button>
 
-
+<a href="{{ url_for('sitios_historicos.exportar_csv', **request_args) }}" class="btn btn-success">
+   Exportar CSV
+</a>
 <form method="get">
+    
     <div id="filtrosAvanzados" style="display: none;">
         <label>Provincia:</label>
     <select id="provinciaSelect" name="provincia">
@@ -262,4 +265,6 @@ btnLimpiar.addEventListener('click', () => {
     document.querySelector('#order').value = "asc";
 });
 </script>
+
+
 {% endblock %}

@@ -10,6 +10,8 @@ from sqlalchemy import or_
 from src.core.board.tag import Tag
 from src.web.handlers.auth import login_required
 from sqlalchemy import func
+import io, csv
+from flask import Response
 
 
 
@@ -341,3 +343,88 @@ def busqueda_avanzada():
         tags=tags
     )
 
+
+@bp.route("/exportar_csv")
+def exportar_csv():
+    provincia_id = request.args.get("provincia")
+    ciudad_id = request.args.get("ciudad")
+    categoria_id = request.args.get("categoria")
+    estado_conservacion = request.args.get("estado_conservacion")
+    fecha_desde = request.args.get("fecha_desde")
+    fecha_hasta = request.args.get("fecha_hasta")
+    visibilidad = request.args.get("visibilidad")
+    sort_by = request.args.get("sort_by", "fecha_registro")
+    order = request.args.get("order", "asc")
+    tag_ids = request.args.getlist("tags", type=int)
+
+    query = db.session.query(SitioHistorico)
+
+    buscar = request.args.get("buscar", "").strip()
+    if tag_ids:
+        query = query.join(SitioHistorico.tags).filter(Tag.id.in_(tag_ids))
+        query = query.group_by(SitioHistorico.id)
+        query = query.having(func.count(Tag.id) == len(tag_ids))
+
+    if provincia_id:
+        query = query.join(Ciudad).filter(Ciudad.idProvincia == provincia_id)
+    if ciudad_id:
+        query = query.filter(SitioHistorico.idCiudad == ciudad_id)
+    if categoria_id:
+        query = query.filter(SitioHistorico.idCategoria == categoria_id)
+    if estado_conservacion:
+        query = query.filter(SitioHistorico.estadoConservacion.ilike(f"%{estado_conservacion}%"))
+    if fecha_desde:
+        query = query.filter(SitioHistorico.fechaRegistro >= fecha_desde)
+    if fecha_hasta:
+        query = query.filter(SitioHistorico.fechaRegistro <= fecha_hasta)
+    if visibilidad == "1":
+        query = query.filter(SitioHistorico.visible == True)
+    elif visibilidad == "0":
+        query = query.filter(SitioHistorico.visible == False)
+    if buscar:
+        from sqlalchemy import or_
+        query = query.filter(
+            or_(
+                SitioHistorico.nombre.ilike(f"%{buscar}%"),
+                SitioHistorico.descBreve.ilike(f"%{buscar}%")
+            )
+        )
+
+    if sort_by == "nombre":
+        columna = SitioHistorico.nombre
+    elif sort_by == "fecha_registro":
+        columna = SitioHistorico.fechaRegistro
+    else:
+        columna = SitioHistorico.fechaRegistro  # default
+
+    if order == "desc":
+        query = query.order_by(columna.desc())
+    else:
+        query = query.order_by(columna.asc())
+    sitios = query.all()
+
+    data = []
+    for s in sitios:
+        data.append({
+            "Nombre": s.nombre,
+            "Descripcion": s.descBreve or "",
+            "Ciudad": s.ciudad.nombre if s.ciudad else "",
+            "Provincia": s.ciudad.provincia.nombre if s.ciudad and s.ciudad.provincia else "",
+            "Estado": s.estadoConservacion or "",
+            "FechaRegistro": s.fechaRegistro.strftime("%Y-%m-%d"),
+            "Coordenadas": f"{s.latitud}, {s.longitud}" if s.latitud and s.longitud else "",
+            "Tags": ", ".join([t.nombre for t in s.tags])
+        })
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+    filename = f"sitios_{timestamp}.csv"
+
+    output = io.StringIO()
+    fieldnames = ["Nombre", "Descripcion", "Ciudad", "Provincia", "Estado", "FechaRegistro", "Coordenadas", "Tags"]
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
+    writer.writeheader()
+    writer.writerows(data)
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
