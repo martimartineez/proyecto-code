@@ -121,7 +121,7 @@ def cambiar_contraseña(usuario_id):
             flash("Contraseña actual verificada.", "success")
             return render_template("manejo_usuarios/cambiar_contraseña.html", verified=True)
         else:
-            flash("La contraseña actual no es correcta.", "danger")
+            flash("La contraseña actual no es correcta.", "error")
 
 
     #return render_template("manejo_usuarios/cambiar_contraseña.html", usuario=user)
