@@ -216,7 +216,9 @@ def eliminar_sitio(sitio_id):
     return redirect(url_for("sitios_historicos.busqueda_avanzada"))
 
 @bp.route("/sitio/<int:sitio_id>")
+@login_required
 def ver_sitio(sitio_id):
+    next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
     sitio = board.obtener_sitio(sitio_id)
     # Filtros de historial
     usuario_id = request.args.get("usuario_id", type=int)
@@ -259,10 +261,11 @@ def ver_sitio(sitio_id):
             "hasta": hasta,
             "page": page,
         },
+        next_url=next_url,
     )
-    return render_template("sitios_historicos/ver_sitio.html", sitio=sitio)
 
 @bp.route("/", methods=["GET"])
+@login_required
 def busqueda_avanzada():
     provincias = board.listar_provincias()
     ciudades = board.listar_ciudades()
@@ -345,6 +348,7 @@ def busqueda_avanzada():
 
 
 @bp.route("/exportar_csv")
+@login_required
 def exportar_csv():
     provincia_id = request.args.get("provincia")
     ciudad_id = request.args.get("ciudad")

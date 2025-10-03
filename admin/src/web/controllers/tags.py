@@ -1,10 +1,12 @@
 from src.core import board
 from flask import Blueprint, render_template, request, redirect, url_for, flash
+from src.web.handlers.auth import login_required
 
 bp = Blueprint("tags", __name__, url_prefix="/tags")
 
 
 @bp.get("/")
+@login_required
 def index():
     page = request.args.get("page", 1, type=int)
     per_page = 25
@@ -29,6 +31,7 @@ def index():
 
 
 @bp.route("/nuevo", methods=["GET", "POST"])
+@login_required
 def agregar_tag():
     if request.method == "POST":
         tag = board.crear_tag(request.form)
@@ -42,6 +45,7 @@ def agregar_tag():
 
 
 @bp.route("/<int:tag_id>/editar", methods=["GET", "POST"])
+@login_required
 def editar_tag(tag_id):
     tag = board.obtener_tag(tag_id)
     if not tag:
@@ -59,6 +63,7 @@ def editar_tag(tag_id):
 
 
 @bp.post("/<int:tag_id>/eliminar")
+@login_required
 def eliminar_tag(tag_id):
     resultado = board.eliminar_tag(tag_id)
     
