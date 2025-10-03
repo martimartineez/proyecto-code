@@ -1,14 +1,7 @@
 {% extends "layout.html" %}
 
-{%block head %} 
-    {{ super() }}
-{% endblock %}
-
-{%block header %}
-    {% include 'header.html'%}
-{% endblock %}
-
 {% block title %}Detalle del sitio{% endblock %}
+
 {% block content %}
 <h1>Sitio Histórico</h1>
 <a href="{{ url_for('sitios_historicos.agregar_sitio', next=request.path) }}">Agregar sitio</a>

@@ -2,13 +2,6 @@
 
 {% block title %}Error {{ error.code }}{% endblock %}
 
-{%block head %} 
-    {{ super() }}
-{% endblock %}
-
-{%block header %}
-    {% include 'header.html'%}
-{% endblock %}
 {% block content %}
     <div class="error-container">
         <h1>Error {{error.code}}</h1>
