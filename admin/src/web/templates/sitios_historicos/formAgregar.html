@@ -16,7 +16,9 @@
 
 <h2>Agregar Sitio Histórico</h2>
 
-<a href="{{ url_for('sitios_historicos.busqueda_avanzada') }}">Volver</a>
+<a href="{{ next_url }}">
+  <button type="button">Volver atras</button>
+</a>
 
 <form method="post">
     <label>Nombre:</label>

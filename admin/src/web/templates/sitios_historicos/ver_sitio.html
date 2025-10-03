@@ -4,7 +4,9 @@
 
 {% block content %}
 <h1>Sitio Histórico</h1>
-<a href="{{ url_for('sitios_historicos.agregar_sitio', next=request.path) }}">Agregar sitio</a>
+<a href="{{ url_for('sitios_historicos.agregar_sitio', next=request.path) }}">
+  <button type="button">Agregar sitio</button>
+</a>
 
 <table>
     <thead>
@@ -58,8 +60,12 @@
     </div>
 </div>
 
-<a href="{{ next_url }}">Volver</a>
-<a href="/">Volver a inicio</a>
+<a href="{{ next_url }}">
+  <button type="button">Volver atras</button>
+</a>
+<a href="/">
+  <button type="button">Volver a inicio</button>
+</a>
 
 <!-- Leaflet CSS y JS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
