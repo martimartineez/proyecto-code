@@ -30,6 +30,7 @@ main{
     grid-column-end: 3;
     display: flexbox;
     justify-items: center;
+    padding: 10px;
 }
 
 header {
