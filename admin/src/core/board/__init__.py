@@ -442,22 +442,6 @@ def eliminar_tag(tag_id: int):
     tag.baja = True
     db.session.commit()
     return True 
-    # Registro de historial
-    if id_usuario is None:
-        id_usuario = 1  # TODO: reemplazar por usuario autenticado
-    try:
-        registrar_evento_historial(
-            id_sitio=sitio.id,
-            id_usuario=id_usuario,
-            accion="DELETED" if not prev_baja and sitio.baja else "STATE_CHANGED",
-            valores_anteriores={"baja": prev_baja},
-            valores_nuevos={"baja": sitio.baja},
-        )
-    except Exception:
-        db.session.rollback()
-        raise
-
-# ...
 
 def create_rol(nombre: str):
     from src.core.board.rol import Rol
