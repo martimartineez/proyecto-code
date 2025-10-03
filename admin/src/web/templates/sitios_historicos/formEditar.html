@@ -1,5 +1,7 @@
 {% extends "layout.html" %}
+
 {% block title %}Editar Sitio{% endblock %}
+
 {% block content %}
 
 <!-- Leaflet CSS y JS -->
@@ -94,6 +96,58 @@
 
     <button type="submit">Guardar cambios</button>
 </form>
+
+<hr>
+<h2>Historial de cambios</h2>
+
+<form method="get" action="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id) }}" style="margin-bottom:10px;">
+  <label>Usuario:</label>
+  <select name="usuario_id" style="min-width:240px;">
+    <option value="">Todos</option>
+    {% if usuarios_historial %}
+      {% for u in usuarios_historial %}
+        <option value="{{ u.id }}" {% if filtros.usuario_id == u.id %}selected{% endif %}>{{ u.label }}</option>
+      {% endfor %}
+    {% endif %}
+  </select>
+
+  <label>Acción:</label>
+  <select name="accion">
+    <option value="">Todas</option>
+    {% for a in ['CREATED', 'UPDATED', 'DELETED', 'STATE_CHANGED', 'TAGS_CHANGED', 'IMAGES_CHANGED'] %}
+    {% set a_label =
+      'Creado' if a=='CREATED' else
+      'Actualizado' if a=='UPDATED' else
+      'Eliminado' if a=='DELETED' else
+      'Cambio de estado' if a=='STATE_CHANGED' else
+      'Cambio de etiquetas' if a=='TAGS_CHANGED' else
+      'Imágenes actualizadas' if a=='IMAGES_CHANGED' else a %}
+    <option value="{{ a }}" {% if filtros.accion == a %}selected{% endif %}>{{ a_label }}</option>
+    {% endfor %}
+  </select>
+
+  <label>Desde:</label>
+  <input type="date" name="desde" value="{{ filtros.desde or '' }}">
+
+  <label>Hasta:</label>
+  <input type="date" name="hasta" value="{{ filtros.hasta or '' }}">
+
+  <button type="submit">Filtrar</button>
+</form>
+
+{% include 'sitios_historicos/_tabla_historial.html' %}
+
+{% set page = historial.page %}
+{% set pages = historial.pages %}
+<div style="margin-top:10px;">
+  {% if page > 1 %}
+    <a href="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id, usuario_id=filtros.usuario_id, accion=filtros.accion, desde=filtros.desde, hasta=filtros.hasta, page=page-1) }}">&laquo; Anterior</a>
+  {% endif %}
+  <span style="margin:0 8px;">Página {{ page }} de {{ pages }}</span>
+  {% if page < pages %}
+    <a href="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id, usuario_id=filtros.usuario_id, accion=filtros.accion, desde=filtros.desde, hasta=filtros.hasta, page=page+1) }}">Siguiente &raquo;</a>
+  {% endif %}
+</div>
 
 <script>
   // Obtener coordenadas desde los inputs del formulario (evitar Jinja en JS)

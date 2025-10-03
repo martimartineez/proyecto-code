@@ -1,16 +1,17 @@
-:root{
-    --pri-color: #ff6906;
-    --sec-color: #ec843f;
+:root {
+    --pri-color: #2a4d69;
+    --sec-color: #4b86b4;
+    --trd-color: #e7eff6;
 }
 
-html{
+html {
     font-family: "lora", serif;
     height: 100%;
     margin: 0px;
 }
 
 
-body{
+body {
     height: 100%;
     display: grid;
     grid-template-columns: 15% 85%;
@@ -21,17 +22,18 @@ body{
     padding: 0px;
     margin: 0px;
 }
-    
-main{
+
+main {
     grid-row-start: 2;
-    grid-column-start: 2;
+    grid-column-start: 1;
     grid-row-end: 3;
     grid-column-end: 3;
-    display: block;
-    justify-content: center;
+    display: flexbox;
+    justify-items: center;
+    padding: 10px;
 }
 
-header{
+header {
     grid-row-start: 1;
     grid-column-start: 1;
     grid-row-end: 1;
@@ -43,18 +45,28 @@ header{
     place-items: center;
     font-size: 15px;
     height: fit-content;
+    width: 100%;
     padding: 5px;
     background-color: var(--pri-color);
     color: white;
 }
 
-.title, .title:visited{
-    grid-column-start: 2;
-    text-decoration: none;
-    color: white;
+.nav-item {
+    padding: 10px;
+    font-size: 15px;
+    align-content: center;
 }
 
-.user-menu{
+#title,
+#title:visited {
+    font-weight: 600;
+    line-height: 1.1;
+    font-size: 20px;
+    max-width: 200px;
+    white-space: normal !important;
+}
+
+.user-menu {
     font-size: 25px;
     padding: 20px;
     text-decoration: none;
@@ -63,73 +75,33 @@ header{
     justify-self: right;
 }
 
-.left-menu{
+#left-menu {
     grid-row-start: 1;
     grid-column-start: 1;
     justify-self: left;
 }
 
-.menuicon{
+.menuicon {
     padding-top: 20px;
     width: 60x;
     height: 60px;
 }
 
-#dropbtn{
+
+#userbtn {
     background-color: var(--pri-color);
     border: none;
     display: none;
 }
 
-#dropbtn:checked ~ #dropdown-content{
-    left: 0;
-}
-
-#dropdown-content{
-    grid-row-start: 1;
-    grid-column-start: 1;
-    grid-row-end: 4 ;
-    grid-column-end: 2;
-    display: grid;
-    grid-template-columns: repeat(1,18.75em);
-    grid-template-rows: repeat(4,25%);
-    position: absolute;
-    background-color: var(--sec-color);
-    min-width: 15%;
-    transition: 200ms ease;
-    height: 90%;
-    margin: 0.7em auto;
-    border: 1px solid var(--pri-color);
-    left: -100%;
-    z-index: 1001;
-}
-
-#dropdown-content a{
-    text-decoration: none;
-    font-weight: 700;
-    padding: 0.5em;
-    border: 5px solid var(--pri-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 22px;
-}
-
-#userbtn{
-    background-color: var(--pri-color);
-    border: none;
+#user-content {
     display: none;
 }
 
-#user-content{
-    display: none;
-}
-
-#userbtn:checked ~ #user-content{
+#userbtn:checked~#user-content {
     display: grid;
-    grid-template-columns: repeat(1,300px);
-    grid-template-rows: repeat(3,33%);
+    grid-template-columns: repeat(1, 300px);
+    grid-template-rows: repeat(3, 33%);
     position: absolute;
     background-color: var(--sec-color);
     min-width: 10%;
@@ -140,23 +112,23 @@ header{
     z-index: 1001;
 }
 
-#user-content *{
+#user-content * {
     display: flex;
     text-align: center;
     justify-content: left;
     text-decoration: none;
     font-weight: 700;
-    padding: 0.5em;    
+    padding: 0.5em;
     color: white;
     font-size: 20px;
     margin: 0px;
 }
 
-#user-content .username{
+#user-content .username {
     border-bottom: 4px solid var(--pri-color);
 }
 
-#guest-user{
+#guest-user {
     display: flex;
     flex-direction: row;
     justify-content: center;
@@ -167,13 +139,13 @@ header{
     margin-top: 20px;
 }
 
-#guest-user a{
+#guest-user a {
     text-decoration: none;
     color: white;
     padding: 10px;
-}   
+}
 
-footer{
+footer {
     grid-row-start: 3;
     grid-column-start: 1;
     grid-row-end: 4;
@@ -190,7 +162,232 @@ footer{
 }
 
 @media (max-width: 768px) {
-    h1{
+    h1 {
         font-size: 1.2em;
+    }
+}
+
+/* Estilos básicos para tablas */
+table {
+    table-layout: auto;
+    border-collapse: collapse;
+    width: 80%;
+    margin: 20px 0;
+    font-size: 18px;
+}
+
+th,
+td {
+    border: 2px solid var(--pri-color);
+    padding: 10px 8px;
+    text-align: center;
+}
+
+th {
+    background-color: var(--sec-color);
+    color: white;
+    font-weight: bold;
+}
+
+tr:nth-child(even) {
+    background-color: #fff3e6;
+}
+
+tr:hover {
+    background-color: #ffe0b2;
+}
+
+/* Puedes agregar esto al final de tu archivo styles.css */
+
+/* Centrar el botón debajo de la tabla */
+.center-btn {
+    display: flex;
+    justify-content: center;
+    margin: 30px 0 20px 0;
+}
+
+/* Mejorar y centrar el formulario */
+#miFormulario {
+    display: none;
+    margin: 0 auto 30px auto;
+    padding: 20px 30px;
+    border: 2px solid var(--pri-color);
+    border-radius: 12px;
+    width: 320px;
+    background: #fff3e6;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+}
+
+#miFormulario label {
+    display: block;
+    margin: 10px 0 5px 0;
+    font-weight: bold;
+    text-align: left;
+}
+
+#miFormulario input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 14px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+#miFormulario button[type="submit"] {
+    width: 100%;
+    background-color: var(--pri-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 0;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+#miFormulario button[type="submit"]:hover {
+    background-color: var(--sec-color);
+}
+
+.Volver {
+    background-color: var(--pri-color);
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 20px;
+    font-weight: bolder;
+    display: inline-block;
+    margin-top: 5%;
+    /* Aumenta este valor para bajarlo más */
+}
+
+/* Estilos exclusivos para el formulario y tabla de modificar usuario */
+
+.modificar-usuario-container {
+    margin: 0 auto 40px auto;
+    width: 420px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Centra el contenido horizontalmente */
+}
+
+.modificar-usuario-container h3 {
+    margin-bottom: 18px;
+}
+
+.modificar-usuario-tabla {
+    width: 100%;
+    margin-bottom: 18px;
+    border: 1.5px solid var(--pri-color);
+    border-radius: 8px;
+    background: #fff;
+    font-size: 17px;
+    margin-left: auto;
+    margin-right: auto;
+    /* Centra la tabla dentro del contenedor */
+}
+
+.modificar-usuario-tabla th,
+.modificar-usuario-tabla td {
+    border: 1px solid var(--pri-color);
+    padding: 7px 10px;
+    text-align: left;
+}
+
+.modificar-usuario-tabla th {
+    background-color: var(--sec-color);
+    color: white;
+    width: 40%;
+}
+
+.modificar-usuario-tabla td {
+    background: #fff3e6;
+}
+
+.modificar-usuario-form {
+    margin: 0 auto 40px auto;
+    padding: 24px 32px;
+    border: 2px solid var(--pri-color);
+    border-radius: 14px;
+    width: 380px;
+    background: #fff3e6;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modificar-usuario-form label {
+    font-weight: bold;
+    margin-top: 10px;
+    text-align: left;
+}
+
+.modificar-usuario-form input[type="text"],
+.modificar-usuario-form input[type="email"],
+.modificar-usuario-form input[type="password"],
+.modificar-usuario-form select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.modificar-usuario-form button[type="submit"],
+.modificar-usuario-form button[type="button"] {
+    width: 100%;
+    background-color: var(--pri-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 0;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.2s;
+}
+
+.modificar-usuario-form button[type="submit"]:hover,
+.modificar-usuario-form button[type="button"]:hover {
+    background-color: var(--sec-color);
+}
+
+.modificar-usuario-form .modificar-usuario-flex {
+    display: flex;
+    gap: 10px;
+}
+
+.modificar-usuario-form input[type="radio"]+label,
+.modificar-usuario-form input[type="checkbox"]+label {
+    margin-right: 18px;
+    font-weight: normal;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2%;
+}
+
+@media (max-width: 600px) {
+
+    .modificar-usuario-form,
+    .modificar-usuario-container,
+    .modificar-usuario-tabla {
+        width: 98vw;
+        min-width: unset;
+        padding: 10px;
+    }
+
+    .modificar-usuario-form .modificar-usuario-flex {
+        flex-direction: column;
     }
 }

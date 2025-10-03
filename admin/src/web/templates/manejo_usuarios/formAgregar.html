@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block title %} agregarUsuario {% endblock %}
+
+{%block content %}
+
+{%with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="flash {{ category }}">{{ message }}</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<form method="post">
+    <label>Nombre:</label>
+    <input type="text" name="nombre" required><br>
+
+    <label>Apellido:</label>
+    <input type="text" name="apellido" required><br>
+
+    <label>Password:</label>
+    <input type="password" name="password" required><br>
+
+    <label>Email:</label>
+    <input type="email" name="email" required><br>
+
+    <label>Rol:</label>
+    <div>
+        {% for rol in roles %}
+        <div>
+            <input type="checkbox" id="rol_{{ rol.id }}" name="roles" value="{{ rol.id }}">
+            <label for="rol_{{ rol.id }}">{{ rol.nombre }}</label>
+        </div>
+        {% endfor %}
+    </div>
+
+
+    <input type="submit" value="Agregar Usuario">
+</form>
+
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+
+{% block title %}Manejo usuarios{% endblock %}
+
+{%block head %}
+{{ super() }}
+<title>Botón con formulario toggle</title>
+<style>
+    /* El formulario empieza oculto */
+    #miFormulario {
+        display: none;
+        margin-top: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        width: 250px;
+    }
+
+    label {
+        display: block;
+        margin: 5px 0 3px;
+    }
+
+    input {
+        width: 100%;
+        padding: 5px;
+        margin-bottom: 10px;
+    }
+
+    button {
+        padding: 8px 12px;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{%block header %}
+{% include 'header.html'%}
+{% endblock %}
+
+{% block content %}
+
+<h1>Usuario</h1>
+<div class="modificar-usuario-container">
+    <table class="modificar-usuario-tabla">
+        <td colspan="3">
+            <strong>Nombre:</strong> {{ usuario.nombre }}<br>
+            <strong>Apellido:</strong> {{ usuario.apellido }}<br>
+            <strong>Email:</strong> {{ usuario.email }}<br>
+            <strong>Activo:</strong>
+            {% if usuario.activo%}
+            {{ "Si" }}
+            {% else %}
+            {{ "No" }}
+            {% endif %}<br>
+            <strong>Es Admin:</strong>
+            {% if usuario.esAdmin%}
+            {{ "Si" }}
+            {% else %}
+            {{ "No" }}
+            {% endif %}<br>
+            <strong>Rol:</strong>
+            {% for rol in roles %}
+            {% if rol.id == usuario.idRol %}
+            {{ rol.nombre }}
+            {% endif %}
+            {% endfor %}
+            <br>
+            <strong>Fecha de creación:</strong> {{ usuario.fechaCreacion }}<br>
+        </td>
+    </table>
+    {% endblock %}

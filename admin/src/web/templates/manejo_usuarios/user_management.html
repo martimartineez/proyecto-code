@@ -1,0 +1,123 @@
+{% extends "layout.html" %}
+
+{% block title %}Manejo usuarios{% endblock %}
+
+{%block head %}
+{{ super() }}
+<title>Botón con formulario toggle</title>
+<style>
+    /* El formulario empieza oculto */
+    #miFormulario {
+        display: none;
+        margin-top: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        width: 250px;
+    }
+
+    label {
+        display: block;
+        margin: 5px 0 3px;
+    }
+
+    input {
+        width: 100%;
+        padding: 5px;
+        margin-bottom: 10px;
+    }
+
+    button {
+        padding: 8px 12px;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{%block header %}
+{% include 'header.html'%}
+{% endblock %}
+
+{% block content %}
+
+<h1>Usuarios</h1>
+
+{%with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="flash {{ category }}">{{ message }}</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+<table>
+    <thead>
+        <tr>
+            <th>nombre</th>
+            <th>Email</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for usuario in usuarios %}
+        {% if usuario.activo %}
+        <tr>
+            <td>{{ usuario.nombre }}</td>
+            <td>{{ usuario.email }}</td>
+            <td>
+                <!-- Boton ver detalles -->
+                <form action="{{ url_for('usuarios.ver_detalles', usuario_id=usuario.id) }}" method="post"
+                    style="display:inline;">
+                    <button type="submit">Ver detalles</button>
+                </form>
+                <!-- Boton de modificar -->
+                <form action="{{ url_for('usuarios.modificar', usuario_id=usuario.id) }}" method="get"
+                    style="display:inline;">
+                    <button type="submit">Modificar</button>
+                </form>
+                <!-- Boton de modificar -->
+                <form action="{{ url_for('usuarios.desactivar', usuario_id=usuario.id) }}" method="post"
+                    style="display:inline;">
+                    <button type="submit"
+                        onclick="return confirm('¿Seguro que deseas desactivar este usuario?');">Desactivar</button>
+                </form>
+                <!-- Boton eliminar -->
+                <form action="{{ url_for('usuarios.eliminar', usuario_id=usuario.id) }}" method="post"
+                    style="display:inline;">
+                    <button type="submit"
+                        onclick="return confirm('¿Seguro que deseas eliminar este usuario?');">Eliminar usuario</button>
+                </form>
+            </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Botones -->
+<div class="center-btn">
+    <a href="{{ url_for('usuarios.agregar_usuario') }}">
+        <button id="agregarUsuarioBtn">Agregar usuario</button>
+    </a>
+</div>
+
+<div>
+    <a href="{{ url_for('usuarios.busqueda_avanzada') }}">
+        <button>Busqueda Avanzada</button>
+    </a>
+</div>
+
+
+<!-- <script>
+    function toggleDetalles(id) {
+        const fila = document.getElementById(id);
+        if (fila.style.display === "none" || fila.style.display === "") {
+            fila.style.display = "table-row";
+        } else {
+            fila.style.display = "none";
+        }
+    }
+</script> -->
+
+
+<a href="{{ url_for('home') }}" class="Volver">Volver al inicio</a>
+{% endblock %}

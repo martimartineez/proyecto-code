@@ -1,5 +1,7 @@
 {% extends "layout.html" %}
+
 {% block title %}Agregar Sitio{% endblock %}
+
 {% block content %}
 
 <!-- Leaflet CSS y JS -->
@@ -14,7 +16,7 @@
 
 <h2>Agregar Sitio Histórico</h2>
 
-<a href="{{ next_url }}">Volver</a>
+<a href="{{ url_for('sitios_historicos.busqueda_avanzada') }}">Volver</a>
 
 <form method="post">
     <label>Nombre:</label>
