@@ -9,6 +9,7 @@ from datetime import datetime
 from sqlalchemy import or_
 from src.core.board.tag import Tag
 from src.web.handlers.auth import login_required
+from sqlalchemy import func
 
 
 
@@ -121,31 +122,16 @@ def _build_historial_view(historial: dict, ciudades, categorias, usuarios_by_id:
     }
 
 
-@bp.get("/")
-@login_required
-def index():
-    page = request.args.get("page", 1, type=int)
-    per_page = 25
-    sitios_historicos = board.listar_sitios(page=page, per_page=per_page)
-    total = board.contar_sitios()
-    total_pages = (total + per_page - 1) // per_page  # redondeo hacia arriba
-
-    return render_template(
-        "sitios_historicos/index.html",
-        sitios=sitios_historicos,
-        page=page,
-        total_pages=total_pages
-    )
 
 @bp.route("/nuevo", methods=["GET", "POST"])
 @login_required
 def agregar_sitio():
-    next_url = request.args.get("next", url_for("sitios_historicos.index"))
+    next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
 
     if request.method == "POST":
         # Procesar datos y agregar sitio
-        board.crear_sitio(request.form, id_usuario=_current_user_id())
-        return redirect(url_for("sitios_historicos.index"))
+        board.crear_sitio(request.form)
+        return redirect(url_for("sitios_historicos.busqueda_avanzada"))
     provincias = board.listar_provincias()
     ciudades = board.listar_ciudades()
     categorias = board.listar_categorias()
@@ -163,12 +149,12 @@ def agregar_sitio():
 @bp.route("/<int:sitio_id>/editar", methods=["GET", "POST"])
 @login_required
 def editar_sitio(sitio_id):
-    next_url = request.args.get("next", url_for("sitios_historicos.index"))
+    next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
 
     if request.method == "POST":
         # Procesar edición del sitio
-        board.editar_sitio(sitio_id, request.form, id_usuario=_current_user_id())
-        return redirect(url_for("sitios_historicos.index"))
+        board.editar_sitio(sitio_id, request.form)
+        return redirect(url_for("sitios_historicos.busqueda_avanzada"))
     sitio = board.obtener_sitio(sitio_id)
     # Filtros de historial
     usuario_id = request.args.get("usuario_id", type=int)
@@ -224,8 +210,8 @@ def editar_sitio(sitio_id):
 @bp.post("/<int:sitio_id>/eliminar")
 @login_required
 def eliminar_sitio(sitio_id):
-    board.eliminar_sitio(sitio_id, id_usuario=_current_user_id())
-    return redirect(url_for("sitios_historicos.index"))
+    board.eliminar_sitio(sitio_id)
+    return redirect(url_for("sitios_historicos.busqueda_avanzada"))
 
 @bp.route("/sitio/<int:sitio_id>")
 def ver_sitio(sitio_id):
@@ -274,11 +260,12 @@ def ver_sitio(sitio_id):
     )
     return render_template("sitios_historicos/ver_sitio.html", sitio=sitio)
 
-@bp.route("/busquedaAvanzada", methods=["GET"])
+@bp.route("/", methods=["GET"])
 def busqueda_avanzada():
     provincias = board.listar_provincias()
     ciudades = board.listar_ciudades()
     categorias = board.listar_categorias()
+    tags = board.listar_tags()
 
     provincia_id = request.args.get("provincia")
     ciudad_id = request.args.get("ciudad")
@@ -290,100 +277,67 @@ def busqueda_avanzada():
     page = request.args.get("page", 1, type=int)
     sort_by = request.args.get("sort_by", "fecha_registro")
     order = request.args.get("order", "asc")
+    tag_ids = request.args.getlist("tags", type=int)
 
-    per_page = 5
+    per_page = 5  
 
     query = db.session.query(SitioHistorico)
     buscar = request.args.get("buscar", "").strip()
+    if tag_ids:
+        query = query.join(SitioHistorico.tags).filter(Tag.id.in_(tag_ids))
+        query = query.group_by(SitioHistorico.id)
+        query = query.having(func.count(Tag.id) == len(tag_ids))
 
     if provincia_id:
-        query = (
-            db.session.query(SitioHistorico)
-            .join(Ciudad)
-            .filter(Ciudad.idProvincia == provincia_id)
-        )
+        query = query.join(Ciudad).filter(Ciudad.idProvincia == provincia_id)
     if ciudad_id:
         query = query.filter(SitioHistorico.idCiudad == ciudad_id)
-
     if categoria_id:
         query = query.filter(SitioHistorico.idCategoria == categoria_id)
-
     if estado_conservacion:
-        query = query.filter(
-            SitioHistorico.estadoConservacion.ilike(f"%{estado_conservacion}%")
-        )
+        query = query.filter(SitioHistorico.estadoConservacion.ilike(f"%{estado_conservacion}%"))
     if fecha_desde:
         query = query.filter(SitioHistorico.fechaRegistro >= fecha_desde)
-
     if fecha_hasta:
         query = query.filter(SitioHistorico.fechaRegistro <= fecha_hasta)
-
     if visibilidad == "1":
         query = query.filter(SitioHistorico.visible == True)
     elif visibilidad == "0":
         query = query.filter(SitioHistorico.visible == False)
-
     if buscar:
+        from sqlalchemy import or_
         query = query.filter(
-            (SitioHistorico.nombre.ilike(f"%{buscar}%")) |
-            (SitioHistorico.descBreve.ilike(f"%{buscar}%"))
+            or_(
+                SitioHistorico.nombre.ilike(f"%{buscar}%"),
+                SitioHistorico.descBreve.ilike(f"%{buscar}%")
             )
-
-    filtros_aplicados = any(
-        [
-            provincia_id,
-            ciudad_id,
-            categoria_id,
-            estado_conservacion,
-            fecha_desde,
-            fecha_hasta,
-            visibilidad,
-        ]
-    )
-
+        )
+    query = query.filter(SitioHistorico.baja == False)
+    
     valid_sort_columns = {
         "fecha_registro": SitioHistorico.fechaRegistro,
         "nombre": SitioHistorico.nombre,
         "ciudad": Ciudad.nombre,
     }
+    column = valid_sort_columns.get(sort_by, SitioHistorico.fechaRegistro)
+    query = query.join(Ciudad) if sort_by == "ciudad" else query
+    query = query.order_by(column.desc() if order == "desc" else column.asc())
 
-    if sort_by in valid_sort_columns:
-        column = valid_sort_columns[sort_by]
-    if order == "desc":
-        query = query.order_by(column.desc())
-    else:
-        query = query.order_by(column.asc())
-
-    from sqlalchemy import or_
-
-    tags_input = request.args.get("tags", "").strip()
-
-    if tags_input:
-        tag_nombres = [t.strip() for t in tags_input.split(",") if t.strip()]
-        if tag_nombres:
-            query = query.join(SitioHistorico.tags).filter(
-                or_(*[Tag.nombre.ilike(f"%{t}%") for t in tag_nombres])
-            )
-    total_results = 0
-    total_pages = 0
-    query_result = None
-    if filtros_aplicados:
-        total_results = query.count()
-        query_result = query.offset((page - 1) * per_page).limit(per_page).all()
-        total_pages = (total_results + per_page - 1) // per_page
-    print(query)
+    
+    total_results = query.count()
+    total_pages = (total_results + per_page - 1) // per_page
+    sitios = query.offset((page - 1) * per_page).limit(per_page).all()
 
     return render_template(
         "sitios_historicos/busquedaAvanzada.html",
         provincias=provincias,
         ciudades=ciudades,
         categorias=categorias,
-        sitios=query_result,
+        sitios=sitios,
         page=page,
         total_pages=total_pages,
         total_results=total_results,
-        request_args=request.args.to_dict(),
+        request_args=request.args,
+        tags=tags
     )
 
-
-# a que se refiere con validar fechas.#Si la fecha desde es mayor a la fecha hasta, no deberia devolver ningun resultado.
