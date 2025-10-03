@@ -1,25 +1,26 @@
 <div class="btn-group" id="left-menu">
     <nav class="navbar navbar-expand-lg">
-    <div class="container-fluid">
-        <a class="navbar-brand text-white" id="title" href="/">Programa Nacional de Registro y Preservacion de Sitios Historicos</a>    
-        <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav">
-            {% if is_autenticated(session) %}
-                <li class="nav-item">
-                <a class="nav-link text-white" href="/sitioshistoricos">Sitios Historicos</a>
-                </li>
-                <li class="nav-item">
-                <a class="nav-link text-white" href="/propuestas">Validacion de Propuestas</a>
-                </li>
-                <li class="nav-item">
-                <a class="nav-link text-white" href="/reseñas">Reseñas</a>
-                </li>
-                <li class="nav-item">
-                <a class="nav-link text-white" href="/manejo_usuarios/"> Usuarios</a>
-            {% endif %} 
-        </ul>
+        <div class="container-fluid">
+            <a class="navbar-brand text-white" id="title" href="/">Programa Nacional de Registro y Preservacion de
+                Sitios Historicos</a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    {% if is_autenticated(session) %}
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="/sitioshistoricos">Sitios Historicos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="/propuestas">Validacion de Propuestas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="/reseñas">Reseñas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="/manejo_usuarios/"> Usuarios</a>
+                        {% endif %}
+                </ul>
+            </div>
         </div>
-    </div>
     </nav>
 </div>
 <div class="user-menu">

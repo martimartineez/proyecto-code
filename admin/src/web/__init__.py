@@ -6,6 +6,7 @@ from src.web.handlers import error
 from src.web.config import config
 from src.core import database
 from src.web.controllers.sitios_historicos import bp as sitios_historicos_bp
+from src.web.controllers.tags import bp as tags_bp
 from src.web.controllers.user_management import bp as user_management_bp
 from src.web.controllers.tags import bp as tags_bp
 from src.core import seeds

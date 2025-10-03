@@ -1,0 +1,94 @@
+{% extends "layout.html" %}
+
+{% block title %}Manejo usuarios{% endblock %}
+
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="es">
+
+
+<body>
+    <h2>Búsqueda Avanzada de Usuarios</h2>
+
+    <div class="form-box">
+        <form method="GET">
+            <div>
+                <label for="email">Buscar por Email:</label>
+                <input type="text" id="email" name="email" value="{{ email }}">
+            </div>
+
+            <div>
+                <label for="activo">Estado:</label>
+                <select id="activo" name="activo">
+                    <option value="" {% if activo=="" %}selected{% endif %}>Todos</option>
+                    <option value="true" {% if activo=="true" %}selected{% endif %}>Activos</option>
+                    <option value="false" {% if activo=="false" %}selected{% endif %}>Inactivos</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="orden">Ordenar por fecha:</label>
+                <select id="orden" name="orden">
+                    <option value="asc" {% if orden=="asc" %}selected{% endif %}>Ascendente</option>
+                    <option value="desc" {% if orden=="desc" %}selected{% endif %}>Descendente</option>
+                </select>
+            </div>
+
+            <button type="submit">Buscar</button>
+        </form>
+    </div>
+
+    {% if usuarios %}
+    <table>
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Activo</th>
+                <th>Fecha de creación</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for usuario in usuarios %}
+            <tr>
+                <td>{{ usuario.email }}</td>
+                <td>{{ "Sí" if usuario.activo else "No" }}</td>
+                <td>{{ usuario.fechaCreacion.strftime("%d/%m/%Y") }}</td>
+                <td>
+                    <!-- Boton ver detalles -->
+                    <form action="{{ url_for('usuarios.ver_detalles', usuario_id=usuario.id) }}" method="post"
+                        style="display:inline;">
+                        <button type="submit">Ver detalles</button>
+                    </form>
+                    <!-- Boton de modificar -->
+                    <form action="{{ url_for('usuarios.modificar', usuario_id=usuario.id) }}" method="get"
+                        style="display:inline;">
+                        <button type="submit">Modificar</button>
+                    </form>
+                    <!-- Boton de modificar -->
+                    <form action="{{ url_for('usuarios.desactivar', usuario_id=usuario.id) }}" method="post"
+                        style="display:inline;">
+                        <button type="submit"
+                            onclick="return confirm('¿Seguro que deseas desactivar este usuario?');">Desactivar</button>
+                    </form>
+                    <!-- Boton eliminar -->
+                    <form action="{{ url_for('usuarios.eliminar', usuario_id=usuario.id) }}" method="post"
+                        style="display:inline;">
+                        <button type="submit"
+                            onclick="return confirm('¿Seguro que deseas eliminar este usuario?');">Eliminar
+                            usuario</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No se encontraron usuarios con esos criterios.</p>
+    {% endif %}
+</body>
+
+</html>
+
+{% endblock %}
