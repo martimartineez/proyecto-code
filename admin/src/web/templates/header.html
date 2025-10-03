@@ -1,24 +1,22 @@
 <div class="btn-group" id="left-menu">
     <nav class="navbar navbar-expand-lg">
     <div class="container-fluid">
-        <a class="navbar-brand text-white" id="title" href="/">Programa Nacional de Registro y Preservacion de Sitios Historicos</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-        </button>
+        <a class="navbar-brand text-white" id="title" href="/">Programa Nacional de Registro y Preservacion de Sitios Historicos</a>    
         <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav">
-            <li class="nav-item">
-            <a class="nav-link text-white" href="/sitioshistoricos">Sitios Historicos</a>
-            </li>
-            <li class="nav-item">
-            <a class="nav-link text-white" href="/propuestas">Validacion de Propuestas</a>
-            </li>
-            <li class="nav-item">
-            <a class="nav-link text-white" href="/reseñas">Reseñas</a>
-            </li>
-            <li class="nav-item">
-            <a class="nav-link text-white" href="/manejo_usuarios/"> Usuarios</a>
-            </li>
+            {% if is_autenticated(session) %}
+                <li class="nav-item">
+                <a class="nav-link text-white" href="/sitioshistoricos">Sitios Historicos</a>
+                </li>
+                <li class="nav-item">
+                <a class="nav-link text-white" href="/propuestas">Validacion de Propuestas</a>
+                </li>
+                <li class="nav-item">
+                <a class="nav-link text-white" href="/reseñas">Reseñas</a>
+                </li>
+                <li class="nav-item">
+                <a class="nav-link text-white" href="/manejo_usuarios/"> Usuarios</a>
+            {% endif %} 
         </ul>
         </div>
     </div>
@@ -26,7 +24,7 @@
 </div>
 <div class="user-menu">
     <nav>
-        {% if idRol != "visitante" %}
+        {% if is_autenticated(session) %}
         <input type="checkbox" id="userbtn">
         <label for="userbtn">
             <svg class="menuicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
@@ -35,13 +33,13 @@
             </svg>
         </label>
         <div id="user-content">
-            <p class="username"> {{ username }} </p>
+            <p class="username"> {{ session["username"] }}</p>
             <a href="/settings">Configuracion</a>
-            <a href="/logout">Cerrar Sesion</a>
+            <a href="/auth/logout">Cerrar Sesion</a>
         </div>
         {% else %}
         <div id="guest-user">
-            <a href="/login">Iniciar Sesion</a>
+            <a href="/auth">Iniciar Sesion</a>
         </div>
         {% endif %}
     </nav>

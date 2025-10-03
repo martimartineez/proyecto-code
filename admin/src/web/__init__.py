@@ -43,7 +43,6 @@ def create_app(env="development", static_folder="../../static"):
 
     #register session handler
     app.jinja_env.globals['is_autenticated'] = is_autenticated
-
     # register commands
 
     @app.cli.command("reset-db")
