@@ -142,5 +142,34 @@ def cambiar_contraseña(usuario_id):
 
     return render_template("manejo_usuarios/cambiar_contraseña.html", verified=False)
 
+@bp.route("/busqueda_avanzada", methods=["GET", "POST"])
+@login_required
+def busqueda_avanzada():
+    # Capturamos los filtros
+    email = request.args.get("email", "").strip()
+    activo = request.args.get("activo", "")  # puede ser "", "true", "false"
+    orden = request.args.get("orden", "asc")  # "asc" o "desc"
+
+    # Arrancamos con la lista de usuarios
+    usuarios = auth.list_usuarios()  # Supongo que devuelve una lista/query
+
+    # Filtrar por email
+    if email:
+        usuarios = [u for u in usuarios if email.lower() in u.email.lower()]
+
+    # Filtrar por activo
+    if activo == "true":
+        usuarios = [u for u in usuarios if u.activo]
+    elif activo == "false":
+        usuarios = [u for u in usuarios if not u.activo]
+
+    # Ordenar por fecha (ejemplo: campo u.fecha_creacion)
+    usuarios = sorted(
+        usuarios,
+        key=lambda u: u.fechaCreacion,
+        reverse=(orden == "desc")
+    )
+
+    return render_template("manejo_usuarios/busqueda_avanzada.html",usuarios=usuarios,email=email,activo=activo,orden=orden)
 
 
