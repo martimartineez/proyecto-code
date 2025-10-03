@@ -86,8 +86,8 @@ def modificar(usuario_id):
         user.nombre = request.form["nombre"]
         user.apellido = request.form["apellido"]
         user.email = request.form["email"]
-        user.password = request.form["password"]
         user.idRol = int(request.form["rol"])
+        session['username'] = user.nombre
 
         # Guardar los cambios en la base de datos
         auth.db.session.commit()
