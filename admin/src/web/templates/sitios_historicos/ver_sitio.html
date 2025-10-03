@@ -1,36 +1,38 @@
 {% extends "layout.html" %}
+
+{%block head %} 
+    {{ super() }}
+{% endblock %}
+
+{%block header %}
+    {% include 'header.html'%}
+{% endblock %}
+
 {% block title %}Detalle del sitio{% endblock %}
 {% block content %}
-<h1>Sitio Historico</h1>
+<h1>Sitio Histórico</h1>
 <a href="{{ url_for('sitios_historicos.agregar_sitio', next=request.path) }}">Agregar sitio</a>
+
 <table>
     <thead>
         <tr>
-            <th>Acciones</th>
             <th>Nombre</th>
-            <th>Descripcion</th>
-            <th>Descripcion Completa</th>
+            <th>Descripción</th>
+            <th>Descripción Completa</th>
             <th>Ciudad</th>
             <th>Provincia</th>
             <th>Latitud</th>
             <th>Longitud</th>
-            <th>Estado Conservacion</th>
-            <th>Año de inauguracion</th>
-            <th>Categoria</th>
+            <th>Estado Conservación</th>
+            <th>Año de inauguración</th>
+            <th>Categoría</th>
             <th>Fecha Registro</th>
             <th>Visible</th>
+            <th>Acciones</th>
         </tr>
     </thead>
     <tbody>
         <tr>
-            <td>
-                <a href="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id, next=request.path) }}">
-                     <button type="button">Editar</button>
-                </a>
-                <form action="{{ url_for('sitios_historicos.eliminar_sitio', sitio_id=sitio.id)}}" method="post" style="display:inline;">
-                    <button type="submit">Eliminar</button>
-                </form>
-            </td>
             <td>{{ sitio.nombre }}</td>
             <td>{{ sitio.descBreve }}</td>
             <td>{{ sitio.descCompleta }}</td>
@@ -43,12 +45,59 @@
             <td>{{ sitio.categoria.nombre if sitio.categoria else 'N/A' }}</td>
             <td>{{ sitio.fechaRegistro.strftime('%Y-%m-%d') if sitio.fechaRegistro else 'N/A' }}</td>
             <td>{{ 'Sí' if sitio.visible else 'No' }}</td>
+             <td>
+                <a href="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id, next=request.path) }}">
+                     <button type="button">Editar</button>
+                </a>
+                <form action="{{ url_for('sitios_historicos.eliminar_sitio', sitio_id=sitio.id)}}" method="post" style="display:inline;">
+                    <button type="submit" onclick="return confirm('¿Estás seguro de que quieres eliminar el sitio historico: {{ sitio.nombre }}?');">Eliminar</button>
+                </form>
+            </td>
         </tr>
 </table>
 
-<a href="{{ url_for('sitios_historicos.index') }}">Volver</a>
+<div style="max-width: 600px; margin: 20px auto;">
+    <h3>Ubicación en el mapa</h3>
+    <div id="map"
+         style="height: 400px; border: 1px solid #ccc;"
+         data-lat="{{ sitio.latitud or -34.921 }}"
+         data-lng="{{ sitio.longitud or -57.954 }}">
+    </div>
+</div>
+
+<a href="{{ url_for('sitios_historicos.busqueda_avanzada') }}">Volver</a>
 <a href="/">Volver a inicio</a>
 
+<!-- Leaflet CSS y JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+<script>
+  // Obtener coordenadas desde atributos data
+  var mapDiv = document.getElementById('map');
+  var lat = parseFloat(mapDiv.getAttribute('data-lat'));
+  var lng = parseFloat(mapDiv.getAttribute('data-lng'));
+
+  // Crear mapa en modo solo visualización
+  var map = L.map('map', {
+    center: [lat, lng],
+    zoom: 13,
+    dragging: false,
+    scrollWheelZoom: false,
+    doubleClickZoom: false,
+    boxZoom: false,
+    keyboard: false,
+    zoomControl: false
+  });
+
+  // Capa base OpenStreetMap
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+  }).addTo(map);
+
+  // Marcador fijo
+  L.marker([lat, lng]).addTo(map);
+</script>
 <hr>
 <h2>Historial de cambios</h2>
 
