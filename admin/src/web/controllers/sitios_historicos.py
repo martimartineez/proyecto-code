@@ -102,7 +102,7 @@ def busqueda_avanzada():
                 SitioHistorico.descBreve.ilike(f"%{buscar}%")
             )
         )
-
+    query = db.session.query(SitioHistorico).filter(SitioHistorico.baja == False)
     
     valid_sort_columns = {
         "fecha_registro": SitioHistorico.fechaRegistro,
