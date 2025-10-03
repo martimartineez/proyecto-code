@@ -124,9 +124,18 @@ def _build_historial_view(historial: dict, ciudades, categorias, usuarios_by_id:
 @bp.get("/")
 @login_required
 def index():
-    sitios_historicos = board.listar_sitios()
-    return render_template("sitios_historicos/index.html", sitios=sitios_historicos)
+    page = request.args.get("page", 1, type=int)
+    per_page = 25
+    sitios_historicos = board.listar_sitios(page=page, per_page=per_page)
+    total = board.contar_sitios()
+    total_pages = (total + per_page - 1) // per_page  # redondeo hacia arriba
 
+    return render_template(
+        "sitios_historicos/index.html",
+        sitios=sitios_historicos,
+        page=page,
+        total_pages=total_pages
+    )
 
 @bp.route("/nuevo", methods=["GET", "POST"])
 @login_required

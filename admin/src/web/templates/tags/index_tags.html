@@ -33,5 +33,71 @@
     </tbody>
 </table>
 
+
+<form method="get" action="{{ url_for('tags.index') }}" id="sortForm">
+    <input type="text" name="q" value="{{ q or '' }}" placeholder="Buscar por nombre">
+    
+    <p>
+        <strong>Criterios de Ordenamiento:</strong><br>
+        <label>
+            <input type="checkbox" name="sort_criteria" value="nombre" {% if "nombre" in sort %}checked{% endif %}> Nombre
+        </label>
+        <label>
+            <input type="checkbox" name="sort_criteria" value="fecha" {% if "fecha" in sort %}checked{% endif %}> Fecha de creación
+        </label>
+    </p>
+
+    <input type="hidden" name="sort" id="sortHidden" value="{{ sort or '' }}">
+
+    <p>
+        <strong>Dirección de Ordenamiento:</strong><br>
+        <select name="order">
+            <option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascendente</option>
+            <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descendente</option>
+        </select>
+    </p>
+
+    <button type="submit">Aplicar Filtros y Orden</button>
+    
+    <a href="{{ url_for('tags.index') }}" style="margin-left: 10px;">
+        <button type="button">Limpiar Filtros</button>
+    </a>
+    
+</form>
+
+<script>
+    document.getElementById('sortForm').addEventListener('submit', function(e) {
+        // 1. Obtener todos los checkboxes de ordenación marcados
+        const checkboxes = document.querySelectorAll('input[name="sort_criteria"]:checked');
+        
+        // 2. Unir los valores en una cadena separada por comas (ej: "nombre,fecha")
+        const sortValues = Array.from(checkboxes).map(cb => cb.value).join(',');
+        
+        // 3. Establecer esta cadena en el campo oculto 'sort' que tu backend espera
+        document.getElementById('sortHidden').value = sortValues;
+    });
+</script>
+
+
+<div class="pagination">
+    {% if page > 1 %}
+        <a href="{{ url_for('tags.index', page=page-1, q=q, sort=sort, order=order) }}">Anterior</a>
+    {% endif %}
+
+    {% for p in range(1, total_pages + 1) %}
+        {% if p == page %}
+            <strong>{{ p }}</strong>
+        {% else %}
+            <a href="{{ url_for('tags.index', page=p, q=q, sort=sort, order=order) }}">{{ p }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if page < total_pages %}
+        <a href="{{ url_for('tags.index', page=page+1, q=q, sort=sort, order=order) }}">Siguiente</a>
+    {% endif %}
+</div>
+
+
+
 <a href="/">Volver a inicio</a>
 {% endblock %}
