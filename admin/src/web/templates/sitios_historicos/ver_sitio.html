@@ -4,6 +4,12 @@
 
 {% block content %}
 <h1>Sitio Histórico</h1>
+<a href="/">
+    <button type="button">Volver a inicio</button>
+</a>
+<a href="{{ next_url }}">
+  <button type="button">Volver atras</button>
+</a>
 <a href="{{ url_for('sitios_historicos.agregar_sitio', next=request.path) }}">
   <button type="button">Agregar sitio</button>
 </a>

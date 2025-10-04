@@ -4,7 +4,13 @@
 <h1>Gestión de Tags</h1>
 
 <p>
-    <a href="{{ url_for('tags.agregar_tag') }}">Agregar nuevo Tag</a>
+    <a href="/">
+    <button type="button">Volver a inicio</button>
+    </a>
+    <a href="{{ url_for('tags.agregar_tag') }}">
+        <button type="button">Agregar nuevo tag</button>
+    </a>
+    
 </p>
 
 <table>
@@ -98,6 +104,4 @@
 </div>
 
 
-
-<a href="/">Volver a inicio</a>
 {% endblock %}
