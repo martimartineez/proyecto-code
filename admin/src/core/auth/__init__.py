@@ -4,6 +4,25 @@ from src.core.board.rol import Rol
 from src.core.bcrypt import bcrypt
 
 
+
+def crearPermisos(permisos):
+    from src.core.board.rol import Rol
+    from src.core.board.permiso import Permiso
+    #Creo los nuevos permisos
+    admin = db.session.query(Rol).filter(Rol.nombre == "Admin").first()
+    editor = db.session.query(Rol).filter(Rol.nombre == "Editor").first()
+    for permiso in permisos["admin"]:
+        admin.permisos.append(Permiso(nombre=permiso))
+    for permiso in permisos["editor"]:
+        editor.permisos.append(Permiso(nombre=permiso))
+    db.session.commit()
+    return True
+
+def permissions(user):
+    permisos = db.session.query(Rol).filter(Rol.id == user.idRol).first().permisos
+    nombres_permisos = [permiso.nombre for permiso in permisos]
+    return nombres_permisos
+
 def list_usuarios():
     #return db.session.query(Usuario.nombre, Usuario.email).all()
     return db.session.query(Usuario).all()
