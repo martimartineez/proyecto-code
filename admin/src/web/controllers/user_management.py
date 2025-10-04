@@ -1,12 +1,13 @@
 from flask import Blueprint
 from flask import render_template
 from flask import request, redirect, url_for
-from flask import session, flash
+from flask import session, flash, abort
 
 from src.core import auth
 from src.core import board
 from src.web.handlers.auth import is_autenticated
 from src.web.handlers.auth import login_required
+from src.web.handlers.auth import check_permission
 
 bp = Blueprint("usuarios", __name__, url_prefix="/manejo_usuarios")
 
@@ -15,6 +16,10 @@ bp = Blueprint("usuarios", __name__, url_prefix="/manejo_usuarios")
 #Este es para que no te deje entrar si no estas logueado
 @login_required
 def index():
+
+    if not check_permission("user_index"):
+        return abort(403)
+    
     usuarios = auth.list_usuarios()
     roles = board.list_roles()
 

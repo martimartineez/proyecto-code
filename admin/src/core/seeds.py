@@ -24,9 +24,9 @@ def _get_categoria_id(nombre_categoria: str) -> int | None:
 
 def run():
     # Crear rol y usuario "System" si no existen
-    admin_role = db.session.query(Rol).filter(Rol.nombre == "Admin").first()
+    admin_role = db.session.query(Rol).filter(Rol.nombre == "SystemAdmin").first()
     if not admin_role:
-        admin_role = Rol(nombre="Admin")
+        admin_role = Rol(nombre="SystemAdmin")
         db.session.add(admin_role)
         db.session.flush()
 
@@ -200,10 +200,56 @@ def run():
     print("Creating roles...")
     rol_admin = board.create_rol(nombre="Admin")
     rol_editor = board.create_rol(nombre="Editor")
-    rol_user = board.create_rol(nombre="User")
+    ##rol_user = board.create_rol(nombre="User")
     print("Created roles! 👍🏻")
 
-
+    print('Creando permisos..')
+    
+    PERMISSIONS = {
+    'editor': [
+        "site_index",
+        "site_show",
+        "site_new",
+        "site_create",
+        "site_edit",
+        "site_update",
+        "tag_index",
+        "tag_show",
+        "tag_new",
+        "tag_create",
+        "tag_edit",
+        "tag_update",
+        "tag_destroy",
+        "record_show",
+    ],
+    'admin': [
+        "user_index",
+        "user_show",
+        "user_create"
+        "user_new",
+        "user_edit",
+        "user_update",
+        "user_destroy",
+        "site_index",
+        "site_show",
+        "site_new",
+        "site_create",
+        "site_edit",
+        "site_update",
+        "site_destroy",
+        "site_export",
+        "tag_index",
+        "tag_show",
+        "tag_new",
+        "tag_create",
+        "tag_edit",
+        "tag_update",
+        "tag_destroy",
+        "record_show",
+    ]
+}
+    auth.crearPermisos(PERMISSIONS)
+    print('Permisos creados! 👍🏻')
 
     print("Creating users...")
 
