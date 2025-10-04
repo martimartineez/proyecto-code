@@ -4,6 +4,12 @@
 
 {% block content %}
 <h1>Sitio Histórico</h1>
+<a href="/">
+    <button type="button">Volver a inicio</button>
+</a>
+<a href="{{ next_url }}">
+  <button type="button">Volver atras</button>
+</a>
 <a href="{{ url_for('sitios_historicos.agregar_sitio', next=request.path) }}">
   <button type="button">Agregar sitio</button>
 </a>
@@ -50,6 +56,48 @@
             </td>
         </tr>
 </table>
+
+<style>
+  .tag-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    margin-right: 6px;
+    margin-bottom: 5px;
+    background-color: #e0f7fa; /* Azul claro */
+    border: 1px solid #00bcd4;
+    border-radius: 12px;
+    font-size: 0.9em;
+    color: #006064; /* Color de texto oscuro */
+    font-weight: 500;
+  }
+  .tags-container {
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #fafafa;
+  }
+</style>
+
+<div class="tags-container">
+    <h2>Etiquetas (Tags) Asociadas</h2>
+    
+    {% set active_tags = sitio.tags | selectattr('baja', 'equalto', False) | list %}
+    
+    {% if active_tags %}
+        <p>Este sitio está asociado a las siguientes etiquetas:</p>
+        <div>
+            {% for tag in active_tags %}
+                <span class="tag-badge">
+                    {{ tag.nombre }}
+                </span>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No hay etiquetas activas asociadas a este sitio histórico.</p>
+    {% endif %}
+</div>
+<hr>
 
 <div style="max-width: 600px; margin: 20px auto;">
     <h3>Ubicación en el mapa</h3>

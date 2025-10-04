@@ -131,9 +131,18 @@ def agregar_sitio():
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
 
     if request.method == "POST":
-        # Procesar datos y agregar sitio
-        board.crear_sitio(request.form)
-        return redirect(url_for("sitios_historicos.busqueda_avanzada"))
+        try:
+            # Procesar datos y agregar sitio
+            board.crear_sitio(request.form)
+            flash("Sitio histórico agregado exitosamente.", "success")
+            return redirect(url_for("sitios_historicos.busqueda_avanzada"))
+        except Exception as e:
+            # Puedes registrar el error 'e' para depuración
+            flash(f"Ocurrió un error al intentar agregar el sitio: {e}.", "error")
+            # Devolver el render template para que el usuario pueda corregir y reintentar
+            # Es bueno devolver los datos del formulario para no perderlos, pero aquí se omite por simplicidad
+            # y se vuelve a cargar el formulario.
+            pass # Continúa al render_template con los datos de soporte.
     provincias = board.listar_provincias()
     ciudades = board.listar_ciudades()
     categorias = board.listar_categorias()
@@ -154,9 +163,17 @@ def editar_sitio(sitio_id):
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
 
     if request.method == "POST":
-        # Procesar edición del sitio
-        board.editar_sitio(sitio_id, request.form)
-        return redirect(url_for("sitios_historicos.busqueda_avanzada"))
+        try:
+            # Procesar edición del sitio
+            board.editar_sitio(sitio_id, request.form)
+            flash("Sitio histórico editado exitosamente.", "success")
+            return redirect(url_for("sitios_historicos.busqueda_avanzada"))
+        except Exception as e:
+            flash(f"Ocurrió un error al intentar editar el sitio: {e}.", "error")
+            # Para evitar que el usuario pierda el contexto de edición,
+            # se permite que el flujo continúe hacia el render_template,
+            # lo que implica recargar el sitio con los posibles filtros de historial.
+            pass # Continúa cargando los datos para el render_template.
     sitio = board.obtener_sitio(sitio_id)
     # Filtros de historial
     usuario_id = request.args.get("usuario_id", type=int)
@@ -212,7 +229,12 @@ def editar_sitio(sitio_id):
 @bp.post("/<int:sitio_id>/eliminar")
 @login_required
 def eliminar_sitio(sitio_id):
-    board.eliminar_sitio(sitio_id)
+    try:
+        board.eliminar_sitio(sitio_id)
+        flash("Sitio histórico eliminado exitosamente.", "success")
+    except Exception as e:
+        flash(f"Ocurrió un error al intentar eliminar el sitio: {e}.", "error")
+    
     return redirect(url_for("sitios_historicos.busqueda_avanzada"))
 
 @bp.route("/sitio/<int:sitio_id>")
