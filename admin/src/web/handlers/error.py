@@ -9,6 +9,14 @@ class HTTPError:
     description: str
 
 
+def forbidden(e):
+    error = HTTPError(
+        code=403,
+        message="Acceso denegado",
+        description="No cuentas con los permisos para acceder a esta pagina",
+    )
+    return render_template("error.html", error=error), 403
+
 def not_found(e):
     error = HTTPError(
         code=404,
