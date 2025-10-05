@@ -7,7 +7,7 @@ from src.core.board.ciudad import Ciudad
 from datetime import datetime
 from sqlalchemy import or_
 from src.core.board.tag import Tag
-from src.web.handlers.auth import login_required
+from src.web.handlers.auth import login_required, check_permission
 from sqlalchemy import func
 import io, csv
 from flask import Response
@@ -239,6 +239,7 @@ def eliminar_sitio(sitio_id):
 @bp.route("/sitio/<int:sitio_id>")
 @login_required
 def ver_sitio(sitio_id):
+    permiso= check_permission("site_destroy")
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
     sitio = board.obtener_sitio(sitio_id)
     # Filtros de historial
@@ -283,11 +284,13 @@ def ver_sitio(sitio_id):
             "page": page,
         },
         next_url=next_url,
+        permiso=permiso,
     )
 
 @bp.route("/", methods=["GET"])
 @login_required
 def busqueda_avanzada():
+    permiso= check_permission("site_destroy")
     provincias = board.listar_provincias()
     ciudades = board.listar_ciudades()
     categorias = board.listar_categorias()
@@ -365,6 +368,7 @@ def busqueda_avanzada():
         total_results=total_results,
         request_args=request.args,
         tags=tags,
+        permiso=permiso,
     )
 
 
