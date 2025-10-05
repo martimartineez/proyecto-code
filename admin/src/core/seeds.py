@@ -23,28 +23,6 @@ def _get_categoria_id(nombre_categoria: str) -> int | None:
 
 
 def run():
-    # Crear rol y usuario "System" si no existen
-    admin_role = db.session.query(Rol).filter(Rol.nombre == "Admin").first()
-    if not admin_role:
-        admin_role = Rol(nombre="Admin")
-        db.session.add(admin_role)
-        db.session.flush()
-
-    system_user = db.session.query(Usuario).filter(Usuario.email == "system@example.com").first()
-    if not system_user:
-        system_user = Usuario(
-            nombre="System",
-            apellido="User",
-            password="changeme",
-            email="system@example.com",
-            activo=True,
-            esAdmin=True,
-            idRol=admin_role.id,
-        )
-        db.session.add(system_user)
-        db.session.flush()
-
-    db.session.commit()
 
     # Crear sitios con el esquema actual utilizando board.crear_sitio
     # Asegúrate de haber corrido reset-db para tener ciudades y categorías seed-eadas
