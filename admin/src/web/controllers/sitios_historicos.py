@@ -1,10 +1,9 @@
 from src.core import board
-from flask import Blueprint, render_template, request, redirect, url_for, session
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from src.core.auth import Usuario
 from src.core.board import SitioHistorico
 from src.core.database import db
 from src.core.board.ciudad import Ciudad
-from flask import flash
 from datetime import datetime
 from sqlalchemy import or_
 from src.core.board.tag import Tag

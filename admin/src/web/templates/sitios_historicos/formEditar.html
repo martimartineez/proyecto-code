@@ -20,6 +20,13 @@
 <a href="{{ next_url }}">
   <button type="button">Volver atras</button>
 </a>
+{%with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="flash {{ category }}">{{ message }}</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
 
 <form method="post" action="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id) }}">
     <label>Nombre:</label>
