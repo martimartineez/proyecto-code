@@ -13,6 +13,13 @@
 <a href="{{ url_for('sitios_historicos.agregar_sitio', next=request.path) }}">
   <button type="button">Agregar sitio</button>
 </a>
+{%with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="flash {{ category }}">{{ message }}</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
 
 <table>
     <thead>
@@ -107,13 +114,6 @@
          data-lng="{{ sitio.longitud or -57.954 }}">
     </div>
 </div>
-
-<a href="{{ next_url }}">
-  <button type="button">Volver atras</button>
-</a>
-<a href="/">
-  <button type="button">Volver a inicio</button>
-</a>
 
 <!-- Leaflet CSS y JS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>

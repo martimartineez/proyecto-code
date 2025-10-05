@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from sqlite3 import IntegrityError
+from sqlalchemy.exc import IntegrityError
 from src.core.database import db
 from src.core.board.sitio_historico import SitioHistorico
 from src.core.board.historial_sitio import HistorialSitio
@@ -385,22 +385,51 @@ def contar_tags(q=None):
 def obtener_tag(tag_id: int):
     return db.session.get(Tag, tag_id)
 
+# En src/core/board/__init__.py
+# NOTA IMPORTANTE: Asegúrate de que la importación de IntegrityError sea de SQLAlchemy,
+# no de sqlite3, como hicimos en la corrección anterior:
+# from sqlalchemy.exc import IntegrityError 
+
 def crear_tag(form):
     nombre_tag = form.get("nombre")
     if not nombre_tag:
         return None
     
-    # GENERACIÓN DEL SLUG
-    slug_tag = _generate_slug(nombre_tag)
-    # NOTA: Deberías implementar aquí la lógica para asegurar que el slug sea único
-    # si ya existe (ej: consultar la DB y si existe, generar 'slug-1', 'slug-2', etc.)
+    # 1. Verificar si ya existe un Tag con este nombre (activo o borrado lógicamente).
+    existing_tag = db.session.query(Tag).filter(
+        Tag.nombre == nombre_tag
+    ).first()
     
-    nuevo_tag = Tag(nombre=nombre_tag, slug=slug_tag) # <--- Asignar el slug
+    if existing_tag:
+        if existing_tag.baja:
+            # El Tag existe, pero está dado de BAJA. Lo RE-ACTIVAMOS.
+            existing_tag.baja = False
+            # Opcional: Re-generar el slug por si la lógica de slug cambia
+            existing_tag.slug = _generate_slug(nombre_tag) 
+            try:
+                db.session.commit()
+                return existing_tag
+            except IntegrityError:
+                # Esto es un fallback, si por alguna razón el re-commit falla
+                db.session.rollback()
+                return "DUPLICATE_ERROR"
+            except Exception:
+                db.session.rollback()
+                return None
+        else:
+            # El Tag existe y está ACTIVO. Es un duplicado.
+            return "DUPLICATE_ERROR" 
+
+    # GENERACIÓN DEL SLUG (solo si es un Tag completamente nuevo)
+    slug_tag = _generate_slug(nombre_tag)
+    
+    nuevo_tag = Tag(nombre=nombre_tag, slug=slug_tag) 
     db.session.add(nuevo_tag)
     try:
         db.session.commit()
         return nuevo_tag
     except IntegrityError:
+        # Fallback si el nombre/slug es un duplicado que no se encontró en la consulta previa
         db.session.rollback()
         return "DUPLICATE_ERROR"
     except Exception:
@@ -451,23 +480,28 @@ def eliminar_tag(tag_id: int):
     
     from src.core.board.sitio_historico import SitioHistorico 
     
-    # Esta consulta busca cualquier SitioHistorico que:
-    # 1. No esté dado de baja
-    # 2. Tenga asociado el tag con el id especificado
-    sitios_activos_asociados = db.session.query(SitioHistorico).filter(
-        SitioHistorico.baja == False,
-        SitioHistorico.tags.any(id=tag_id)
-    ).count()
+    # 1. VERIFICACIÓN DE VINCULACIÓN: Buscar solo Sitios Históricos ACTIVOS (baja=False).
+    # Utilizamos un JOIN para obtener los nombres de los Sitios Históricos vinculados.
+    sitios_vinculados = db.session.query(SitioHistorico.nombre).join(
+        Tag.sitios
+    ).filter(
+        Tag.id == tag_id,
+        SitioHistorico.baja == False  # <--- ¡ESTE ES EL FILTRO CLAVE!
+    ).all()
 
-    if sitios_activos_asociados > 0:
-        # El tag está asociado a sitios activos, se impide la baja lógica del tag.
-        return "vinculado"
-    
-    
-    # ELIMINACIÓN LÓGICA del Tag:
-    tag.baja = True
-    db.session.commit()
-    return True
+    if sitios_vinculados:
+        # El Tag está asociado a sitios ACTIVOS. Retornamos la lista de nombres.
+        nombres = [s[0] for s in sitios_vinculados]
+        return nombres # Retorna la lista de nombres, e.g., ['Sitio A', 'Sitio B']
+
+    # 2. PROCEDER CON LA ELIMINACIÓN LÓGICA (si no hay vinculación ACTIVA)
+    try:
+        tag.baja = True
+        db.session.commit()
+        return True
+    except Exception:
+        db.session.rollback()
+        return False
 
 def create_rol(nombre: str):
     from src.core.board.rol import Rol
