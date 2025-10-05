@@ -134,9 +134,11 @@
                 <a href="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id) }}">
                      <button type="button">Editar</button>
                 </a>
-                <form action="{{ url_for('sitios_historicos.eliminar_sitio', sitio_id=sitio.id) }}" method="post" style="display:inline;">
-                    <button type="submit" onclick="return confirm('¿Estás seguro de que quieres eliminar el sitio: {{ sitio.nombre }}?');">Eliminar</button>
-                </form>
+                {% if permiso %}
+                    <form action="{{ url_for('sitios_historicos.eliminar_sitio', sitio_id=sitio.id) }}" method="post" style="display:inline;">
+                        <button type="submit" onclick="return confirm('¿Estás seguro de que quieres eliminar el sitio: {{ sitio.nombre }}?');">Eliminar</button>
+                    </form>
+                {% endif %}
                 <a href="{{ url_for('sitios_historicos.ver_sitio', sitio_id=sitio.id) }}">
                 <button type="button">Ver detalle</button>
                 </a>
