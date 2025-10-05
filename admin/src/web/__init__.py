@@ -51,6 +51,7 @@ def create_app(env="development", static_folder="../../static"):
     app.register_blueprint(auth_bp)
     app.register_blueprint(feature_flags_bp)
 
+    app.register_error_handler(403, error.forbidden)
     app.register_error_handler(404, error.not_found)
     app.register_error_handler(401, error.unauthorized)
     app.register_error_handler(500, error.server_error)

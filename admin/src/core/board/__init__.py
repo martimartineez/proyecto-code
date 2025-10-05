@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from sqlite3 import IntegrityError
 from src.core.database import db
 from src.core.board.sitio_historico import SitioHistorico
 from src.core.board.historial_sitio import HistorialSitio
@@ -399,7 +400,11 @@ def crear_tag(form):
     try:
         db.session.commit()
         return nuevo_tag
+    except IntegrityError:
+        db.session.rollback()
+        return "DUPLICATE_ERROR"
     except Exception:
+        # Otros errores de base de datos
         db.session.rollback()
         return None
 
@@ -409,20 +414,27 @@ def editar_tag(tag_id: int, form):
         return False
     
     nuevo_nombre = form.get("nombre")
-    if nuevo_nombre and nuevo_nombre != tag.nombre:
-        tag.nombre = nuevo_nombre
-        
-        # REGENERACIÓN DEL SLUG si el nombre cambia
-        tag.slug = _generate_slug(nuevo_nombre) # <--- REGENERAR SLUG
-        
-        try:
-            db.session.commit()
-            return True
-        except Exception:
-            db.session.rollback()
-            return False
-            
-    return True
+    if not nuevo_nombre:
+        return False # o manejar error de nombre vacío
+
+    # 1. Actualizar el Tag con el nuevo nombre y slug
+    # Esto es crucial: Si el nombre NO CAMBIA, no hay problema de unicidad.
+    # Si el nombre CAMBIA y ya existe en otro Tag, el IntegrityError se lanzará en el commit.
+    tag.nombre = nuevo_nombre
+    tag.slug = _generate_slug(nuevo_nombre) # Asumo que actualizas el slug también
+    
+    try:
+        db.session.commit()
+        return True # Éxito
+    except IntegrityError:
+        # ⚠️ ERROR ESPECÍFICO DE DUPLICIDAD (el nuevo nombre o slug ya existe en OTRO tag)
+        db.session.rollback()
+        # Retornamos la cadena específica para que el blueprint lo sepa
+        return "DUPLICATE_ERROR" 
+    except Exception:
+        # Otros errores de base de datos
+        db.session.rollback()
+        return None
 
 
 def eliminar_tag(tag_id: int):
@@ -434,14 +446,28 @@ def eliminar_tag(tag_id: int):
     if not tag:
         return False
     
-    # OPCIONAL: Si quieres impedir la eliminación lógica mientras esté en uso:
-    if len(tag.sitios) > 0:
+    
+    # Verificar SOLO asociaciones con sitios ACTIVOS
+    
+    from src.core.board.sitio_historico import SitioHistorico 
+    
+    # Esta consulta busca cualquier SitioHistorico que:
+    # 1. No esté dado de baja
+    # 2. Tenga asociado el tag con el id especificado
+    sitios_activos_asociados = db.session.query(SitioHistorico).filter(
+        SitioHistorico.baja == False,
+        SitioHistorico.tags.any(id=tag_id)
+    ).count()
+
+    if sitios_activos_asociados > 0:
+        # El tag está asociado a sitios activos, se impide la baja lógica del tag.
         return "vinculado"
     
-    # ELIMINACIÓN LÓGICA: Actualizar el campo 'baja'
+    
+    # ELIMINACIÓN LÓGICA del Tag:
     tag.baja = True
     db.session.commit()
-    return True 
+    return True
 
 def create_rol(nombre: str):
     from src.core.board.rol import Rol
