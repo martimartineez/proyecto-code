@@ -92,19 +92,58 @@
 
 <div class="pagination">
     {% if page > 1 %}
-        <a href="{{ url_for('tags.index', page=page-1, q=q, sort=sort, order=order) }}">Anterior</a>
+        <a style="
+            display: inline-block; 
+            padding: 8px 12px; 
+            margin: 0 4px; 
+            border: 1px solid #ccc; 
+            text-decoration: none; 
+            color: #333; 
+            border-radius: 4px;"  
+            href="{{ url_for('tags.index', page=page-1, q=q, sort=sort, order=order) }}">Anterior
+        </a>
     {% endif %}
 
     {% for p in range(1, total_pages + 1) %}
         {% if p == page %}
-            <strong>{{ p }}</strong>
+            <strong style="
+                display: inline-block; 
+                padding: 8px 12px; 
+                margin: 0 4px; 
+                border: 1px solid #ccc; 
+                background-color: #f0f0f0; /* Color de fondo claro para que parezca un botón */
+                color: #333; 
+                border-radius: 4px;
+                font-weight: bold;
+            ">
+                {{ p }}
+            </strong>
         {% else %}
-            <a href="{{ url_for('tags.index', page=p, q=q, sort=sort, order=order) }}">{{ p }}</a>
+            <a style="
+                display: inline-block; 
+                padding: 8px 12px; 
+                margin: 0 4px; 
+                border: 1px solid #ccc; 
+                text-decoration: none; 
+                color: #333; 
+                border-radius: 4px;" 
+            href="{{ url_for('tags.index', page=p, q=q, sort=sort, order=order) }}">
+                {{ p }}
+            </a>
         {% endif %}
     {% endfor %}
 
     {% if page < total_pages %}
-        <a href="{{ url_for('tags.index', page=page+1, q=q, sort=sort, order=order) }}">Siguiente</a>
+        <a style="
+            display: inline-block; 
+            padding: 8px 12px; 
+            margin: 0 4px; 
+            border: 1px solid #ccc; 
+            text-decoration: none; 
+            color: #333; 
+            border-radius: 4px;"  
+        href="{{ url_for('tags.index', page=page+1, q=q, sort=sort, order=order) }}">Siguiente
+        </a>
     {% endif %}
 </div>
 

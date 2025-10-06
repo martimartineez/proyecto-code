@@ -28,12 +28,15 @@ def crearPermisos(permisos):
         db.session.commit()
     return True
 
-def permissions(user: Usuario):
-    nombres: set[str] = set()
-    for rol in (user.roles or []):
-        for permiso in rol.permisos:
-            nombres.add(permiso.nombre)
-    return list(nombres)
+def permissions(user):
+    permisos_usuario = list({permiso.nombre for rol in user.roles for permiso in rol.permisos})
+    #print('👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻',permisos_usuario)
+    return permisos_usuario
+
+def listar_roles_usuario(user):
+    roles_usuario = list({rol.nombre for rol in user.roles})
+    return roles_usuario
+
 
 def list_usuarios():
     #return db.session.query(Usuario.nombre, Usuario.email).all()
@@ -99,8 +102,11 @@ def comprobar_email(email: str):
 
 
 def baja_logica_usuario(user: Usuario):
-    user.activo = False
+    user.borradoLogico = True
     db.session.commit()
     return user
 
+def comprobar_bloqueado(user):
+    estado = user.activo
+    return estado
 

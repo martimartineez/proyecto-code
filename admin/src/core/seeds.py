@@ -232,6 +232,8 @@ def run():
         "user_edit",
         "user_update",
         "user_destroy",
+        "user_activate",
+        "user_deactivate",
         "site_index",
         "site_show",
         "site_new",
@@ -262,7 +264,7 @@ def run():
         email="a@gmail.com",
         activo=True,
         esAdmin=True,
-        #idRol=rol_admin.id
+        roles=[rol_admin, rol_editor]
     )
     user2 = auth.create_user(
         nombre="Moni",
@@ -271,7 +273,7 @@ def run():
         email="b@gmail.com",
         activo=True,
         esAdmin=True,
-        #idRol=rol_admin.id
+        roles=[rol_admin, rol_editor]
     )
     user3 = auth.create_user(
         nombre="Coqui",
@@ -280,7 +282,7 @@ def run():
         email="c@gmail.com",
         activo=True,
         esAdmin=True,
-        #idRol=rol_admin.id
+        roles=[rol_admin, rol_editor]
     )
 
     print("Created users! 👍🏻")

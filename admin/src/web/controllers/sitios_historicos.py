@@ -1,4 +1,5 @@
 from src.core import board
+from src.core.board.validaciones import validar_sitio_historico
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from src.core.auth import Usuario
 from src.core.board import SitioHistorico
@@ -11,6 +12,7 @@ from src.web.handlers.auth import login_required, check_permission
 from sqlalchemy import func
 import io, csv
 from flask import Response
+from datetime import date 
 
 
 
@@ -128,20 +130,30 @@ def _build_historial_view(historial: dict, ciudades, categorias, usuarios_by_id:
 @login_required
 def agregar_sitio():
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
-
+    hoy = date.today().strftime('%Y-%m-%d')
     if request.method == "POST":
-        try:
-            # Procesar datos y agregar sitio
-            board.crear_sitio(request.form)
-            flash("Sitio histórico agregado exitosamente.", "success")
-            return redirect(url_for("sitios_historicos.busqueda_avanzada"))
-        except Exception as e:
-            # Puedes registrar el error 'e' para depuración
-            flash(f"Ocurrió un error al intentar agregar el sitio: {e}.", "error")
-            # Devolver el render template para que el usuario pueda corregir y reintentar
-            # Es bueno devolver los datos del formulario para no perderlos, pero aquí se omite por simplicidad
-            # y se vuelve a cargar el formulario.
-            pass # Continúa al render_template con los datos de soporte.
+        
+        # 1. Ejecutar la validación del sitio histórico con los datos del formulario
+        errores = validar_sitio_historico(request.form)
+        
+        if errores:
+            # 2. Si el diccionario NO está vacío (hay errores), mostrar un mensaje Flash
+            # Concatenamos todos los mensajes de error para mostrarlos al usuario.
+            full_error_msg = " | ".join(errores.values()) 
+            flash(f"Hubo errores de validación en el formulario: {full_error_msg}", "error")
+            # El flujo continúa para recargar el formulario con los datos anteriores.
+        else:
+            try:
+                # 3. Si la validación es exitosa, procesar y guardar
+                board.crear_sitio(request.form)
+                flash("Sitio histórico agregado exitosamente.", "success")
+                return redirect(url_for("sitios_historicos.busqueda_avanzada"))
+            except Exception as e:
+                # Manejar errores de la capa de negocio/base de datos
+                flash(f"Ocurrió un error al intentar agregar el sitio: {e}.", "error")
+                # Continúa al render_template con los datos de soporte.
+                pass 
+
     provincias = board.listar_provincias()
     ciudades = board.listar_ciudades()
     categorias = board.listar_categorias()
@@ -153,6 +165,7 @@ def agregar_sitio():
         categorias=categorias,
         tags=tags,
         next_url=next_url,
+        today=hoy,
     )
 
 
@@ -160,19 +173,28 @@ def agregar_sitio():
 @login_required
 def editar_sitio(sitio_id):
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
+    hoy = date.today().strftime('%Y-%m-%d')
 
     if request.method == "POST":
-        try:
-            # Procesar edición del sitio
-            board.editar_sitio(sitio_id, request.form)
-            flash("Sitio histórico editado exitosamente.", "success")
-            return redirect(url_for("sitios_historicos.busqueda_avanzada"))
-        except Exception as e:
-            flash(f"Ocurrió un error al intentar editar el sitio: {e}.", "error")
-            # Para evitar que el usuario pierda el contexto de edición,
-            # se permite que el flujo continúe hacia el render_template,
-            # lo que implica recargar el sitio con los posibles filtros de historial.
-            pass # Continúa cargando los datos para el render_template.
+        
+        # 1. Llamar a la función y recibir el diccionario de errores
+        errores = validar_sitio_historico(request.form)
+        
+        if errores:
+            # 2. Si el diccionario NO está vacío (hay errores), mostrar un mensaje Flash
+            full_error_msg = " | ".join(errores.values()) 
+            flash(f"Hubo errores de validación en el formulario: {full_error_msg}", "error")
+            # El flujo continúa a cargar los datos para el render_template.
+        else:
+            try:
+                # 3. Procesar edición del sitio
+                board.editar_sitio(sitio_id, request.form)
+                flash("Sitio histórico editado exitosamente.", "success")
+                return redirect(url_for("sitios_historicos.busqueda_avanzada"))
+            except Exception as e:
+                flash(f"Ocurrió un error al intentar editar el sitio: {e}.", "error")
+                # El flujo continuará a cargar los datos para el render_template.
+                pass 
     sitio = board.obtener_sitio(sitio_id)
     # Filtros de historial
     usuario_id = request.args.get("usuario_id", type=int)
@@ -222,6 +244,7 @@ def editar_sitio(sitio_id):
         },
         tags=tags,
         next_url=next_url,
+        today=hoy,
     )
 
 
@@ -308,7 +331,7 @@ def busqueda_avanzada():
     order = request.args.get("order", "asc")
     tag_ids = request.args.getlist("tags", type=int)
 
-    per_page = 5  
+    per_page = 25  
 
     query = db.session.query(SitioHistorico)
     buscar = request.args.get("buscar", "").strip()
