@@ -106,9 +106,7 @@ def ver_detalles(usuario_id):
 
     if request.method == "POST":
         usuario = auth.get_user_by_id(usuario_id)
-        roles = board.listar_roles_usuarios(usuario_id)
-        print('--->',roles)
-        #roles_usuarios = board.list_roles_usuarios()
+        roles = auth.listar_roles_usuario(usuario)
         return render_template("manejo_usuarios/detalles_usuario.html", usuario=usuario, roles=roles)
     
     return redirect(url_for("usuarios.index"))

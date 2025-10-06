@@ -19,9 +19,14 @@ def crearPermisos(permisos):
     return True
 
 def permissions(user):
-    permisos = db.session.query(Rol).filter(Rol.id == user.idRol).first().permisos
-    nombres_permisos = [permiso.nombre for permiso in permisos]
-    return nombres_permisos
+    permisos_usuario = list({permiso.nombre for rol in user.roles for permiso in rol.permisos})
+    #print('👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻',permisos_usuario)
+    return permisos_usuario
+
+def listar_roles_usuario(user):
+    roles_usuario = list({rol.nombre for rol in user.roles})
+    return roles_usuario
+
 
 def list_usuarios():
     #return db.session.query(Usuario.nombre, Usuario.email).all()
@@ -72,5 +77,8 @@ def baja_logica_usuario(user: Usuario):
     user.activo = False
     db.session.commit()
     return user
+
+def list_roles_usuario(usuario):
+    return db.session.query(usuario.roles).all()
 
 
