@@ -78,7 +78,7 @@ def baja_logica_usuario(user: Usuario):
     db.session.commit()
     return user
 
-# def list_roles_usuario(usuario):
-#     return db.session.query(usuario.roles).all()
-
+def comprobar_bloqueado(user):
+    estado = user.activo
+    return estado
 

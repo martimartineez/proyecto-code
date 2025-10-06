@@ -202,8 +202,15 @@ def busqueda_avanzada():
     activo = request.args.get("activo", "")  # puede ser "", "true", "false"
     orden = request.args.get("orden", "asc")  # "asc" o "desc"
 
-    # Arrancamos con la lista de usuarios
-    usuarios = auth.list_usuarios()  # Supongo que devuelve una lista/query
+    # Arrancamos con la lista de usuarios 
+    page = request.args.get("page", 1, type=int)
+    per_page = 25
+
+    todos = auth.list_usuarios()  # esto devuelve una lista
+    total = len(todos)
+    inicio = (page - 1) * per_page
+    fin = inicio + per_page
+    usuarios = todos[inicio:fin]
 
     # Filtrar por email
     if email:
@@ -222,6 +229,6 @@ def busqueda_avanzada():
         reverse=(orden == "desc")
     )
 
-    return render_template("manejo_usuarios/busqueda_avanzada.html",usuarios=usuarios,email=email,activo=activo,orden=orden)
+    return render_template("manejo_usuarios/busqueda_avanzada.html",usuarios=usuarios,email=email,activo=activo,orden=orden,page=page,total=total,per_page=per_page)
 
 
