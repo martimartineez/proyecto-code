@@ -16,12 +16,24 @@ def crearPermisos(permisos):
     for permiso in permisos["editor"]:
         editor.permisos.append(Permiso(nombre=permiso))
     db.session.commit()
+
+    # Otorgar TODOS los permisos existentes al rol SystemAdmin
+    system_admin = db.session.query(Rol).filter(Rol.nombre == "SystemAdmin").first()
+    if system_admin:
+        all_perms = db.session.query(Permiso).all()
+        existing = set(p.nombre for p in system_admin.permisos)
+        for p in all_perms:
+            if p.nombre not in existing:
+                system_admin.permisos.append(p)
+        db.session.commit()
     return True
 
-def permissions(user):
-    permisos = db.session.query(Rol).filter(Rol.id == user.idRol).first().permisos
-    nombres_permisos = [permiso.nombre for permiso in permisos]
-    return nombres_permisos
+def permissions(user: Usuario):
+    nombres: set[str] = set()
+    for rol in (user.roles or []):
+        for permiso in rol.permisos:
+            nombres.add(permiso.nombre)
+    return list(nombres)
 
 def list_usuarios():
     #return db.session.query(Usuario.nombre, Usuario.email).all()
@@ -32,12 +44,30 @@ def delete_user(user: Usuario):
     db.session.commit()
 
 def create_user(**kwargs):
+    # Soporte idRol (legacy) para asignar un único rol inicial
+    rol_id = None
+    if 'idRol' in kwargs and kwargs['idRol'] is not None:
+        try:
+            rol_id = int(kwargs.pop('idRol'))
+        except Exception:
+            # si viene por nombre, intentamos resolverlo por nombre
+            nombre_rol = kwargs.pop('idRol')
+            rol = db.session.query(Rol).filter(Rol.nombre == nombre_rol).first()
+            rol_id = rol.id if rol else None
+
     hash_password = bcrypt.generate_password_hash(kwargs['password']).decode('utf-8')
     kwargs['password'] = hash_password
+
     user = Usuario(**kwargs)
     db.session.add(user)
-    db.session.commit()
+    db.session.flush()
 
+    if rol_id:
+        rol = db.session.query(Rol).filter(Rol.id == rol_id).first()
+        if rol and rol not in user.roles:
+            user.roles.append(rol)
+
+    db.session.commit()
     return user
 
 def update_password(usuario_id, new_password):
