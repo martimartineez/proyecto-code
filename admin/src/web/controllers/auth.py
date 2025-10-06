@@ -16,6 +16,9 @@ def authenticate():
     if not user:
         flash('Usuario o contraseña incorrecto/a', 'error')
         return redirect(url_for('auth.login'))
+    if auth.comprobar_bloqueado(user) == False:
+        flash('Usuario bloqueado, contacte al administrador', 'error')
+        return redirect(url_for('auth.login'))
     
     session['user'] = user.email
     session['user_id'] = user.id
