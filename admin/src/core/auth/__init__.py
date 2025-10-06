@@ -73,3 +73,4 @@ def baja_logica_usuario(user: Usuario):
     db.session.commit()
     return user
 
+

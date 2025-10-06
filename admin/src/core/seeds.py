@@ -39,7 +39,7 @@ def run():
             email="system@example.com",
             activo=True,
             esAdmin=True,
-            idRol=admin_role.id,
+            #idRol=admin_role.id,
         )
         db.session.add(system_user)
         db.session.flush()
@@ -260,7 +260,7 @@ def run():
         email="a@gmail.com",
         activo=True,
         esAdmin=True,
-        idRol=rol_admin.id
+        #idRol=rol_admin.id
     )
     user2 = auth.create_user(
         nombre="Moni",
@@ -269,7 +269,7 @@ def run():
         email="b@gmail.com",
         activo=True,
         esAdmin=True,
-        idRol=rol_admin.id
+        #idRol=rol_admin.id
     )
     user3 = auth.create_user(
         nombre="Coqui",
@@ -278,7 +278,7 @@ def run():
         email="c@gmail.com",
         activo=True,
         esAdmin=True,
-        idRol=rol_admin.id
+        #idRol=rol_admin.id
     )
 
     print("Created users! 👍🏻")

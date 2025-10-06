@@ -92,7 +92,6 @@ def modificar(usuario_id):
         user.apellido = request.form["apellido"]
         user.email = request.form["email"]
         user.idRol = int(request.form["rol"])
-        session['username'] = user.nombre
 
         # Guardar los cambios en la base de datos
         auth.db.session.commit()
@@ -107,7 +106,9 @@ def ver_detalles(usuario_id):
 
     if request.method == "POST":
         usuario = auth.get_user_by_id(usuario_id)
-        roles = board.list_roles()
+        roles = board.listar_roles_usuarios(usuario_id)
+        print('--->',roles)
+        #roles_usuarios = board.list_roles_usuarios()
         return render_template("manejo_usuarios/detalles_usuario.html", usuario=usuario, roles=roles)
     
     return redirect(url_for("usuarios.index"))
