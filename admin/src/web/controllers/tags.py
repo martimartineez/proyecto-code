@@ -43,7 +43,7 @@ def agregar_tag():
         
         elif resultado == "DUPLICATE_ERROR":
             # Caso 2: El Tag ya existe
-            flash(f"Error: Ya existe un Tag con el nombre '{request.form.get('nombre')}'.", "error")
+            flash(f"Error: Ya existe un Tag con el nombre '{request.form.get('nombre')}' o uno muy similar.", "error")
             # Dejamos que la ejecución siga para que se vuelva a renderizar el formulario
             
         else:
@@ -72,7 +72,7 @@ def editar_tag(tag_id):
         
         elif resultado == "DUPLICATE_ERROR":
             # Caso 2: El nuevo nombre/slug ya existe en OTRO tag
-            flash(f"Error: Ya existe un Tag con el nombre '{request.form.get('nombre')}' o uno muy similar.", "error")
+            flash(f"Error: Ya existe un Tag con el nombre '{request.form.get('nombre')}' o no esta disponible para usar.", "error")
             # Dejamos que el flujo continúe para que se muestre el formulario de edición con el error
             
         else:
@@ -86,14 +86,17 @@ def editar_tag(tag_id):
 @bp.post("/<int:tag_id>/eliminar")
 @login_required
 def eliminar_tag(tag_id):
-    resultado = board.eliminar_tag(tag_id)
+    resultado = board.eliminar_tag(tag_id) # Si retorna una lista, es error.
     
     if resultado is True:
         flash("Tag eliminado exitosamente.", "success")
-    elif resultado == "vinculado":
-        # Manejamos el error específico de la restricción M:N
-        flash("ERROR: El Tag no puede ser eliminado porque está asociado a uno o más Sitios Históricos. Desvincúlelo primero.", "error")
+        
+    elif isinstance(resultado, list):
+        # ... este código se ejecuta SOLO si hay sitios ACTIVOS vinculados.
+        sitios_nombres = ", ".join(resultado)
+        flash(f"ERROR: El Tag no puede ser eliminado. Está asociado a los siguientes Sitios Históricos: {sitios_nombres}. Desvincúlelo(s) primero.", "error")
+        
     else: 
-        flash("ERROR: El Tag no pudo ser eliminado (no encontrado o error desconocido).", "error")
+        flash("Ocurrió un error inesperado al intentar eliminar el Tag.", "error")
         
     return redirect(url_for("tags.index"))
