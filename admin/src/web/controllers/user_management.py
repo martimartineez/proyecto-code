@@ -20,15 +20,29 @@ def index():
     if not check_permission("user_index"):
         return abort(403)
     
-    usuarios = auth.list_usuarios()
+    page = request.args.get("page", 1, type=int)
+    per_page = 25
+
+    todos = auth.list_usuarios()  # esto devuelve una lista
+    total = len(todos)
+    inicio = (page - 1) * per_page
+    fin = inicio + per_page
+    usuarios = todos[inicio:fin]
+
     roles = board.list_roles()
 
-    return render_template("manejo_usuarios/user_management.html", usuarios=usuarios, roles=roles)
+    return render_template("manejo_usuarios/user_management.html", usuarios=usuarios, roles=roles,page=page,
+        total=total,
+        per_page=per_page)
 
 
 @bp.route("/eliminar/<int:usuario_id>", methods=["POST"])
 @login_required
 def eliminar(usuario_id):
+
+    if not check_permission("user_destroy"):
+        return abort(403)
+    
     user = auth.get_user_by_id(usuario_id)
     # Eliminacion fisica
     # if user:
@@ -41,8 +55,24 @@ def eliminar(usuario_id):
 @bp.route("/desactivar/<int:usuario_id>", methods=["POST"])
 @login_required
 def desactivar(usuario_id):
+
+    if not check_permission("user_deactivate"):
+        return abort(403)
+    
     user = auth.get_user_by_id(usuario_id)
     user.activo = False
+    auth.db.session.commit()
+
+    return redirect(url_for("usuarios.index"))
+
+@bp.route("/activar/<int:usuario_id>", methods=["POST"])
+@login_required
+def activar(usuario_id):
+    if not check_permission("user_activate"):
+        return abort(403)
+    
+    user = auth.get_user_by_id(usuario_id)
+    user.activo = True
     auth.db.session.commit()
 
     return redirect(url_for("usuarios.index"))
@@ -51,6 +81,9 @@ def desactivar(usuario_id):
 @bp.route("/AgregarUsuario", methods=["GET","POST"])
 @login_required
 def agregar_usuario():
+    if not check_permission("user_new"):
+        return abort(403)
+    
     if request.method == "POST":
         if (auth.comprobar_email(request.form["email"])):
             flash("El email ya existe. Por favor, elija otro.", "error")
@@ -60,12 +93,13 @@ def agregar_usuario():
             apellido = request.form["apellido"]
             email = request.form["email"]
             password = request.form["password"]
-            rol = request.form.get("roles")
-            if rol == "Admin":
+            roles_ids = request.form.getlist("roles")
+            roles_ids = list(map(int, roles_ids))    
+            if board.get_id_rol_admin() in(roles_ids):
                 admin = True
             else:
                 admin = False
-            #rol = request.form.get("rol") preguntarle al profe de los roles
+
             auth.create_user(
                 nombre=nombre,
                 email=email,
@@ -73,7 +107,7 @@ def agregar_usuario():
                 apellido=apellido,
                 activo=True,
                 esAdmin=admin,
-                idRol=rol,
+                roles = [board.get_rol_by_id(int(rol_id)) for rol_id in roles_ids]
             )
             # Redirigir al index dentro del blueprint
             return redirect(url_for("usuarios.index"))
@@ -84,26 +118,33 @@ def agregar_usuario():
 @bp.route("/modificar/<int:usuario_id>", methods=["GET", "POST"])
 @login_required
 def modificar(usuario_id):
+    if not check_permission("user_update"):
+        return abort(403)
+    
     user = auth.get_user_by_id(usuario_id)
+    rolesUsuario = auth.listar_roles_usuario(user)
     roles = board.list_roles()
 
     if request.method == "POST":
         user.nombre = request.form["nombre"]
         user.apellido = request.form["apellido"]
         user.email = request.form["email"]
-        user.idRol = int(request.form["rol"])
+        roles_ids = request.form.getlist("rol")
+        user.roles = [board.get_rol_by_id(int(rol_id)) for rol_id in roles_ids]
 
         # Guardar los cambios en la base de datos
+        session['username'] = user.nombre
         auth.db.session.commit()
 
         return redirect(url_for("usuarios.index"))
 
-    return render_template("manejo_usuarios/modificar_usuario.html", usuario=user, roles=roles) 
+    return render_template("manejo_usuarios/modificar_usuario.html", usuario=user, roles=roles, rolesUsuario=rolesUsuario) 
 
 @bp.route("/detalles/<int:usuario_id>", methods=["GET", "POST"])
 @login_required
 def ver_detalles(usuario_id):
-
+    if not check_permission("user_show"):
+        return abort(403)
     if request.method == "POST":
         usuario = auth.get_user_by_id(usuario_id)
         roles = auth.listar_roles_usuario(usuario)
@@ -115,6 +156,9 @@ def ver_detalles(usuario_id):
 @bp.route("/cambiar_contraseña/<int:usuario_id>", methods=["GET", "POST"])
 @login_required
 def cambiar_contraseña(usuario_id):
+    if not check_permission("user_update"):
+        return abort(403)
+    
     user = auth.get_user_by_id(usuario_id)
     step = request.form.get("step")
     # Paso 1: verificar contraseña actual
@@ -136,7 +180,7 @@ def cambiar_contraseña(usuario_id):
         repetir = request.form.get("repetir_contraseña")
 
         if nueva != repetir:
-            flash("Las contraseñas no coinciden.", "danger")
+            flash("Las contraseñas no coinciden.", "error")
             return render_template("manejo_usuarios/cambiar_contraseña.html", verified=True)
 
         auth.update_password(usuario_id, nueva)
@@ -149,6 +193,10 @@ def cambiar_contraseña(usuario_id):
 @bp.route("/busqueda_avanzada", methods=["GET", "POST"])
 @login_required
 def busqueda_avanzada():
+
+    if not check_permission("user_show"):
+        return abort(403)
+    
     # Capturamos los filtros
     email = request.args.get("email", "").strip()
     activo = request.args.get("activo", "")  # puede ser "", "true", "false"

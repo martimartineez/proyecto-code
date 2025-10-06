@@ -516,6 +516,17 @@ def list_roles():
 
     return db.session.query(Rol).order_by(Rol.id).all()
 
+def get_rol_by_id(rol_id: int):
+    from src.core.board.rol import Rol
+
+    return db.session.get(Rol, rol_id)
+
+def get_id_rol_admin():
+    from src.core.board.rol import Rol
+
+    rol_admin = db.session.query(Rol).filter(Rol.nombre == "Admin").first()
+    return rol_admin.id if rol_admin else None
+
 
 def listar_historial_sitio(
     id_sitio: int,

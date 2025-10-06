@@ -230,6 +230,8 @@ def run():
         "user_edit",
         "user_update",
         "user_destroy",
+        "user_activate",
+        "user_deactivate",
         "site_index",
         "site_show",
         "site_new",

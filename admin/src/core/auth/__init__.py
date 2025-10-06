@@ -74,11 +74,11 @@ def comprobar_email(email: str):
 
 
 def baja_logica_usuario(user: Usuario):
-    user.activo = False
+    user.borradoLogico = True
     db.session.commit()
     return user
 
-def list_roles_usuario(usuario):
-    return db.session.query(usuario.roles).all()
+# def list_roles_usuario(usuario):
+#     return db.session.query(usuario.roles).all()
 
 

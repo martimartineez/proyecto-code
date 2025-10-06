@@ -31,6 +31,20 @@
         padding: 8px 12px;
         cursor: pointer;
     }
+
+    .paginacion a {
+        margin: 0 10px;
+        padding: 5px 10px;
+        border: 1px solid #007bff;
+        border-radius: 5px;
+        color: #007bff;
+        text-decoration: none;
+    }
+
+    .paginacion a:hover {
+        background-color: #e3e3e4;
+        color: rgb(0, 0, 0);
+    }
 </style>
 {% endblock %}
 
@@ -52,39 +66,43 @@
 <table>
     <thead>
         <tr>
-            <th>nombre</th>
+            <th>Nombre</th>
             <th>Email</th>
             <th>Acciones</th>
         </tr>
     </thead>
     <tbody>
         {% for usuario in usuarios %}
-        {% if usuario.activo %}
+        {% if not usuario.borradoLogico %}
         <tr>
             <td>{{ usuario.nombre }}</td>
             <td>{{ usuario.email }}</td>
             <td>
-                <!-- Boton ver detalles -->
                 <form action="{{ url_for('usuarios.ver_detalles', usuario_id=usuario.id) }}" method="post"
                     style="display:inline;">
                     <button type="submit">Ver detalles</button>
                 </form>
-                <!-- Boton de modificar -->
                 <form action="{{ url_for('usuarios.modificar', usuario_id=usuario.id) }}" method="get"
                     style="display:inline;">
                     <button type="submit">Modificar</button>
                 </form>
-                <!-- Boton de modificar -->
+                {% if usuario.activo %}
                 <form action="{{ url_for('usuarios.desactivar', usuario_id=usuario.id) }}" method="post"
                     style="display:inline;">
                     <button type="submit"
                         onclick="return confirm('¿Seguro que deseas desactivar este usuario?');">Desactivar</button>
                 </form>
-                <!-- Boton eliminar -->
+                {% else %}
+                <form action="{{ url_for('usuarios.activar', usuario_id=usuario.id) }}" method="post"
+                    style="display:inline;">
+                    <button type="submit"
+                        onclick="return confirm('¿Seguro que deseas activar este usuario?');">Activar</button>
+                </form>
+                {% endif %}
                 <form action="{{ url_for('usuarios.eliminar', usuario_id=usuario.id) }}" method="post"
                     style="display:inline;">
                     <button type="submit"
-                        onclick="return confirm('¿Seguro que deseas eliminar este usuario?');">Eliminar usuario</button>
+                        onclick="return confirm('¿Seguro que deseas eliminar este usuario?');">Eliminar</button>
                 </form>
             </td>
         </tr>
@@ -93,31 +111,38 @@
     </tbody>
 </table>
 
-<!-- Botones -->
+<!-- 🔹 Paginación manual -->
+<div class="paginacion">
+    {% set total_paginas = (total // per_page) + (1 if total % per_page else 0) %}
+
+    {% if page > 1 %}
+    <a href="{{ url_for('usuarios.index', page=page-1) }}">Anterior</a>
+    {% endif %}
+
+    Página {{ page }} de {{ total_paginas }}
+
+    {% if total > page * per_page %}
+    <a href="{{ url_for('usuarios.index', page=page+1) }}">Siguiente</a>
+    {% endif %}
+</div>
+
+<!-- 🔹 Botones -->
 <div class="center-btn">
     <a href="{{ url_for('usuarios.agregar_usuario') }}">
         <button id="agregarUsuarioBtn">Agregar usuario</button>
     </a>
 </div>
 
-<div>
+<div class="center-btn">
     <a href="{{ url_for('usuarios.busqueda_avanzada') }}">
         <button>Busqueda Avanzada</button>
     </a>
 </div>
 
+<div class="center-btn">
+    <a href="{{ url_for('home') }}">
+        <button class="Volver">Volver al inicio</button>
+    </a>
+</div>
 
-<!-- <script>
-    function toggleDetalles(id) {
-        const fila = document.getElementById(id);
-        if (fila.style.display === "none" || fila.style.display === "") {
-            fila.style.display = "table-row";
-        } else {
-            fila.style.display = "none";
-        }
-    }
-</script> -->
-
-
-<a href="{{ url_for('home') }}" class="Volver">Volver al inicio</a>
 {% endblock %}
