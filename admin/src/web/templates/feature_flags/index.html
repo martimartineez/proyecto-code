@@ -13,7 +13,7 @@
 
   <div class="row g-3" style="margin-bottom: 2rem;">
     {% for f in flags %}
-    <div class="col-12 col-md-6 col-xl-6">
+    <div class="col-12 col-md-6 col-lg-4">
       <div class="card shadow-sm h-100">
         <form action="{{ url_for('feature_flags.update') }}" method="post" 
               onsubmit="return confirmarCambio('{{ f.nombre }}', this)" 
@@ -22,17 +22,19 @@
           <div class="card-body">
             <input type="hidden" name="nombre" value="{{ f.nombre }}">
 
-            <!-- Título y Switch -->
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <div>
-                <h5 class="mb-0">{{ f.etiqueta }}</h5>
-                <small class="text-muted">{{ f.descripcion or 'Sin descripción' }} · <code>{{ f.nombre }}</code></small>
-              </div>
-              <div class="form-check form-switch" style="margin-left: 1rem;">
+            <!-- Título centrado -->
+            <div class="mb-2 text-center">
+              <h5 class="mb-0">{{ f.etiqueta }}</h5>
+              <small class="text-muted">{{ f.descripcion or 'Sin descripción' }}</small>
+            </div>
+
+            <!-- Toggle centrado -->
+            <div class="d-flex justify-content-center mb-2">
+              <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" 
                        id="switch_{{ f.nombre }}" name="valor"
                        {% if f.valor %}checked{% endif %}
-                       onchange="toggleMensaje('{{ f.nombre }}')">
+                       onchange="toggleYEnviar('{{ f.nombre }}', this.form)">
                 <label class="form-check-label" for="switch_{{ f.nombre }}">
                   {{ 'ON' if f.valor else 'OFF' }}
                 </label>
@@ -40,8 +42,7 @@
             </div>
 
             <!-- Mensaje de mantenimiento -->
-            <div class="mb-3" id="mensajeBox_{{ f.nombre }}" 
-                 {% if not f.valor and not (f.mensaje and f.mensaje.strip()) %}style="display:none"{% endif %}>
+            <div class="mb-3" id="mensajeBox_{{ f.nombre }}">
               <label for="msg_{{ f.nombre }}" class="form-label">Mensaje de mantenimiento</label>
               <textarea class="form-control" id="msg_{{ f.nombre }}" name="mensaje" 
                         maxlength="200" rows="2"
@@ -49,10 +50,9 @@
             </div>
           </div>
 
-          <!-- Footer -->
-          <div class="card-footer d-flex justify-content-between align-items-center small text-muted">
+          <!-- Footer (sin botón) -->
+          <div class="card-footer d-flex justify-content-center align-items-center small text-muted">
             <span>Última modif.: {{ f.ultimaModificacion.strftime('%Y-%m-%d %H:%M:%S') if f.ultimaModificacion else '-' }} · Usuario: {{ f.usuarioEmail or (f.idUsuarioModificacion or '-') }}</span>
-            <button type="submit" class="btn btn-sm btn-primary" style="margin-left: 1rem;">💾 Guardar</button>
           </div>
         </form>
       </div>
@@ -70,10 +70,29 @@ function confirmarCambio(nombre, form) {
   return true;
 }
 
-function toggleMensaje(nombre) {
-  const box = document.getElementById('mensajeBox_' + nombre);
-  const checkbox = document.getElementById('switch_' + nombre);
-  box.style.display = checkbox.checked ? 'block' : 'none';
+function toggleYEnviar(nombre, form) {
+  const checkbox = form.querySelector('input[name="valor"]');
+  const checked = checkbox.checked;
+  const mensajeEl = form.querySelector('textarea[name="mensaje"]');
+  const mensaje = (mensajeEl?.value || '').trim();
+  const requiereMensaje = (nombre === 'admin_maintenance_mode' || nombre === 'portal_maintenance_mode');
+
+  if (requiereMensaje && checked && !mensaje) {
+    alert('Debe ingresar un mensaje de mantenimiento para habilitar el modo.');
+    checkbox.checked = false;
+    if (mensajeEl) mensajeEl.focus();
+    return;
+  }
+
+  if (requiereMensaje && checked) {
+    if (!confirm('Vas a habilitar el modo de mantenimiento. Esto limitará el acceso. ¿Deseás continuar?')) {
+      checkbox.checked = false;
+      return;
+    }
+  }
+
+  // Enviar el formulario automáticamente
+  form.submit();
 }
 </script>
 {% endblock %}
