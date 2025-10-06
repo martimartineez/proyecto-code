@@ -21,7 +21,7 @@ def index():
         return abort(403)
     
     page = request.args.get("page", 1, type=int)
-    per_page = 25
+    per_page = 25 # elementos por pagina
 
     todos = auth.list_usuarios()  # esto devuelve una lista
     total = len(todos)
@@ -62,7 +62,7 @@ def desactivar(usuario_id):
     user = auth.get_user_by_id(usuario_id)
     if not user.esAdmin: 
         user.activo = False
-    auth.db.session.commit()
+        auth.db.session.commit()
 
     return redirect(url_for("usuarios.index"))
 
@@ -132,6 +132,12 @@ def modificar(usuario_id):
         user.email = request.form["email"]
         roles_ids = request.form.getlist("rol")
         user.roles = [board.get_rol_by_id(int(rol_id)) for rol_id in roles_ids]
+        roles_ids = list(map(int, roles_ids))    
+        if board.get_id_rol_admin() in(roles_ids):
+            admin = True
+        else:
+            admin = False
+        user.esAdmin = admin
 
         # Guardar los cambios en la base de datos
         session['username'] = user.nombre
@@ -205,7 +211,7 @@ def busqueda_avanzada():
 
     # Arrancamos con la lista de usuarios 
     page = request.args.get("page", 1, type=int)
-    per_page = 25
+    per_page = 25 #elementos por pagina
 
     todos = auth.list_usuarios()  # esto devuelve una lista
     total = len(todos)
