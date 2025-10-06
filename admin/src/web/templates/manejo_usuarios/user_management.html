@@ -87,6 +87,7 @@
                     style="display:inline;">
                     <button type="submit">Modificar</button>
                 </form>
+                {% if not usuario.esAdmin %}
                 {% if usuario.activo %}
                 <form action="{{ url_for('usuarios.desactivar', usuario_id=usuario.id) }}" method="post"
                     style="display:inline;">
@@ -99,6 +100,7 @@
                     <button type="submit"
                         onclick="return confirm('¿Seguro que deseas activar este usuario?');">Activar</button>
                 </form>
+                {% endif %}
                 {% endif %}
                 <form action="{{ url_for('usuarios.eliminar', usuario_id=usuario.id) }}" method="post"
                     style="display:inline;">

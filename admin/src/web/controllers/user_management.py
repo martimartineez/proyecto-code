@@ -60,7 +60,8 @@ def desactivar(usuario_id):
         return abort(403)
     
     user = auth.get_user_by_id(usuario_id)
-    user.activo = False
+    if not user.esAdmin: 
+        user.activo = False
     auth.db.session.commit()
 
     return redirect(url_for("usuarios.index"))
