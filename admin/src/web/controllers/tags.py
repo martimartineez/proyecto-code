@@ -1,6 +1,7 @@
 from src.core import board
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from src.web.handlers.auth import login_required
+from core.board.validaciones import validar_tag
 
 bp = Blueprint("tags", __name__, url_prefix="/tags")
 
@@ -34,6 +35,17 @@ def index():
 @login_required
 def agregar_tag():
     if request.method == "POST":
+        # Validar datos con la capa separada
+        errores = validar_tag(request.form)
+        
+        if errores:
+            # Mostrar errores en flash messages y re-renderizar
+            for campo, msg in errores.items():
+                # Nota: Uso "flash" con categoría "error"
+                flash(f"{msg}", "error")
+            # Devolver el formulario con los datos ingresados para que no los pierda (opcional)
+            return render_template("tags/form_tags.html", action="agregar", form_data=request.form), 400
+        
         resultado = board.crear_tag(request.form)
         
         if resultado and resultado != "DUPLICATE_ERROR":
@@ -63,6 +75,17 @@ def editar_tag(tag_id):
         return redirect(url_for("tags.index"))
 
     if request.method == "POST":
+        # Validar datos con la capa separada
+        errores = validar_tag(request.form)
+        
+        if errores:
+            # Mostrar errores y re-renderizar
+            for campo, msg in errores.items():
+                flash(f"{msg}", "error")
+            # Devolver el formulario con el tag existente y los datos POST
+            return render_template("tags/form_tags.html", tag=tag, action="editar", form_data=request.form), 400
+
+
         resultado = board.editar_tag(tag_id, request.form)
         
         if resultado is True:
