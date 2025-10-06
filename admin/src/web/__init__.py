@@ -59,7 +59,7 @@ def create_app(env="development", static_folder="../../static"):
     #register session handler and helpers
     app.jinja_env.globals['is_autenticated'] = is_autenticated
 
-    # Local helper for admin check (user.esAdmin)
+    # Local helpers for admin and system admin checks
     def is_admin() -> bool:
         from flask import session as _session
         uid = _session.get('user_id')
@@ -68,7 +68,24 @@ def create_app(env="development", static_folder="../../static"):
         u = core_auth.get_user_by_id(uid)
         return bool(u and getattr(u, 'esAdmin', False))
 
+    def is_system_admin() -> bool:
+        from flask import session as _session
+        uid = _session.get('user_id')
+        if not uid:
+            return False
+        u = core_auth.get_user_by_id(uid)
+        if not u:
+            return False
+        # System Admin if has role named 'SystemAdmin' or explicit esAdmin True and role named Admin/SystemAdmin
+        try:
+            roles = getattr(u, 'roles', []) or []
+            has_role = any(getattr(r, 'nombre', None) in {'SystemAdmin'} for r in roles)
+        except Exception:
+            has_role = False
+        return bool(has_role)
+
     app.jinja_env.globals['is_admin'] = is_admin
+    app.jinja_env.globals['is_system_admin'] = is_system_admin
 
     # Simple helpers to use flags in templates
     def get_flag_value(nombre: str) -> bool:
@@ -90,18 +107,28 @@ def create_app(env="development", static_folder="../../static"):
         # Always allow auth routes
         if request.blueprint == 'auth':
             return None
-        # Allow Feature Flags page for any usuario logueado (route has @login_required)
+        # Permitir Feature Flags solo a System Admins (para poder desactivar mantenimiento)
         if request.blueprint == 'feature_flags':
-            return None
-
-        flag = get_flag('admin_maintenance_mode')
-        if flag and flag.valor:
-            # If logged-in users navigate anywhere, show banner via flash and redirect to login for non-admins
-            if not is_admin():
+            if is_system_admin():
+                return None
+            # No administrador: si hay mantenimiento, se muestra mensaje y se redirige a login
+            flag = get_flag('admin_maintenance_mode')
+            if flag and flag.valor:
                 msg = flag.mensaje or 'Sistema en mantenimiento.'
                 flash(msg, 'error')
                 return redirect(url_for('auth.login'))
-            # Admins can navigate normally
+            # Si no hay mantenimiento, igualmente restringimos a admins por seguridad
+            flash('No tiene permisos para acceder a esta página', 'error')
+            return redirect(url_for('usuarios.index'))
+
+        flag = get_flag('admin_maintenance_mode')
+        if flag and flag.valor:
+            # Solo System Admin puede navegar el panel durante mantenimiento
+            if not is_system_admin():
+                msg = flag.mensaje or 'Sistema en mantenimiento.'
+                flash(msg, 'error')
+                return redirect(url_for('auth.login'))
+            # Admins pueden navegar normalmente
             return None
         return None
 
