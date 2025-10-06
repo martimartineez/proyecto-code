@@ -20,5 +20,4 @@ def check_permission(permission):
     permissions = auth.permissions(user)
     print(permissions)
     
-    #return user is not None and permission in permissions
-    return True
+    return user is not None and permission in permissions
