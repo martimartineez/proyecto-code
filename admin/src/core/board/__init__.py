@@ -516,11 +516,17 @@ def list_roles():
 
     return db.session.query(Rol).order_by(Rol.id).all()
 
-def listar_roles_usuarios(id_usuario: int):
+def get_rol_by_id(rol_id: int):
     from src.core.board.rol import Rol
-    from src.core.auth.usuario import roles_usuarios
-    
-    return db.session.query(Rol).join(roles_usuarios, roles_usuarios.c.rolId == Rol.id).filter(roles_usuarios.c.usuarioId == id_usuario).order_by(Rol.id).all()
+
+    return db.session.get(Rol, rol_id)
+
+def get_id_rol_admin():
+    from src.core.board.rol import Rol
+
+    rol_admin = db.session.query(Rol).filter(Rol.nombre == "Admin").first()
+    return rol_admin.id if rol_admin else None
+
 
 def listar_historial_sitio(
     id_sitio: int,
