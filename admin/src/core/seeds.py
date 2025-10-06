@@ -32,17 +32,19 @@ def run():
 
     system_user = db.session.query(Usuario).filter(Usuario.email == "system@example.com").first()
     if not system_user:
-        system_user = Usuario(
+        # Usar create_user para garantizar hasheo del password
+        system_user = auth.create_user(
             nombre="System",
             apellido="User",
             password="changeme",
             email="system@example.com",
             activo=True,
             esAdmin=True,
-            #idRol=admin_role.id,
         )
-        db.session.add(system_user)
-        db.session.flush()
+
+    # Asociar rol SystemAdmin al usuario si no lo tiene ya
+    if admin_role not in system_user.roles:
+        system_user.roles.append(admin_role)
 
     db.session.commit()
 
@@ -225,7 +227,7 @@ def run():
     'admin': [
         "user_index",
         "user_show",
-        "user_create"
+        "user_create",
         "user_new",
         "user_edit",
         "user_update",
@@ -282,3 +284,9 @@ def run():
     )
 
     print("Created users! 👍🏻")
+
+    # Asociar rol Admin a los usuarios admin de ejemplo
+    for _u in (user1, user2, user3):
+        if rol_admin not in _u.roles:
+            _u.roles.append(rol_admin)
+    db.session.commit()
