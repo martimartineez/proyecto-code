@@ -331,7 +331,7 @@ def busqueda_avanzada():
     order = request.args.get("order", "asc")
     tag_ids = request.args.getlist("tags", type=int)
 
-    per_page = 1
+    per_page = 25
 
     query = db.session.query(SitioHistorico)
     buscar = request.args.get("buscar", "").strip()
