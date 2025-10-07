@@ -13,7 +13,6 @@ from sqlalchemy import func
 import io, csv
 from flask import Response
 from datetime import date 
-from src.web.handlers.auth import check
 
 
 
