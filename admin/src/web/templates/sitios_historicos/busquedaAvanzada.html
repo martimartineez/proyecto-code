@@ -26,91 +26,115 @@
 {% endwith %}
 
 <form method="get">
-    
-    <div id="filtrosAvanzados" style="display: none;">
-        <label>Provincia:</label>
-    <select id="provinciaSelect" name="provincia">
-    <option value="">Seleccione provincia</option>
-    {% for p in provincias %}
-        <option value="{{ p.id }}" {% if request_args.get('provincia') == p.id|string %}selected{% endif %}>
-        {{ p.nombre }}
-        </option>
-    {% endfor %}
-    </select><br>
+  <div id="filtrosAvanzados" class="filtros">
 
-    <label>Ciudad:</label>
-    <select id="ciudadSelect" name="ciudad" disabled>
-    <option value="">Seleccione ciudad</option>
-    {% for c in ciudades %}
-        <option value="{{ c.id }}" data-provincia="{{ c.idProvincia }}"
-        {% if request_args.get('ciudad') == c.id|string %}selected{% endif %}>
-        {{ c.nombre }}
-    </option>
-    {% endfor %}
-    </select><br>
+    <div>
+      <label>Provincia:</label>
+      <select id="provinciaSelect" name="provincia">
+        <option value="">Seleccione provincia</option>
+        {% for p in provincias %}
+          <option value="{{ p.id }}" {% if request_args.get('provincia') == p.id|string %}selected{% endif %}>
+            {{ p.nombre }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
 
-        <label>Categoría:</label>
-        <select name="categoria">
-            <option value="">Seleccione categoría</option>
-            {% for c in categorias %}
-                <option value="{{ c.id }}" {% if request_args.get('categoria') == c.id|string %}selected{% endif %}>
-                {{ c.nombre }}
-                </option>
-                {% endfor %}
-        </select><br>
+    <div>
+      <label>Ciudad:</label>
+      <select id="ciudadSelect" name="ciudad" disabled>
+        <option value="">Seleccione ciudad</option>
+        {% for c in ciudades %}
+          <option value="{{ c.id }}" data-provincia="{{ c.idProvincia }}"
+            {% if request_args.get('ciudad') == c.id|string %}selected{% endif %}>
+            {{ c.nombre }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
 
-        <label>Estado de conservación:</label>
-        <select name="estado_conservacion">
+    <div>
+      <label>Categoría:</label>
+      <select name="categoria">
+        <option value="">Seleccione categoría</option>
+        {% for c in categorias %}
+          <option value="{{ c.id }}" {% if request_args.get('categoria') == c.id|string %}selected{% endif %}>
+            {{ c.nombre }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label>Estado:</label>
+      <select name="estado_conservacion">
         <option value="">Seleccione estado</option>
         <option value="Bueno" {% if request_args.get('estado_conservacion') == 'Bueno' %}selected{% endif %}>Bueno</option>
         <option value="Regular" {% if request_args.get('estado_conservacion') == 'Regular' %}selected{% endif %}>Regular</option>
         <option value="Malo" {% if request_args.get('estado_conservacion') == 'Malo' %}selected{% endif %}>Malo</option>
-        </select><br>
-
-        <label>Tags:</label>
-<select name="tags" multiple size="5">
-    {% for t in tags %}
-        <option value="{{ t.id }}"
-            {% if t.id|string in request_args.getlist('tags') %}selected{% endif %}>
-            {{ t.nombre }}
-        </option>
-    {% endfor %}
-</select>
-<br>
-
-        <label>Fecha registro desde:</label>
-        <input type="date" name="fecha_desde" value="{{ request_args.get('fecha_desde','') }}"><br>
-
-        <label>Fecha registro hasta:</label>
-        <input type="date" name="fecha_hasta" value="{{ request_args.get('fecha_hasta','') }}"><br>
-
-        <label>Visibilidad:</label>
-        <select name="visibilidad">
-      <option value="" {% if request_args.get('visibilidad') == '' %}selected{% endif %}>Todos</option>
-      <option value="1" {% if request_args.get('visibilidad') == '1' %}selected{% endif %}>Sí</option>
-      <option value="0" {% if request_args.get('visibilidad') == '0' %}selected{% endif %}>No</option>
-        </select><br>
-        <label>Buscar:</label>
-        <input type="text" name="buscar" value="{{ request_args.get('buscar','') }}" placeholder="Nombre o descripción"><br>
-
-
-        <label for="sort_by">Ordenar por:</label>
-<select name="sort_by" id="sort_by">
-  <option value="fecha_registro" {% if request_args.get('sort_by') == 'fecha_registro' %}selected{% endif %}>Fecha de registro</option>
-  <option value="nombre" {% if request_args.get('sort_by') == 'nombre' %}selected{% endif %}>Nombre</option>
-  <option value="ciudad" {% if request_args.get('sort_by') == 'ciudad' %}selected{% endif %}>Ciudad</option>
-</select>
-
-<label for="order">Orden:</label>
-<select name="order" id="order">
-  <option value="asc" {% if request_args.get('order') == 'asc' %}selected{% endif %}>Ascendente</option>
-  <option value="desc" {% if request_args.get('order') == 'desc' %}selected{% endif %}>Descendente</option>
-</select>
-
-
-        <button type="submit">Buscar</button>
-    <button type="button" id="btnLimpiar">Limpiar</button>
+      </select>
     </div>
+
+    <div>
+  <label>Tags:</label>
+  <div class="tag-checkboxes">
+    {% for t in tags %}
+      <label class="tag-option">
+        <input type="checkbox" name="tags" value="{{ t.id }}"
+          {% if t.id|string in request_args.getlist('tags') %}checked{% endif %}>
+        {{ t.nombre }}
+      </label>
+    {% endfor %}
+  </div>
+</div>
+
+    <div>
+      <label>Desde:</label>
+      <input type="date" name="fecha_desde" value="{{ request_args.get('fecha_desde','') }}">
+    </div>
+
+    <div>
+      <label>Hasta:</label>
+      <input type="date" name="fecha_hasta" value="{{ request_args.get('fecha_hasta','') }}">
+    </div>
+
+    <div>
+      <label>Visibilidad:</label>
+      <select name="visibilidad">
+        <option value="" {% if request_args.get('visibilidad') == '' %}selected{% endif %}>Todos</option>
+        <option value="1" {% if request_args.get('visibilidad') == '1' %}selected{% endif %}>Sí</option>
+        <option value="0" {% if request_args.get('visibilidad') == '0' %}selected{% endif %}>No</option>
+      </select>
+    </div>
+
+    <div>
+      <label>Buscar:</label>
+      <input type="text" name="buscar" value="{{ request_args.get('buscar','') }}" placeholder="Nombre o descripción">
+    </div>
+
+    <div>
+      <label>Ordenar por:</label>
+      <select name="sort_by" id="sort_by">
+        <option value="fecha_registro" {% if request_args.get('sort_by') == 'fecha_registro' %}selected{% endif %}>Fecha</option>
+        <option value="nombre" {% if request_args.get('sort_by') == 'nombre' %}selected{% endif %}>Nombre</option>
+        <option value="ciudad" {% if request_args.get('sort_by') == 'ciudad' %}selected{% endif %}>Ciudad</option>
+      </select>
+    </div>
+
+    <div>
+      <label>Orden:</label>
+      <select name="order" id="order">
+        <option value="asc" {% if request_args.get('order') == 'asc' %}selected{% endif %}>Ascendente</option>
+        <option value="desc" {% if request_args.get('order') == 'desc' %}selected{% endif %}>Descendente</option>
+      </select>
+    </div>
+
+    <div class="botones">
+      <button type="submit">Buscar</button>
+      <button type="button" id="btnLimpiar">Limpiar</button>
+    </div>
+
+  </div>
 </form>
 {% if sitios is not none %}
     {% if sitios %}
@@ -292,17 +316,17 @@
 
 <script>
     const btn = document.getElementById('btnFiltros');
-    const filtros = document.getElementById('filtrosAvanzados');
+const filtros = document.getElementById('filtrosAvanzados');
 
-    btn.addEventListener('click', () => {
-        if (filtros.style.display === 'none') {
-            filtros.style.display = 'block';  
-            btn.textContent = 'Ocultar filtros';
-        } else {
-            filtros.style.display = 'none';   
-            btn.textContent = 'Mostrar filtros avanzados';
-        }
-    });
+btn.addEventListener('click', () => {
+  if (filtros.style.display === 'none' || filtros.style.display === '') {
+    filtros.style.display = 'flex';
+    btn.textContent = 'Ocultar filtros';
+  } else {
+    filtros.style.display = 'none';
+    btn.textContent = 'Mostrar filtros avanzados';
+  }
+});
 </script>
 
 <script>
@@ -326,6 +350,8 @@ btnLimpiar.addEventListener('click', () => {
 
     document.querySelector('#sort_by').value = "fecha_registro";
     document.querySelector('#order').value = "asc";
+
+    document.querySelectorAll('input[name="tags"]').forEach(cb => cb.checked = false);
 });
 </script>
 
@@ -355,6 +381,83 @@ btnLimpiar.addEventListener('click', () => {
   background-color: #e2e6ea;
 }
 </style>
+<style>
+.filtros {
+  display: none;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  background: #f8f8f8;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 10px;
+}
 
+.filtros div {
+  display: flex;
+  flex-direction: column;
+  margin-right: 10px;
+}
+
+.filtros select,
+.filtros input[type="text"],
+.filtros input[type="date"] {
+  width: auto;
+  max-width: 180px;   /* ajustá este número si querés más o menos ancho */
+}
+</style>
+
+<style>
+.filtros {
+  display: none;              /* oculto por defecto */
+  flex-wrap: wrap;            /* permite varias líneas */
+  justify-content: flex-start;
+  gap: 15px 25px;             /* espacio entre columnas y filas */
+  background: #f8f8f8;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 10px;
+  max-width: 1500px;          /* fuerza que el contenido salte de línea */
+}
+
+.filtros div {
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;           /* tamaño mínimo por bloque */
+  max-width: 220px;           /* evita que se estiren mucho */
+}
+
+.filtros select,
+.filtros input[type="text"],
+.filtros input[type="date"] {
+  width: 100%;
+  padding: 4px;
+  box-sizing: border-box;
+}
+
+.filtros .botones {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  min-width: 180px;
+}
+</style>
+<style>
+.tag-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  padding: 5px 0;
+  max-height: 120px;       /* ajustá si querés que no ocupe tanto espacio */
+  overflow-y: auto;        /* agrega scroll si hay muchos tags */
+}
+
+.tag-option {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+}
+</style>
 
 {% endblock %}

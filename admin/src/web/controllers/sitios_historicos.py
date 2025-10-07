@@ -334,7 +334,7 @@ def busqueda_avanzada():
 
     per_page = 25
 
-    query = db.session.query(SitioHistorico)
+    query = db.session.query(SitioHistorico).join(Ciudad)
     buscar = request.args.get("buscar", "").strip()
     if tag_ids:
         query = query.join(SitioHistorico.tags).filter(Tag.id.in_(tag_ids))
@@ -342,7 +342,7 @@ def busqueda_avanzada():
         query = query.having(func.count(Tag.id) == len(tag_ids))
 
     if provincia_id:
-        query = query.join(Ciudad).filter(Ciudad.idProvincia == provincia_id)
+        query = query.filter(Ciudad.idProvincia == provincia_id)
     if ciudad_id:
         query = query.filter(SitioHistorico.idCiudad == ciudad_id)
     if categoria_id:
@@ -373,7 +373,7 @@ def busqueda_avanzada():
         "ciudad": Ciudad.nombre,
     }
     column = valid_sort_columns.get(sort_by, SitioHistorico.fechaRegistro)
-    query = query.join(Ciudad) if sort_by == "ciudad" else query
+    query = query if sort_by == "ciudad" else query
     query = query.order_by(column.desc() if order == "desc" else column.asc())
 
     
