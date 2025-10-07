@@ -18,7 +18,7 @@
     <div class="form-box">
         <h2>Cambiar Contraseña</h2>
 
-        {% if not verified %}
+        {% if not verified and "Admin" in usuario.roles%}
         <!-- Paso 1: verificar contraseña actual -->
         <form method="POST">
             <input type="hidden" name="step" value="verify">
