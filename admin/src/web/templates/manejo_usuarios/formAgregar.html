@@ -14,10 +14,10 @@
 
 <form method="post">
     <label>Nombre:</label>
-    <input type="text" name="nombre" required><br>
+    <input type="text" name="nombre" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+"><br>
 
     <label>Apellido:</label>
-    <input type="text" name="apellido" required><br>
+    <input type="text" name="apellido" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+"><br>
 
     <label>Password:</label>
     <input type="password" name="password" required><br>
@@ -29,7 +29,8 @@
     <div>
         {% for rol in roles %}
         <div>
-            <input type="checkbox" id="rol_{{ rol.id }}" name="roles" value="{{ rol.id }}">
+            <input type="checkbox" id="rol_{{ rol.id }}" name="roles" value="{{ rol.id }}" {% if rol.nombre=='Usuario'
+                %}checked onclick="return false;" {% endif %}>
             <label for="rol_{{ rol.id }}">{{ rol.nombre }}</label>
         </div>
         {% endfor %}

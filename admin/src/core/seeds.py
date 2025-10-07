@@ -1,4 +1,5 @@
 from src.core import board
+from src.core.board import seeds as board_seeds
 from src.core import auth
 from src.core.database import db
 from src.core.board.ciudad import Ciudad
@@ -23,6 +24,16 @@ def _get_categoria_id(nombre_categoria: str) -> int | None:
 
 
 def run():
+    # 0) Seed geografía completa (Provincias y Ciudades) y Categorías
+    try:
+        board_seeds.seed_geografia_completa()
+    except Exception as exc:
+        print(f"Error en seed_geografia_completa: {exc}")
+    try:
+        board_seeds.seed_categorias()
+    except Exception as exc:
+        print(f"Error en seed_categorias: {exc}")
+
     # Crear rol y usuario "System" si no existen
     admin_role = db.session.query(Rol).filter(Rol.nombre == "SystemAdmin").first()
     if not admin_role:
@@ -32,17 +43,19 @@ def run():
 
     system_user = db.session.query(Usuario).filter(Usuario.email == "system@example.com").first()
     if not system_user:
-        system_user = Usuario(
+        # Usar create_user para garantizar hasheo del password
+        system_user = auth.create_user(
             nombre="System",
             apellido="User",
             password="changeme",
             email="system@example.com",
             activo=True,
             esAdmin=True,
-            #idRol=admin_role.id,
         )
-        db.session.add(system_user)
-        db.session.flush()
+
+    # Asociar rol SystemAdmin al usuario si no lo tiene ya
+    if admin_role not in system_user.roles:
+        system_user.roles.append(admin_role)
 
     db.session.commit()
 
@@ -171,6 +184,198 @@ def run():
             "fecha_inauguracion": "1889-05-01",
             "fecha_registro": "2022-12-01",
         },
+        {
+            "nombre": "Parque Independencia",
+            "descripcion": "Principal parque urbano de Rosario",
+            "descripcion_completa": "Gran espacio verde diseñado por el paisajista Carlos Thays. Alberga lagos, jardines, un zoológico y varios monumentos históricos.",
+            "ciudad_nombre": "Rosario",
+            "categoria_nombre": "Parque",
+            "latitud": -32.9460,
+            "longitud": -60.6390,
+            "estado_conservacion": "Bueno",
+            "fecha_inauguracion": "1900-09-15",
+            "fecha_registro": "2023-01-10",
+        },
+        {
+            "nombre": "Cerro de la Gloria",
+            "descripcion": "Monumento histórico en Mendoza",
+            "descripcion_completa": "Monumento que conmemora la gesta libertadora del General San Martín. Ofrece vistas panorámicas de la ciudad y los Andes.",
+            "ciudad_nombre": "Mendoza",
+            "categoria_nombre": "Monumento",
+            "latitud": -32.8905,
+            "longitud": -68.8310,
+            "estado_conservacion": "Bueno",
+            "fecha_inauguracion": "1914-02-12",
+            "fecha_registro": "2023-02-18",
+        },
+        {
+            "nombre": "Teatro Mendoza",
+            "descripcion": "Principal teatro de la ciudad de Mendoza",
+            "descripcion_completa": "Teatro histórico que ha sido escenario de importantes obras de teatro, ópera y conciertos. Su arquitectura refleja el estilo neoclásico.",
+            "ciudad_nombre": "Mendoza",
+            "categoria_nombre": "Edificio Histórico",
+            "latitud": -32.8900,
+            "longitud": -68.8270,
+            "estado_conservacion": "Regular",
+            "fecha_inauguracion": "1925-11-25",
+            "fecha_registro": "2023-03-05",
+        },
+        {
+            "nombre": "Parque España",
+            "descripcion": "Parque urbano a orillas del río Paraná",
+            "descripcion_completa": "Espacio verde con áreas recreativas, culturales y deportivas. Ofrece vistas panorámicas del río y es un punto de encuentro popular.",
+            "ciudad_nombre": "Rosario",
+            "categoria_nombre": "Parque",
+            "latitud": -32.9468,
+            "longitud": -60.6400,
+            "estado_conservacion": "Bueno",
+            "fecha_inauguracion": "1992-03-03",
+            "fecha_registro": "2023-04-12",
+        },
+        {
+            "nombre": "Catedral Basílica de Nuestra Señora del Rosario",
+            "descripcion": "Catedral principal de Rosario",
+            "descripcion_completa": "Imponente catedral neogótica ubicada en el centro de la ciudad. Es un importante centro religioso y turístico.",
+            "ciudad_nombre": "Rosario",
+            "categoria_nombre": "Edificio Histórico",
+            "latitud": -32.9463,
+            "longitud": -60.6395,
+            "estado_conservacion": "Bueno",
+            "fecha_inauguracion": "1887-11-07",
+            "fecha_registro": "2023-05-20",
+        },
+        {
+            "nombre": "Plaza 25 de Mayo",
+            "descripcion": "Plaza histórica en el centro de La Plata",
+            "descripcion_completa": "Plaza principal de la ciudad, diseñada por el arquitecto Pedro Benoit. Rodeada de edificios históricos y monumentos.",
+            "ciudad_nombre": "La Plata",
+            "categoria_nombre": "Plaza",
+            "latitud": -34.9214,
+            "longitud": -57.9544,
+            "estado_conservacion": "Bueno",
+            "fecha_inauguracion": "1882-11-19",
+            "fecha_registro": "2023-06-15",
+        },
+        {
+            "nombre": "Estadio Monumental Antonio Vespucio Liberti",
+            "descripcion": "Estadio de fútbol en Buenos Aires",
+            "descripcion_completa": "Conocido como 'El Monumental', es el estadio más grande de Argentina y sede del club River Plate. También alberga partidos de la selección nacional.",
+            "ciudad_nombre": "Buenos Aires",
+            "categoria_nombre": "Estadio",
+            "latitud": -34.5450,
+            "longitud": -58.4497,
+            "estado_conservacion": "Bueno",
+            "fecha_inauguracion": "1938-05-25",
+            "fecha_registro": "2023-07-10",
+        },
+        {
+            "nombre": "Obelisco de Buenos Aires",
+            "descripcion": "Ícono histórico y cultural de la ciudad",
+            "descripcion_completa": "Monumento emblemático ubicado en la Plaza de la República. Construido en 1936 para conmemorar el cuarto centenario de la fundación de la ciudad.",
+            "ciudad_nombre": "Buenos Aires",
+            "categoria_nombre": "Monumento",
+            "latitud": -34.6037,
+            "longitud": -58.3816,
+            "estado_conservacion": "Bueno",
+            "fecha_inauguracion": "1936-05-23",
+            "fecha_registro": "2023-08-05",
+        },
+        {
+            "nombre": "Cementerio de la Recoleta",
+            "descripcion": "Famoso cementerio histórico y turístico",
+            "descripcion_completa": "Conocido por sus elaboradas bóvedas y mausoleos, es el lugar de descanso de muchas figuras históricas argentinas, incluyendo a Eva Perón.",
+            "ciudad_nombre": "Buenos Aires",
+            "categoria_nombre": "Cementerio",
+            "latitud": -34.5881,
+            "longitud": -58.3933,
+            "estado_conservacion": "Bueno",
+            "fecha_inauguracion": "1822-11-17",
+            "fecha_registro": "2023-09-12",
+        },
+        {
+            "nombre": "Palacio Barolo",
+            "descripcion": "Edificio histórico de estilo neogótico",
+            "descripcion_completa": "Inspirado en la Divina Comedia de Dante Alighieri, este edificio es un ícono arquitectónico de Buenos Aires. Ofrece visitas guiadas y vistas panorámicas desde su cúpula.",
+            "ciudad_nombre": "Buenos Aires",
+            "categoria_nombre": "Edificio Histórico",
+            "latitud": -34.6085,
+            "longitud": -58.3700,
+            "estado_conservacion": "Bueno",
+            "fecha_inauguracion": "1923-07-01",
+            "fecha_registro": "2023-10-20",
+        },
+        {
+            "nombre": "Plaza de Mayo",
+            "descripcion": "Plaza histórica y centro político de Argentina",
+            "descripcion_completa": "Lugar emblemático donde se han desarrollado importantes eventos históricos y políticos. Rodeada por edificios como la Casa Rosada y la Catedral Metropolitana.",
+            "ciudad_nombre": "Buenos Aires",
+            "categoria_nombre": "Plaza",
+            "latitud": -34.6083,
+            "longitud": -58.3700,
+            "estado_conservacion": "Bueno",
+            "fecha_inauguracion": "1580-06-11",
+            "fecha_registro": "2023-11-15",
+        },
+        {
+            "nombre": "Avenida 9 de Julio",
+            "descripcion": "Una de las avenidas más anchas del mundo",
+            "descripcion_completa": "Avenida emblemática que atraviesa el centro de Buenos Aires. Conocida por su ancho y por albergar el Obelisco, es un punto neurálgico de la ciudad.",
+            "ciudad_nombre": "Buenos Aires",
+            "categoria_nombre": "Avenida",
+            "latitud": -34.6037,
+            "longitud": -58.3816,
+            "estado_conservacion": "Bueno",
+            "fecha_inauguracion": "1937-03-19",
+            "fecha_registro": "2023-12-01",
+        },
+        {
+            "nombre": "Catedral Metropolitana de Buenos Aires",
+            "descripcion": "Principal iglesia católica de Argentina",
+            "descripcion_completa": "Imponente catedral de estilo neoclásico ubicada en la Plaza de Mayo. Es la sede del Arzobispado de Buenos Aires y un importante centro religioso.",
+            "ciudad_nombre": "Buenos Aires",
+            "categoria_nombre": "Edificio Histórico",
+            "latitud": -34.6086,
+            "longitud": -58.3702,
+            "estado_conservacion": "Bueno",
+            "fecha_inauguracion": "1791-12-06",
+            "fecha_registro": "2024-01-10",
+        },
+        {
+            "nombre": "Puente de la Mujer",
+            "descripcion": "Puente peatonal moderno en Puerto Madero",
+            "descripcion_completa": "Diseñado por Santiago Calatrava, este puente giratorio es un ícono de la arquitectura moderna en Buenos Aires. Conecta las áreas de Puerto Madero y el centro de la ciudad.",
+            "ciudad_nombre": "Buenos Aires",
+            "categoria_nombre": "Puente",
+            "latitud": -34.6080,
+            "longitud": -58.3640,
+            "estado_conservacion": "Bueno",
+            "fecha_inauguracion": "2001-12-20",
+            "fecha_registro": "2024-02-18",
+        },
+        {
+            "nombre": "Museo Nacional de Bellas Artes",
+            "descripcion": "Principal museo de arte de Argentina",
+            "descripcion_completa": "Alberga una vasta colección de arte argentino e internacional, incluyendo obras de artistas como Goya, Van Gogh y Rembrandt. Es un importante centro cultural.",
+            "ciudad_nombre": "Buenos Aires",
+            "categoria_nombre": "Museo",
+            "latitud": -34.5889,
+            "longitud": -58.3973,
+            "estado_conservacion": "Bueno",
+            "fecha_inauguracion": "1895-12-25",
+            "fecha_registro": "2024-03-05",
+        },
+        {
+            "nombre": "Café Tortoni",
+            "descripcion": "Café histórico y cultural de Buenos Aires",
+            "descripcion_completa": "Fundado en 1858, es uno de los cafés más antiguos y emblemáticos de la ciudad. Ha sido punto de encuentro de artistas, escritores y figuras históricas.",
+            "ciudad_nombre": "Buenos Aires",
+            "categoria_nombre": "Café Histórico",
+            "latitud": -34.6087,
+            "longitud": -58.3730,
+            "estado_conservacion": "Bueno",
+            "fecha_inauguracion": "1858-07-01",
+            "fecha_registro": "2024-04-12",
+        },
     ]
 
     created = []
@@ -200,7 +405,7 @@ def run():
     print("Creating roles...")
     rol_admin = board.create_rol(nombre="Admin")
     rol_editor = board.create_rol(nombre="Editor")
-    ##rol_user = board.create_rol(nombre="User")
+    rol_user = board.create_rol(nombre="Usuario")
     print("Created roles! 👍🏻")
 
     print('Creando permisos..')
@@ -225,7 +430,7 @@ def run():
     'admin': [
         "user_index",
         "user_show",
-        "user_create"
+        "user_create",
         "user_new",
         "user_edit",
         "user_update",
@@ -284,3 +489,4 @@ def run():
     )
 
     print("Created users! 👍🏻")
+

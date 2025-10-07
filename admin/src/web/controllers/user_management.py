@@ -7,7 +7,7 @@ from src.core import auth
 from src.core import board
 from src.web.handlers.auth import is_autenticated
 from src.web.handlers.auth import login_required
-from src.web.handlers.auth import check_permission
+from src.web.handlers.auth import check
 
 bp = Blueprint("usuarios", __name__, url_prefix="/manejo_usuarios")
 
@@ -15,15 +15,14 @@ bp = Blueprint("usuarios", __name__, url_prefix="/manejo_usuarios")
 @bp.get("/")
 #Este es para que no te deje entrar si no estas logueado
 @login_required
+@check("user_index")
 def index():
 
-    if not check_permission("user_index"):
-        return abort(403)
     
     page = request.args.get("page", 1, type=int)
-    per_page = 25
+    per_page = 25  # elementos por página
 
-    todos = auth.list_usuarios()  # esto devuelve una lista
+    todos = auth.list_usuarios()  # lista de todos los usuarios
     total = len(todos)
     inicio = (page - 1) * per_page
     fin = inicio + per_page
@@ -31,46 +30,45 @@ def index():
 
     roles = board.list_roles()
 
-    return render_template("manejo_usuarios/user_management.html", usuarios=usuarios, roles=roles,page=page,
+    return render_template(
+        "manejo_usuarios/user_management.html",
+        usuarios=usuarios,
+        roles=roles,
+        page=page,
         total=total,
-        per_page=per_page)
+        per_page=per_page
+    )
 
 
 @bp.route("/eliminar/<int:usuario_id>", methods=["POST"])
 @login_required
+@check("user_destroy")
 def eliminar(usuario_id):
-
-    if not check_permission("user_destroy"):
-        return abort(403)
     
-    user = auth.get_user_by_id(usuario_id)
-    # Eliminacion fisica
-    # if user:
-    #     auth.delete_user(user)
+    user = auth.get_user_by_id(usuario_id)  
 
     auth.baja_logica_usuario(auth.get_user_by_id(usuario_id))
 
     return redirect(url_for("usuarios.index"))
 
+
 @bp.route("/desactivar/<int:usuario_id>", methods=["POST"])
 @login_required
+@check("user_deactivate")
 def desactivar(usuario_id):
 
-    if not check_permission("user_deactivate"):
-        return abort(403)
-    
     user = auth.get_user_by_id(usuario_id)
     if not user.esAdmin: 
         user.activo = False
-    auth.db.session.commit()
+        auth.db.session.commit()
 
     return redirect(url_for("usuarios.index"))
 
+
 @bp.route("/activar/<int:usuario_id>", methods=["POST"])
 @login_required
+@check("user_activate")
 def activar(usuario_id):
-    if not check_permission("user_activate"):
-        return abort(403)
     
     user = auth.get_user_by_id(usuario_id)
     user.activo = True
@@ -81,9 +79,8 @@ def activar(usuario_id):
 
 @bp.route("/AgregarUsuario", methods=["GET","POST"])
 @login_required
+@check("user_new")
 def agregar_usuario():
-    if not check_permission("user_new"):
-        return abort(403)
     
     if request.method == "POST":
         if (auth.comprobar_email(request.form["email"])):
@@ -94,12 +91,18 @@ def agregar_usuario():
             apellido = request.form["apellido"]
             email = request.form["email"]
             password = request.form["password"]
+            if not nombre or not apellido or not email or not password:
+                flash('Todos los campos son obligatorios','error')
+                return redirect(url_for("usuarios.agregar_usuario"))
+            
             roles_ids = request.form.getlist("roles")
             roles_ids = list(map(int, roles_ids))    
             if board.get_id_rol_admin() in(roles_ids):
                 admin = True
             else:
                 admin = False
+
+            
 
             auth.create_user(
                 nombre=nombre,
@@ -118,20 +121,32 @@ def agregar_usuario():
 
 @bp.route("/modificar/<int:usuario_id>", methods=["GET", "POST"])
 @login_required
+@check("user_update")
 def modificar(usuario_id):
-    if not check_permission("user_update"):
-        return abort(403)
     
     user = auth.get_user_by_id(usuario_id)
     rolesUsuario = auth.listar_roles_usuario(user)
     roles = board.list_roles()
 
     if request.method == "POST":
-        user.nombre = request.form["nombre"]
-        user.apellido = request.form["apellido"]
-        user.email = request.form["email"]
+        nombre = request.form["nombre"]
+        apellido = request.form["apellido"]
+        email = request.form["email"]
+        if not nombre or not apellido or not email:
+            flash('Todos los campos son obligatorios','error')
+            return redirect(url_for("usuarios.agregar_usuario"))
+        user.nombre = nombre
+        user.apellido = apellido
+        user.email = email
+        
         roles_ids = request.form.getlist("rol")
         user.roles = [board.get_rol_by_id(int(rol_id)) for rol_id in roles_ids]
+        roles_ids = list(map(int, roles_ids))    
+        if board.get_id_rol_admin() in(roles_ids):
+            admin = True
+        else:
+            admin = False
+        user.esAdmin = admin
 
         # Guardar los cambios en la base de datos
         session['username'] = user.nombre
@@ -143,9 +158,9 @@ def modificar(usuario_id):
 
 @bp.route("/detalles/<int:usuario_id>", methods=["GET", "POST"])
 @login_required
+@check("user_show")
 def ver_detalles(usuario_id):
-    if not check_permission("user_show"):
-        return abort(403)
+
     if request.method == "POST":
         usuario = auth.get_user_by_id(usuario_id)
         roles = auth.listar_roles_usuario(usuario)
@@ -156,9 +171,8 @@ def ver_detalles(usuario_id):
 
 @bp.route("/cambiar_contraseña/<int:usuario_id>", methods=["GET", "POST"])
 @login_required
+@check("user_update")
 def cambiar_contraseña(usuario_id):
-    if not check_permission("user_update"):
-        return abort(403)
     
     user = auth.get_user_by_id(usuario_id)
     step = request.form.get("step")
@@ -193,10 +207,8 @@ def cambiar_contraseña(usuario_id):
 
 @bp.route("/busqueda_avanzada", methods=["GET", "POST"])
 @login_required
+@check("user_show")
 def busqueda_avanzada():
-
-    if not check_permission("user_show"):
-        return abort(403)
     
     # Capturamos los filtros
     email = request.args.get("email", "").strip()
@@ -205,13 +217,14 @@ def busqueda_avanzada():
 
     # Arrancamos con la lista de usuarios 
     page = request.args.get("page", 1, type=int)
-    per_page = 25
+    per_page = 25 #elementos por pagina
 
     todos = auth.list_usuarios()  # esto devuelve una lista
     total = len(todos)
     inicio = (page - 1) * per_page
     fin = inicio + per_page
     usuarios = todos[inicio:fin]
+    total_pages = (total + per_page - 1) // per_page
 
     # Filtrar por email
     if email:
@@ -230,6 +243,16 @@ def busqueda_avanzada():
         reverse=(orden == "desc")
     )
 
-    return render_template("manejo_usuarios/busqueda_avanzada.html",usuarios=usuarios,email=email,activo=activo,orden=orden,page=page,total=total,per_page=per_page)
+    return render_template(
+    "manejo_usuarios/busqueda_avanzada.html",
+    usuarios=usuarios,
+    email=email,
+    activo=activo,
+    orden=orden,
+    page=page,
+    total=total,
+    per_page=per_page,
+    total_pages=total_pages
+)
 
 
