@@ -4,14 +4,20 @@
 
 {% block content %}
 
-<!-- Leaflet CSS y JS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
 <style>
   #map { height: 400px; width: 100%; margin-bottom: 10px; border: 1px solid #ccc; }
+  /* Estilo para los mensajes de error */
+  .error-message {
+    color: red;
+    font-size: 0.9em;
+    margin-top: -10px; /* Sube el mensaje para que esté justo arriba del input/select */
+    margin-bottom: 10px;
+    display: none; /* Inicialmente oculto */
+  }
 </style>
-
 
 
 <h2>Agregar Sitio Histórico</h2>
@@ -25,23 +31,27 @@
 {%with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}
 {% for category, message in messages %}
-<div class="flash {{ category }}">{{ message }}</div>
+<div class="flash {{ category }}{{ category }}">{{ message }}</div>
 {% endfor %}
 {% endif %}
 {% endwith %}
 
-<form method="post">
-    <label>Nombre:</label>
-    <input type="text" name="nombre" required><br>
+<form method="post" id="agregarSitioForm">
+    <label>Nombre :</label>
+    <div class="error-message" id="error-nombre">⚠️ El nombre debe tener entre 3 y 100 caracteres.</div>
+    <input type="text" name="nombre" id="nombreInput" maxlength="100"><br>
 
-    <label>Descripción:</label>
-    <input type="text" name="descripcion" required><br>
+    <label>Descripción breve :</label>
+    <div class="error-message" id="error-descripcion">⚠️ La descripción debe tener entre 10 y 255 caracteres.</div>
+    <input type="text" name="descripcion" id="descripcionInput" maxlength="255"><br>
 
-    <label>Descripción Completa:</label>
-    <input type="text" name="descripcion_completa" required><br>
+    <label>Descripción completa :</label>
+    <div class="error-message" id="error-descripcion_completa">⚠️ La descripción completa debe tener entre 20 y 5000 caracteres.</div>
+    <input type="text" name="descripcion_completa" id="descripcionCompletaInput" maxlength="5000"><br>
 
     <label>Provincia:</label>
-    <select id="provinciaSelect" name="provincia" required>
+    <div class="error-message" id="error-provincia">⚠️ Por favor, seleccione la provincia.</div>
+    <select id="provinciaSelect" name="provincia">
         <option value="">Seleccione provincia</option>
         {% for p in provincias %}
         <option value="{{ p.id }}">{{ p.nombre }}</option>
@@ -49,7 +59,8 @@
     </select><br>
 
     <label>Ciudad:</label>
-    <select id="ciudadSelect" name="ciudad" disabled required>
+    <div class="error-message" id="error-ciudad">⚠️ Por favor, seleccione la ciudad.</div>
+    <select id="ciudadSelect" name="ciudad" disabled>
         <option value="">Seleccione ciudad</option>
         {% for c in ciudades %}
         <option value="{{ c.id }}" data-provincia="{{ c.idProvincia }}">{{ c.nombre }}</option>
@@ -57,7 +68,8 @@
     </select><br>
 
     <label>Estado Conservación:</label>
-    <select name="estado_conservacion" required>
+    <div class="error-message" id="error-estado_conservacion">⚠️ Por favor, seleccione el estado de conservación.</div>
+    <select name="estado_conservacion" id="estadoConservacionSelect">
         <option value="">Seleccione estado</option>
         <option value="Bueno">Bueno</option>
         <option value="Regular">Regular</option>
@@ -65,12 +77,14 @@
     </select><br>
 
     <label>Fecha Inauguracion:</label>
-    <input type="date" name="fecha_inauguracion" required
+    <div class="error-message" id="error-fecha_inauguracion">⚠️ Por favor, ingrese la fecha de inauguración.</div>
+    <input type="date" name="fecha_inauguracion" id="fechaInauguracionInput"
       value=""
         max="{{ today }}"><br>
 
     <label>Categoría:</label>
-    <select name="categoria" required>
+    <div class="error-message" id="error-categoria">⚠️ Por favor, seleccione la categoría.</div>
+    <select name="categoria" id="categoriaSelect">
         <option value="">Seleccione categoría</option>
         {% for c in categorias %}
         <option value="{{ c.id }}">{{ c.nombre }}</option>
@@ -78,7 +92,8 @@
     </select><br>
 
     <label>Fecha Registro:</label>
-    <input type="date" name="fecha_registro" required
+    <div class="error-message" id="error-fecha_registro">⚠️ Por favor, ingrese la fecha de registro.</div>
+    <input type="date" name="fecha_registro" id="fechaRegistroInput"
       value=""
         max="{{ today }}"><br>
 
@@ -110,85 +125,172 @@
 </form>
 
 <script>
-  // Inicializa el mapa centrado en La Plata por defecto
+  // Inicializa el mapa centrado en La Plata por defecto (CÓDIGO ORIGINAL)
   var map = L.map('map').setView([-34.921, -57.954], 13);
-
-  // Capa OpenStreetMap
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-  }).addTo(map);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
   var marker;
-
-  // Captura clic del usuario
+  // Captura clic del usuario (CÓDIGO ORIGINAL)
   map.on('click', function(e) {
       var lat = e.latlng.lat.toFixed(6);
       var lng = e.latlng.lng.toFixed(6);
 
-      // Coloca o mueve el marcador
       if (marker) {
           marker.setLatLng(e.latlng);
       } else {
           marker = L.marker(e.latlng).addTo(map);
       }
 
-      // Guardar coordenadas en inputs separados
       document.getElementById('latitud').value = lat;
       document.getElementById('longitud').value = lng;
-
       document.getElementById('coordenadas_seleccionadas').innerHTML = `✅ Coordenadas seleccionadas: ${lat}, ${lng}`;
+      
+      // Asegura que al seleccionar se restablezca el color (de la validación)
+      document.getElementById('coordenadas_seleccionadas').style.color = '#555';
   });
+
+
+  // LÓGICA DE VALIDACIÓN CENTRALIZADA (COMPLETA CON MÍNIMOS Y MÁXIMOS)
   (function() {
-    // 1. Obtener el formulario y los campos de coordenadas
-    const form = document.querySelector('form');
-    const latInput = document.getElementById('latitud');
-    const lngInput = document.getElementById('longitud');
-    const coordsDisplay = document.getElementById('coordenadas_seleccionadas');
+    const form = document.getElementById('agregarSitioForm');
     
-    // Función para manejar el intento de envío
-    form.addEventListener('submit', function(event) {
+    // Lista de TODOS los campos obligatorios a validar. Ajustados mínimos y agregados máximos.
+    // NOTA: Se ajustó la longitud mínima de 'descripcion' a 10 y 'descripcion_completa' a 20 para coincidir con tu validaciones.py.
+    const requiredFields = [
+        { name: 'nombre', errorId: 'error-nombre', minLength: 3, maxLength: 100, errorMsg: '⚠️ El nombre debe tener entre 3 y 100 caracteres.' },
+        { name: 'descripcion', errorId: 'error-descripcion', minLength: 5, maxLength: 255, errorMsg: '⚠️ La descripción debe tener entre 5 y 255 caracteres.' },
+        { name: 'descripcion_completa', errorId: 'error-descripcion_completa', minLength: 10, maxLength: 5000, errorMsg: '⚠️ La descripción completa debe tener entre 10 y 5000 caracteres.' },
+        // Campos sin longitud específica (Selects/Dates)
+        { name: 'provincia', errorId: 'error-provincia', errorMsg: '⚠️ Por favor, seleccione la provincia.' },
+        { name: 'ciudad', errorId: 'error-ciudad', errorMsg: '⚠️ Por favor, seleccione la ciudad.' },
+        { name: 'estado_conservacion', errorId: 'error-estado_conservacion', errorMsg: '⚠️ Por favor, seleccione el estado de conservación.' },
+        { name: 'fecha_inauguracion', errorId: 'error-fecha_inauguracion', errorMsg: '⚠️ Por favor, ingrese la fecha de inauguración.' },
+        { name: 'categoria', errorId: 'error-categoria', errorMsg: '⚠️ Por favor, seleccione la categoría.' },
+        { name: 'fecha_registro', errorId: 'error-fecha_registro', errorMsg: '⚠️ Por favor, ingrese la fecha de registro.' },
+    ];
+    
+    // Función de validación principal
+    function validateForm(event) {
+        let formIsValid = true;
+        let firstInvalidField = null;
         
-        // El método .trim() asegura que no haya solo espacios vacíos
+        // 1. Ocultar todos los mensajes de error al inicio
+        document.querySelectorAll('.error-message').forEach(el => el.style.display = 'none');
+
+        // 2. Validar campos de texto y select
+        requiredFields.forEach(field => {
+            const input = form.elements[field.name];
+            const errorElement = document.getElementById(field.errorId);
+            const value = input ? input.value.trim() : "";
+            
+            let isInvalid = false;
+            let currentErrorMsg = field.errorMsg; // Mensaje por defecto
+
+            // a) Verificar si está vacío
+            if (value === "") {
+                isInvalid = true;
+                // Si es un campo sin minLength (como un select/date), el mensaje es el genérico.
+                if (!field.minLength) {
+                    currentErrorMsg = field.errorMsg; 
+                } else {
+                    // Si tiene minLength, el mensaje debe ser el de rango.
+                    currentErrorMsg = field.errorMsg; 
+                }
+            } 
+            // b) Verificar longitud mínima
+            else if (field.minLength && value.length < field.minLength) {
+                isInvalid = true;
+            }
+            // c) Verificar longitud máxima (aunque el HTML lo limita, lo validamos aquí también)
+            else if (field.maxLength && value.length > field.maxLength) {
+                isInvalid = true;
+            }
+            
+            if (isInvalid) {
+                formIsValid = false;
+                if (errorElement) {
+                    errorElement.textContent = currentErrorMsg; 
+                    errorElement.style.display = 'block';
+                    if (!firstInvalidField) {
+                        firstInvalidField = input; // Guardamos el primer campo inválido
+                    }
+                }
+            }
+        });
+        
+        // 3. Validar coordenadas
+        const latInput = document.getElementById('latitud');
+        const lngInput = document.getElementById('longitud');
+        const coordsDisplay = document.getElementById('coordenadas_seleccionadas');
+        
         if (latInput.value.trim() === "" || lngInput.value.trim() === "") {
+            formIsValid = false;
             
-            // 2. DETENER el envío del formulario
-            event.preventDefault(); 
-            
-            // 3. Mostrar un mensaje de error claro
             const errorMsg = "⚠️ Debe seleccionar una ubicación en el mapa antes de guardar.";
-            alert(errorMsg); 
             
-            // Opcional: Mostrar el error donde está el mensaje de coordenadas
             if (coordsDisplay) {
                 coordsDisplay.style.color = 'red';
                 coordsDisplay.textContent = errorMsg;
             }
         }
-        // Si tienen valor, el formulario se envía normalmente.
-    });
-
-    // Restaurar el mensaje cuando el usuario haga clic en el mapa
-    // (Esto usa el código que ya habías modificado anteriormente)
-    const map = L.DomUtil.get('map')._leaflet_map;
-    if (map) {
-        map.on('click', function() {
-            if (coordsDisplay) {
-                coordsDisplay.style.color = '#555'; // Restablece el color
+        
+        // 4. Detener el envío y enfocar el primer campo con error
+        if (!formIsValid) {
+            event.preventDefault(); 
+            if (firstInvalidField) {
+                firstInvalidField.focus(); 
+            } else if (latInput.value.trim() === "") {
+                window.alert("Debe seleccionar una ubicación en el mapa antes de guardar.");
             }
-        });
+        }
     }
+    
+    // Asignar el listener al formulario
+    form.addEventListener('submit', validateForm);
+    
+    // Restaurar mensajes (ocultar el error al empezar a escribir/seleccionar)
+    requiredFields.forEach(field => {
+        const input = form.elements[field.name];
+        const errorElement = document.getElementById(field.errorId);
+        
+        if (input && errorElement) {
+            const eventType = (input.tagName === 'SELECT' || input.type === 'date') ? 'change' : 'input';
+
+            input.addEventListener(eventType, function() {
+                // Ocultar el error si cumple la longitud mínima y no excede la máxima
+                if (field.minLength) {
+                    const currentLength = this.value.trim().length;
+                    if (currentLength >= field.minLength && currentLength <= field.maxLength) {
+                        errorElement.style.display = 'none'; 
+                    } else if (currentLength === 0 && this.value.trim() === "") {
+                        // No hacer nada si se vacía, para que la validación de submit lo muestre
+                    } else {
+                        // Si está escribiendo pero aún no cumple, mantenemos el error oculto hasta el submit.
+                        // Solo lo ocultamos si ya es válido.
+                        if (currentLength > 0 && currentLength <= field.maxLength) {
+                             errorElement.style.display = 'none';
+                        }
+                    }
+                } else {
+                    // Para selects/dates, ocultar si tiene cualquier valor
+                    if (this.value.trim() !== "") {
+                        errorElement.style.display = 'none';
+                    }
+                }
+            });
+        }
+    });
 
 })();
 </script>
 
 <script>
-  // Filtrado de ciudades por provincia (alta)
+  // Filtrado de ciudades por provincia (alta) - CÓDIGO ORIGINAL con ajuste para ocultar errores
   (function() {
     var provSel = document.getElementById('provinciaSelect');
     var ciudadSel = document.getElementById('ciudadSelect');
     if (!provSel || !ciudadSel) return;
 
-    // Guardamos una copia de todas las opciones iniciales (incluye placeholder y todas las ciudades)
     var allCityOptions = Array.from(ciudadSel.querySelectorAll('option'));
 
     function actualizarCiudades() {
@@ -201,6 +303,12 @@
       placeholder.textContent = 'Seleccione ciudad';
       ciudadSel.appendChild(placeholder);
 
+      // Ocultar error de provincia al seleccionar
+      var errorProv = document.getElementById('error-provincia');
+      if (errorProv && provId) {
+          errorProv.style.display = 'none';
+      }
+      
       if (!provId) {
         ciudadSel.disabled = true;
         return;
@@ -217,9 +325,16 @@
       ciudadSel.disabled = false;
     }
 
-    // Inicializa estado deshabilitado hasta que elijan provincia
     ciudadSel.disabled = true;
     provSel.addEventListener('change', actualizarCiudades);
+    
+    // Agregar listener para ocultar error de ciudad al seleccionar
+    ciudadSel.addEventListener('change', function() {
+        var errorCiudad = document.getElementById('error-ciudad');
+        if (errorCiudad && this.value) {
+            errorCiudad.style.display = 'none';
+        }
+    });
   })();
 </script>
 
