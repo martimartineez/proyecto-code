@@ -187,7 +187,7 @@ def cambiar_contraseña(usuario_id):
             flash("La contraseña actual no es correcta.", "error")
 
 
-    #return render_template("manejo_usuarios/cambiar_contraseña.html", usuario=user)
+    
 
     # Paso 2: guardar nueva contraseña
     elif step == "change":
@@ -203,7 +203,7 @@ def cambiar_contraseña(usuario_id):
         flash("Contraseña cambiada correctamente.", "success")
         return redirect(url_for("usuarios.index"))
 
-    return render_template("manejo_usuarios/cambiar_contraseña.html", verified=False)
+    return render_template("manejo_usuarios/cambiar_contraseña.html", verified=False, usuario=user)
 
 @bp.route("/busqueda_avanzada", methods=["GET", "POST"])
 @login_required

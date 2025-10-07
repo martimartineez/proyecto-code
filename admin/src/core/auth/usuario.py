@@ -35,10 +35,6 @@ class Usuario(Base):
         back_populates='usuario'
     )
 
-    # sitios: Mapped[List["SitioHistorico"]] = relationship(
-    #     secondary=tags_sitios,
-    #     back_populates="tags",
-    # )
 
     def __repr__(self):
         return (
