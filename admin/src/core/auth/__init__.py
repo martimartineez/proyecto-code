@@ -2,6 +2,8 @@ from src.core.database import db
 from src.core.auth.usuario import Usuario
 from src.core.board.rol import Rol
 from src.core.bcrypt import bcrypt
+from src.core import board
+
 
 
 
@@ -109,4 +111,5 @@ def baja_logica_usuario(user: Usuario):
 def comprobar_bloqueado(user):
     estado = user.activo
     return estado
+
 
