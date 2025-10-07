@@ -13,9 +13,9 @@ html {
 
 body {
     height: 100%;
-    display: grid;
-    grid-template-columns: 15% 85%;
-    grid-template-rows: 100px 1fr 60px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
     background-color: white;
     text-align: center;
     font-size: larger;
@@ -24,20 +24,12 @@ body {
 }
 
 main {
-    grid-row-start: 2;
-    grid-column-start: 1;
-    grid-row-end: 3;
-    grid-column-end: 3;
-    display: flexbox;
+    flex-grow: 1;
     justify-items: center;
     padding: 10px;
 }
 
 header {
-    grid-row-start: 1;
-    grid-column-start: 1;
-    grid-row-end: 1;
-    grid-column-end: 3;
     position: relative;
     z-index: 1002;
     background-color: var(--pri-color);
@@ -73,8 +65,6 @@ header {
 }
 
 #left-menu {
-    grid-row-start: 1;
-    grid-column-start: 1;
     justify-self: left;
 }
 
@@ -143,15 +133,13 @@ header {
 }
 
 footer {
-    grid-row-start: 3;
-    grid-column-start: 1;
-    grid-row-end: 4;
-    grid-column-end: 3;
+    flex-direction: column;
+    margin-top: 10px;
     height: fit-content;
     background-color: var(--pri-color);
     color: white;
     padding: 2px;
-    position: fixed;
+    position: relative;
     bottom: 0;
     width: 100%;
     text-align: center;
@@ -188,6 +176,16 @@ tr:nth-child(even) {
 
 tr:hover {
     background-color: #ffe0b2;
+}
+
+@media (max-width: 600px) {
+    table {
+        width: 100% !important;
+        font-size: 14px !important;
+    }
+    th, td {
+        padding: 6px 4px !important;
+    }
 }
 
 /* Puedes agregar esto al final de tu archivo styles.css */
