@@ -137,12 +137,7 @@ def crear_sitio(form, id_usuario: int | None = None):
         anioInauguracion=_parse_date(form.get("fecha_inauguracion")),
         fechaRegistro=_parse_date(form.get("fecha_registro")) or datetime.now(),
         # Manejar hidden + checkbox (dos valores). True si cualquiera es truthy
-        visible=(
-            any(
-                str(v).lower() in ("true", "1", "yes", "on", "t")
-                for v in form.getlist("visible")
-            )
-        ),
+        visible=True,
         baja=False,
     )
 
