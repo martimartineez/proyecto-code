@@ -13,6 +13,7 @@ from sqlalchemy import func
 import io, csv
 from flask import Response
 from datetime import date 
+from src.web.handlers.auth import check
 
 
 
@@ -380,6 +381,8 @@ def busqueda_avanzada():
     total_pages = (total_results + per_page - 1) // per_page
     sitios = query.offset((page - 1) * per_page).limit(per_page).all()
 
+    permisocsv= check_permission("site_destroy")
+
     return render_template(
         "sitios_historicos/busquedaAvanzada.html",
         provincias=provincias,
@@ -392,11 +395,13 @@ def busqueda_avanzada():
         request_args=request.args,
         tags=tags,
         permiso=permiso,
+        permisocsv=permisocsv
     )
 
 
 @bp.route("/exportar_csv")
 @login_required
+@check("site_export")
 def exportar_csv():
     provincia_id = request.args.get("provincia")
     ciudad_id = request.args.get("ciudad")
@@ -469,6 +474,7 @@ def exportar_csv():
         })
     timestamp = datetime.now().strftime("%Y%m%d_%H%M")
     filename = f"sitios_{timestamp}.csv"
+
 
     output = io.StringIO()
     fieldnames = ["Nombre", "Descripcion", "Ciudad", "Provincia", "Estado", "FechaRegistro", "Coordenadas", "Tags"]

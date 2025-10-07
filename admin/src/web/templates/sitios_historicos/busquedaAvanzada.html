@@ -11,10 +11,11 @@
     <button type="button">Agregar sitio histórico</button>
 </a>
 <button id="btnFiltros">Mostrar filtros avanzados</button>
-
-<a href="{{ url_for('sitios_historicos.exportar_csv', **request_args) }}" class="btn btn-success">
-   Exportar CSV
-</a>
+{% if permisocsv %}
+  <a href="{{ url_for('sitios_historicos.exportar_csv', **request_args) }}" class="btn btn-success">
+    Exportar CSV
+  </a>
+{% endif %}
 
 {%with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}
