@@ -4,13 +4,25 @@
 <h1>Gestión de Tags</h1>
 
 <p>
-    <a href="{{ url_for('tags.agregar_tag') }}">Agregar nuevo Tag</a>
+    <a href="/">
+    <button type="button">Volver a inicio</button>
+    </a>
+    <a href="{{ url_for('tags.agregar_tag') }}">
+        <button type="button">Agregar nuevo tag</button>
+    </a>
+    
 </p>
+{%with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="flash {{ category }}">{{ message }}</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
 
 <table>
     <thead>
         <tr>
-            <th>ID</th>
             <th>Nombre</th>
             <th>Acciones</th>
         </tr>
@@ -18,7 +30,6 @@
     <tbody>
         {% for tag in tags %}
         <tr>
-            <td>{{ tag.id }}</td>
             <td>{{ tag.nombre }}</td>
             <td>
                 <a href="{{ url_for('tags.editar_tag', tag_id=tag.id) }}">
@@ -79,25 +90,65 @@
 </script>
 
 
-<div class="pagination">
+{% if total_pages > 1 %}
+<nav>
+  <ul class="pagination">
+    {# Copiamos los argumentos para mantener filtros y orden #}
+    {% set args = request.args.copy() %}
+    {% if 'page' in args %}{% set _ = args.pop('page') %}{% endif %}
+
     {% if page > 1 %}
-        <a href="{{ url_for('tags.index', page=page-1, q=q, sort=sort, order=order) }}">Anterior</a>
+    <li>
+      <a href="{{ url_for('tags.index', page=page-1, **args) }}">
+        <button type="button">Anterior</button>
+      </a>
+    </li>
     {% endif %}
 
     {% for p in range(1, total_pages + 1) %}
-        {% if p == page %}
-            <strong>{{ p }}</strong>
-        {% else %}
-            <a href="{{ url_for('tags.index', page=p, q=q, sort=sort, order=order) }}">{{ p }}</a>
-        {% endif %}
+    <li class="{% if p == page %}active{% endif %}">
+      <a href="{{ url_for('tags.index', page=p, **args) }}">
+        <button type="button">{{ p }}</button>
+      </a>
+    </li>
     {% endfor %}
 
     {% if page < total_pages %}
-        <a href="{{ url_for('tags.index', page=page+1, q=q, sort=sort, order=order) }}">Siguiente</a>
+    <li>
+      <a href="{{ url_for('tags.index', page=page+1, **args) }}">
+        <button type="button">Siguiente</button>
+      </a>
+    </li>
     {% endif %}
-</div>
+  </ul>
+</nav>
+{% endif %}
 
 
+<style>
+.pagination li {
+  display: inline-block;
+  margin: 2px;
+}
 
-<a href="/">Volver a inicio</a>
+.pagination li a button {
+  background-color: #f8f9fa;
+  border: 1px solid #ccc;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.pagination li.active a button {
+  background-color: #007bff; /* Azul */
+  color: white;
+  border-color: #007bff;
+  font-weight: bold;
+}
+
+.pagination li a button:hover {
+  background-color: #e2e6ea;
+}
+</style>
+
 {% endblock %}

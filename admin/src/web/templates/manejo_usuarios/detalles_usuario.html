@@ -61,9 +61,8 @@
             {% endif %}<br>
             <strong>Rol:</strong>
             {% for rol in roles %}
-            {% if rol.id == usuario.idRol %}
-            {{ rol.nombre }}
-            {% endif %}
+            {{rol}}
+            |
             {% endfor %}
             <br>
             <strong>Fecha de creación:</strong> {{ usuario.fechaCreacion }}<br>

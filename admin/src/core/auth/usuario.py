@@ -1,8 +1,22 @@
 from src.core.database import Base
+from typing import List, TYPE_CHECKING
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, DateTime, Boolean, Integer, ForeignKey
 from datetime import datetime, timezone
 from src.core.board.rol import Rol  
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import ForeignKey, String, Table, Column
+
+if TYPE_CHECKING:
+    from src.core.board.rol import Rol
+
+
+roles_usuarios = Table(
+    "roles_usuarios",
+    Base.metadata,
+    Column("usuarioId", ForeignKey("usuarios.id"), primary_key=True),
+    Column("rolId", ForeignKey("roles.id"), primary_key=True),
+)
 
 class Usuario(Base):
     __tablename__ = 'usuarios'
@@ -14,8 +28,17 @@ class Usuario(Base):
     email: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
     activo: Mapped[bool] = mapped_column(Boolean, default=True)
     esAdmin: Mapped[bool] = mapped_column(Boolean, default=False)
+    borradoLogico: Mapped[bool] = mapped_column(Boolean, default=False)
     fechaCreacion: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    idRol: Mapped[int] = mapped_column(Integer, ForeignKey('roles.id'), nullable=False)#cambiar a false
+    roles: Mapped[List["Rol"]] = relationship(
+        secondary=roles_usuarios,
+        back_populates='usuario'
+    )
+
+    # sitios: Mapped[List["SitioHistorico"]] = relationship(
+    #     secondary=tags_sitios,
+    #     back_populates="tags",
+    # )
 
     def __repr__(self):
         return (
@@ -25,5 +48,7 @@ class Usuario(Base):
             f"password={self.password}, "
             f"email={self.email}, "
             f"activo={self.activo}, esAdmin={self.esAdmin}, "
+            f"borradoLogico={self.borradoLogico}, "
             f"fechaCreacion={self.fechaCreacion}, idRol={getattr(self, 'idRol', None)})>"
         )
+    

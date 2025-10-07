@@ -1,10 +1,13 @@
 from src.core import board
 from flask import Blueprint, render_template, request, redirect, url_for, flash
+from src.web.handlers.auth import login_required
+from core.board.validaciones import validar_tag
 
 bp = Blueprint("tags", __name__, url_prefix="/tags")
 
 
 @bp.get("/")
+@login_required
 def index():
     page = request.args.get("page", 1, type=int)
     per_page = 25
@@ -29,45 +32,94 @@ def index():
 
 
 @bp.route("/nuevo", methods=["GET", "POST"])
+@login_required
 def agregar_tag():
     if request.method == "POST":
-        tag = board.crear_tag(request.form)
-        if tag:
-            # flash(f"Tag '{tag.nombre}' creado exitosamente.")
+        # Validar datos con la capa separada
+        errores = validar_tag(request.form)
+        
+        if errores:
+            # Mostrar errores en flash messages y re-renderizar
+            for campo, msg in errores.items():
+                # Nota: Uso "flash" con categoría "error"
+                flash(f"{msg}", "error")
+            # Devolver el formulario con los datos ingresados para que no los pierda (opcional)
+            return render_template("tags/form_tags.html", action="agregar", form_data=request.form), 400
+        
+        resultado = board.crear_tag(request.form)
+        
+        if resultado and resultado != "DUPLICATE_ERROR":
+            # Caso 1: Éxito
+            flash("Tag agregado exitosamente.", "success")
             return redirect(url_for("tags.index"))
-        # flash("Error al crear el tag.")
-        return redirect(url_for("tags.agregar_tag"))
-
+        
+        elif resultado == "DUPLICATE_ERROR":
+            # Caso 2: El Tag ya existe
+            flash(f"Error: Ya existe un Tag con el nombre '{request.form.get('nombre')}' o uno muy similar.", "error")
+            # Dejamos que la ejecución siga para que se vuelva a renderizar el formulario
+            
+        else:
+            # Caso 3: Otro error (ej: error de servidor o nombre vacío)
+            flash("Ocurrió un error inesperado al intentar agregar el Tag.", "error")
+            
+    # Si es GET o si el POST falló (Casos 2 y 3), se renderiza el formulario
     return render_template("tags/form_tags.html", action="agregar")
 
 
 @bp.route("/<int:tag_id>/editar", methods=["GET", "POST"])
+@login_required
 def editar_tag(tag_id):
     tag = board.obtener_tag(tag_id)
     if not tag:
-        # flash("Tag no encontrado.")
+        flash("Tag no encontrado.", "error")
         return redirect(url_for("tags.index"))
 
     if request.method == "POST":
-        if board.editar_tag(tag_id, request.form):
-            # flash(f"Tag '{tag.nombre}' editado exitosamente.")
-            return redirect(url_for("tags.index"))
-        # flash("Error al editar el tag.")
-        return redirect(url_for("tags.editar_tag", tag_id=tag_id))
+        # Validar datos con la capa separada
+        errores = validar_tag(request.form)
+        
+        if errores:
+            # Mostrar errores y re-renderizar
+            for campo, msg in errores.items():
+                flash(f"{msg}", "error")
+            # Devolver el formulario con el tag existente y los datos POST
+            return render_template("tags/form_tags.html", tag=tag, action="editar", form_data=request.form), 400
 
+
+        resultado = board.editar_tag(tag_id, request.form)
+        
+        if resultado is True:
+            # Caso 1: Éxito (incluye si el nombre no se modificó)
+            flash("Tag editado exitosamente.", "success")
+            return redirect(url_for("tags.index"))
+        
+        elif resultado == "DUPLICATE_ERROR":
+            # Caso 2: El nuevo nombre/slug ya existe en OTRO tag
+            flash(f"Error: Ya existe un Tag con el nombre '{request.form.get('nombre')}' o no esta disponible para usar.", "error")
+            # Dejamos que el flujo continúe para que se muestre el formulario de edición con el error
+            
+        else:
+            # Caso 3: Otro error (servidor, nombre vacío)
+            flash("Ocurrió un error inesperado al intentar editar el Tag.", "error")
+
+    # Renderiza el formulario (GET o después de un error POST)
     return render_template("tags/form_tags.html", tag=tag, action="editar")
 
 
 @bp.post("/<int:tag_id>/eliminar")
+@login_required
 def eliminar_tag(tag_id):
-    resultado = board.eliminar_tag(tag_id)
+    resultado = board.eliminar_tag(tag_id) # Si retorna una lista, es error.
     
     if resultado is True:
         flash("Tag eliminado exitosamente.", "success")
-    elif resultado == "vinculado":
-        # Manejamos el error específico de la restricción M:N
-        flash("ERROR: El Tag no puede ser eliminado porque está asociado a uno o más Sitios Históricos. Desvincúlelo primero.", "error")
+        
+    elif isinstance(resultado, list):
+        # ... este código se ejecuta SOLO si hay sitios ACTIVOS vinculados.
+        sitios_nombres = ", ".join(resultado)
+        flash(f"ERROR: El Tag no puede ser eliminado. Está asociado a los siguientes Sitios Históricos: {sitios_nombres}. Desvincúlelo(s) primero.", "error")
+        
     else: 
-        flash("ERROR: El Tag no pudo ser eliminado (no encontrado o error desconocido).", "error")
+        flash("Ocurrió un error inesperado al intentar eliminar el Tag.", "error")
         
     return redirect(url_for("tags.index"))

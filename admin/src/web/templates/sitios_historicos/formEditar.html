@@ -1,12 +1,7 @@
 {% extends "layout.html" %}
-{%block head %} 
-    {{ super() }}
-{% endblock %}
 
-{%block header %}
-    {% include 'header.html'%}
-{% endblock %}
 {% block title %}Editar Sitio{% endblock %}
+
 {% block content %}
 
 <!-- Leaflet CSS y JS -->
@@ -19,7 +14,19 @@
 
 <h2>Editar Sitio Histórico</h2>
 
-<a href="{{ url_for('sitios_historicos.busqueda_avanzada') }}">Volver</a>
+<a href="/">
+    <button type="button">Volver a inicio</button>
+</a>
+<a href="{{ next_url }}">
+  <button type="button">Volver atras</button>
+</a>
+{%with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="flash {{ category }}">{{ message }}</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
 
 <form method="post" action="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id) }}">
     <label>Nombre:</label>
@@ -29,11 +36,11 @@
     <input type="text" name="descripcion" value="{{ sitio.descBreve }}" required><br>
 
     <label>Descripción Completa:</label>
-    <input type="text" name="descripcion_completa" value="{{ sitio.descCompleta }}"><br>
+    <input type="text" name="descripcion_completa" value="{{ sitio.descCompleta }}" required><br>
 
     {# Provincia y Ciudad como selects dependientes #}
     <label>Provincia:</label>
-    <select id="provinciaSelect">
+    <select id="provinciaSelect" name="provincia" required>
         <option value="">Seleccione provincia</option>
         {% set selectedProv = sitio.ciudad.provincia.id if sitio.ciudad and sitio.ciudad.provincia else '' %}
         {% for p in provincias %}
@@ -42,7 +49,7 @@
     </select><br>
 
     <label>Ciudad:</label>
-    <select id="ciudadSelect" name="ciudad">
+    <select id="ciudadSelect" name="ciudad" required>
         <option value="">Seleccione ciudad</option>
         {% for c in ciudades %}
         <option value="{{ c.id }}" data-provincia="{{ c.idProvincia }}" {% if sitio.idCiudad == c.id %}selected{% endif %}>{{ c.nombre }}</option>
@@ -58,8 +65,9 @@
     </select><br>
 
     <label>Fecha Inauguracion:</label>
-    <input type="date" name="fecha_inauguracion" 
-       value="{{ sitio.anioInauguracion.strftime('%Y-%m-%d') if sitio.anioInauguracion else '' }}"><br>
+    <input type="date" name="fecha_inauguracion" required  
+       value="{{ sitio.anioInauguracion.strftime('%Y-%m-%d') if sitio.anioInauguracion else '' }}"
+        max="{{ today }}"><br>
 
     <label>Categoría:</label>
     <select name="categoria" required>
@@ -70,8 +78,9 @@
     </select><br>
 
     <label>Fecha Registro:</label>
-    <input type="date" name="fecha_registro" 
-       value="{{ sitio.fechaRegistro.strftime('%Y-%m-%d') if sitio.fechaRegistro else '' }}"><br>
+    <input type="date" name="fecha_registro" required
+       value="{{ sitio.fechaRegistro.strftime('%Y-%m-%d') if sitio.fechaRegistro else '' }}"
+        max="{{ today }}"><br>
 
     <label>Visible a los usuarios:</label>
     <input type="hidden" name="visible" value="False">
@@ -93,6 +102,10 @@
 
     <input type="hidden" name="latitud" id="latitud" value="{{ sitio.latitud }}">
     <input type="hidden" name="longitud" id="longitud" value="{{ sitio.longitud }}">
+
+    <p id="coordenadas_seleccionadas" style="margin-top: -5px; font-size: 0.9em; color: #555;">
+    ⚠️ Haga clic en el mapa para seleccionar la ubicación (Obligatorio).
+    </p>  
 
     <div style="max-width: 600px; margin: 10px auto;">
         <label>Ubicación (seleccione en el mapa):</label>
@@ -164,6 +177,19 @@
   var existingLat = hasCoords ? parseFloat(latStr) : -34.921;
   var existingLng = hasCoords ? parseFloat(lngStr) : -57.954;
 
+   // LÓGICA DE FEEDBACK VISUAL
+  var coordsDisplay = document.getElementById('coordenadas_seleccionadas');
+  if (coordsDisplay) {
+      if (hasCoords) {
+          coordsDisplay.innerHTML = `✅ Coordenadas seleccionadas: ${existingLat}, ${existingLng}`;
+          coordsDisplay.style.color = '#555';
+      } else {
+          // Si por alguna razón el sitio no tiene coordenadas (aunque el backend lo previene), se avisa.
+          coordsDisplay.innerHTML = '⚠️ Haga clic en el mapa para seleccionar la ubicación (Obligatorio).';
+          coordsDisplay.style.color = 'red';
+      }
+  }
+
   // Inicializa el mapa centrado en las coordenadas existentes o La Plata por defecto
   var map = L.map('map').setView([existingLat, existingLng], 13);
 
@@ -193,6 +219,12 @@
 
       latInput.value = lat;
       lngInput.value = lng;
+      
+      // ACTUALIZAR FEEDBACK
+      if (coordsDisplay) {
+          coordsDisplay.innerHTML = `✅ Coordenadas seleccionadas: ${lat}, ${lng}`;
+          coordsDisplay.style.color = '#555';
+      }
   });
 </script>
 

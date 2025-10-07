@@ -1,12 +1,7 @@
 {% extends "layout.html" %}
-{%block head %} 
-    {{ super() }}
-{% endblock %}
 
-{%block header %}
-    {% include 'header.html'%}
-{% endblock %}
 {% block title %}Agregar Sitio{% endblock %}
+
 {% block content %}
 
 <!-- Leaflet CSS y JS -->
@@ -21,7 +16,19 @@
 
 <h2>Agregar Sitio Histórico</h2>
 
-<a href="{{ url_for('sitios_historicos.busqueda_avanzada') }}">Volver</a>
+<a href="/">
+    <button type="button">Volver a inicio</button>
+</a>
+<a href="{{ next_url }}">
+  <button type="button">Volver atras</button>
+</a>
+{%with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="flash {{ category }}">{{ message }}</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
 
 <form method="post">
     <label>Nombre:</label>
@@ -31,10 +38,10 @@
     <input type="text" name="descripcion" required><br>
 
     <label>Descripción Completa:</label>
-    <input type="text" name="descripcion_completa"><br>
+    <input type="text" name="descripcion_completa" required><br>
 
     <label>Provincia:</label>
-    <select id="provinciaSelect">
+    <select id="provinciaSelect" name="provincia" required>
         <option value="">Seleccione provincia</option>
         {% for p in provincias %}
         <option value="{{ p.id }}">{{ p.nombre }}</option>
@@ -42,7 +49,7 @@
     </select><br>
 
     <label>Ciudad:</label>
-    <select id="ciudadSelect" name="ciudad" disabled>
+    <select id="ciudadSelect" name="ciudad" disabled required>
         <option value="">Seleccione ciudad</option>
         {% for c in ciudades %}
         <option value="{{ c.id }}" data-provincia="{{ c.idProvincia }}">{{ c.nombre }}</option>
@@ -58,7 +65,9 @@
     </select><br>
 
     <label>Fecha Inauguracion:</label>
-    <input type="date" name="fecha_inauguracion"><br>
+    <input type="date" name="fecha_inauguracion" required
+      value=""
+        max="{{ today }}"><br>
 
     <label>Categoría:</label>
     <select name="categoria" required>
@@ -69,7 +78,9 @@
     </select><br>
 
     <label>Fecha Registro:</label>
-    <input type="date" name="fecha_registro"><br>
+    <input type="date" name="fecha_registro" required
+      value=""
+        max="{{ today }}"><br>
 
     <label>Tags:</label><br>
     <div style="border: 1px solid #ccc; padding: 10px; max-height: 150px; overflow-y: auto;">
@@ -85,6 +96,10 @@
 
     <input type="hidden" name="latitud" id="latitud">
     <input type="hidden" name="longitud" id="longitud">
+
+    <p id="coordenadas_seleccionadas" style="margin-top: -5px; font-size: 0.9em; color: #555;">
+    ⚠️ Haga clic en el mapa para seleccionar la ubicación (Obligatorio).
+    </p>  
 
     <div style="max-width: 600px; margin: 10px auto;">
         <label>Ubicación (seleccione en el mapa):</label>
@@ -120,7 +135,50 @@
       // Guardar coordenadas en inputs separados
       document.getElementById('latitud').value = lat;
       document.getElementById('longitud').value = lng;
+
+      document.getElementById('coordenadas_seleccionadas').innerHTML = `✅ Coordenadas seleccionadas: ${lat}, ${lng}`;
   });
+  (function() {
+    // 1. Obtener el formulario y los campos de coordenadas
+    const form = document.querySelector('form');
+    const latInput = document.getElementById('latitud');
+    const lngInput = document.getElementById('longitud');
+    const coordsDisplay = document.getElementById('coordenadas_seleccionadas');
+    
+    // Función para manejar el intento de envío
+    form.addEventListener('submit', function(event) {
+        
+        // El método .trim() asegura que no haya solo espacios vacíos
+        if (latInput.value.trim() === "" || lngInput.value.trim() === "") {
+            
+            // 2. DETENER el envío del formulario
+            event.preventDefault(); 
+            
+            // 3. Mostrar un mensaje de error claro
+            const errorMsg = "⚠️ Debe seleccionar una ubicación en el mapa antes de guardar.";
+            alert(errorMsg); 
+            
+            // Opcional: Mostrar el error donde está el mensaje de coordenadas
+            if (coordsDisplay) {
+                coordsDisplay.style.color = 'red';
+                coordsDisplay.textContent = errorMsg;
+            }
+        }
+        // Si tienen valor, el formulario se envía normalmente.
+    });
+
+    // Restaurar el mensaje cuando el usuario haga clic en el mapa
+    // (Esto usa el código que ya habías modificado anteriormente)
+    const map = L.DomUtil.get('map')._leaflet_map;
+    if (map) {
+        map.on('click', function() {
+            if (coordsDisplay) {
+                coordsDisplay.style.color = '#555'; // Restablece el color
+            }
+        });
+    }
+
+})();
 </script>
 
 <script>

@@ -1,17 +1,18 @@
 from src.core import board
-from flask import Blueprint, render_template, request, redirect, url_for, session
+from src.core.board.validaciones import validar_sitio_historico
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from src.core.auth import Usuario
 from src.core.board import SitioHistorico
 from src.core.database import db
 from src.core.board.ciudad import Ciudad
-from flask import flash
 from datetime import datetime
 from sqlalchemy import or_
 from src.core.board.tag import Tag
-from src.web.handlers.auth import login_required
+from src.web.handlers.auth import login_required, check_permission
 from sqlalchemy import func
 import io, csv
 from flask import Response
+from datetime import date 
 
 
 
@@ -129,11 +130,30 @@ def _build_historial_view(historial: dict, ciudades, categorias, usuarios_by_id:
 @login_required
 def agregar_sitio():
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
-
+    hoy = date.today().strftime('%Y-%m-%d')
     if request.method == "POST":
-        # Procesar datos y agregar sitio
-        board.crear_sitio(request.form)
-        return redirect(url_for("sitios_historicos.busqueda_avanzada"))
+        
+        # 1. Ejecutar la validación del sitio histórico con los datos del formulario
+        errores = validar_sitio_historico(request.form)
+        
+        if errores:
+            # 2. Si el diccionario NO está vacío (hay errores), mostrar un mensaje Flash
+            # Concatenamos todos los mensajes de error para mostrarlos al usuario.
+            full_error_msg = " | ".join(errores.values()) 
+            flash(f"Hubo errores de validación en el formulario: {full_error_msg}", "error")
+            # El flujo continúa para recargar el formulario con los datos anteriores.
+        else:
+            try:
+                # 3. Si la validación es exitosa, procesar y guardar
+                board.crear_sitio(request.form)
+                flash("Sitio histórico agregado exitosamente.", "success")
+                return redirect(url_for("sitios_historicos.busqueda_avanzada"))
+            except Exception as e:
+                # Manejar errores de la capa de negocio/base de datos
+                flash(f"Ocurrió un error al intentar agregar el sitio: {e}.", "error")
+                # Continúa al render_template con los datos de soporte.
+                pass 
+
     provincias = board.listar_provincias()
     ciudades = board.listar_ciudades()
     categorias = board.listar_categorias()
@@ -145,6 +165,7 @@ def agregar_sitio():
         categorias=categorias,
         tags=tags,
         next_url=next_url,
+        today=hoy,
     )
 
 
@@ -152,11 +173,28 @@ def agregar_sitio():
 @login_required
 def editar_sitio(sitio_id):
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
+    hoy = date.today().strftime('%Y-%m-%d')
 
     if request.method == "POST":
-        # Procesar edición del sitio
-        board.editar_sitio(sitio_id, request.form)
-        return redirect(url_for("sitios_historicos.busqueda_avanzada"))
+        
+        # 1. Llamar a la función y recibir el diccionario de errores
+        errores = validar_sitio_historico(request.form)
+        
+        if errores:
+            # 2. Si el diccionario NO está vacío (hay errores), mostrar un mensaje Flash
+            full_error_msg = " | ".join(errores.values()) 
+            flash(f"Hubo errores de validación en el formulario: {full_error_msg}", "error")
+            # El flujo continúa a cargar los datos para el render_template.
+        else:
+            try:
+                # 3. Procesar edición del sitio
+                board.editar_sitio(sitio_id, request.form)
+                flash("Sitio histórico editado exitosamente.", "success")
+                return redirect(url_for("sitios_historicos.busqueda_avanzada"))
+            except Exception as e:
+                flash(f"Ocurrió un error al intentar editar el sitio: {e}.", "error")
+                # El flujo continuará a cargar los datos para el render_template.
+                pass 
     sitio = board.obtener_sitio(sitio_id)
     # Filtros de historial
     usuario_id = request.args.get("usuario_id", type=int)
@@ -206,17 +244,26 @@ def editar_sitio(sitio_id):
         },
         tags=tags,
         next_url=next_url,
+        today=hoy,
     )
 
 
 @bp.post("/<int:sitio_id>/eliminar")
 @login_required
 def eliminar_sitio(sitio_id):
-    board.eliminar_sitio(sitio_id)
+    try:
+        board.eliminar_sitio(sitio_id)
+        flash("Sitio histórico eliminado exitosamente.", "success")
+    except Exception as e:
+        flash(f"Ocurrió un error al intentar eliminar el sitio: {e}.", "error")
+    
     return redirect(url_for("sitios_historicos.busqueda_avanzada"))
 
 @bp.route("/sitio/<int:sitio_id>")
+@login_required
 def ver_sitio(sitio_id):
+    permiso= check_permission("site_destroy")
+    next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
     sitio = board.obtener_sitio(sitio_id)
     # Filtros de historial
     usuario_id = request.args.get("usuario_id", type=int)
@@ -259,11 +306,14 @@ def ver_sitio(sitio_id):
             "hasta": hasta,
             "page": page,
         },
+        next_url=next_url,
+        permiso=permiso,
     )
-    return render_template("sitios_historicos/ver_sitio.html", sitio=sitio)
 
 @bp.route("/", methods=["GET"])
+@login_required
 def busqueda_avanzada():
+    permiso= check_permission("site_destroy")
     provincias = board.listar_provincias()
     ciudades = board.listar_ciudades()
     categorias = board.listar_categorias()
@@ -281,7 +331,7 @@ def busqueda_avanzada():
     order = request.args.get("order", "asc")
     tag_ids = request.args.getlist("tags", type=int)
 
-    per_page = 5  
+    per_page = 25
 
     query = db.session.query(SitioHistorico)
     buscar = request.args.get("buscar", "").strip()
@@ -340,11 +390,13 @@ def busqueda_avanzada():
         total_pages=total_pages,
         total_results=total_results,
         request_args=request.args,
-        tags=tags
+        tags=tags,
+        permiso=permiso,
     )
 
 
 @bp.route("/exportar_csv")
+@login_required
 def exportar_csv():
     provincia_id = request.args.get("provincia")
     ciudad_id = request.args.get("ciudad")

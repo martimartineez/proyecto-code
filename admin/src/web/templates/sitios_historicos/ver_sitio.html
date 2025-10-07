@@ -1,17 +1,25 @@
 {% extends "layout.html" %}
 
-{%block head %} 
-    {{ super() }}
-{% endblock %}
-
-{%block header %}
-    {% include 'header.html'%}
-{% endblock %}
-
 {% block title %}Detalle del sitio{% endblock %}
+
 {% block content %}
 <h1>Sitio Histórico</h1>
-<a href="{{ url_for('sitios_historicos.agregar_sitio', next=request.path) }}">Agregar sitio</a>
+<a href="/">
+    <button type="button">Volver a inicio</button>
+</a>
+<a href="{{ next_url }}">
+  <button type="button">Volver atras</button>
+</a>
+<a href="{{ url_for('sitios_historicos.agregar_sitio', next=request.path) }}">
+  <button type="button">Agregar sitio</button>
+</a>
+{%with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="flash {{ category }}">{{ message }}</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
 
 <table>
     <thead>
@@ -49,12 +57,56 @@
                 <a href="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id, next=request.path) }}">
                      <button type="button">Editar</button>
                 </a>
-                <form action="{{ url_for('sitios_historicos.eliminar_sitio', sitio_id=sitio.id)}}" method="post" style="display:inline;">
-                    <button type="submit" onclick="return confirm('¿Estás seguro de que quieres eliminar el sitio historico: {{ sitio.nombre }}?');">Eliminar</button>
-                </form>
+                {% if permiso %}
+                  <form action="{{ url_for('sitios_historicos.eliminar_sitio', sitio_id=sitio.id)}}" method="post" style="display:inline;">
+                      <button type="submit" onclick="return confirm('¿Estás seguro de que quieres eliminar el sitio historico: {{ sitio.nombre }}?');">Eliminar</button>
+                  </form>
+                {% endif %}
             </td>
         </tr>
 </table>
+
+<style>
+  .tag-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    margin-right: 6px;
+    margin-bottom: 5px;
+    background-color: #e0f7fa; /* Azul claro */
+    border: 1px solid #00bcd4;
+    border-radius: 12px;
+    font-size: 0.9em;
+    color: #006064; /* Color de texto oscuro */
+    font-weight: 500;
+  }
+  .tags-container {
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #fafafa;
+  }
+</style>
+
+<div class="tags-container">
+    <h2>Etiquetas (Tags) Asociadas</h2>
+    
+    {% set active_tags = sitio.tags | selectattr('baja', 'equalto', False) | list %}
+    
+    {% if active_tags %}
+        <p>Este sitio está asociado a las siguientes etiquetas:</p>
+        <div>
+            {% for tag in active_tags %}
+                <span class="tag-badge">
+                    {{ tag.nombre }}
+                </span>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No hay etiquetas activas asociadas a este sitio histórico.</p>
+    {% endif %}
+</div>
+<hr>
 
 <div style="max-width: 600px; margin: 20px auto;">
     <h3>Ubicación en el mapa</h3>
@@ -64,9 +116,6 @@
          data-lng="{{ sitio.longitud or -57.954 }}">
     </div>
 </div>
-
-<a href="{{ url_for('sitios_historicos.busqueda_avanzada') }}">Volver</a>
-<a href="/">Volver a inicio</a>
 
 <!-- Leaflet CSS y JS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
