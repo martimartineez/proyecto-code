@@ -252,8 +252,16 @@ def editar_sitio(sitio_id):
 @login_required
 def eliminar_sitio(sitio_id):
     try:
-        board.eliminar_sitio(sitio_id)
-        flash("Sitio histórico eliminado exitosamente.", "success")
+        # 💡 Capturamos el valor devuelto (el nombre del sitio o False)
+        nombre_sitio = board.eliminar_sitio(sitio_id) 
+        
+        if nombre_sitio:
+            # Usamos el nombre devuelto en el mensaje flash
+            flash(f"El sitio histórico '{nombre_sitio}' ha sido eliminado exitosamente.", "success")
+        elif nombre_sitio is False:
+             # Esto ocurre si obtener_sitio(sitio_id) no encontró el sitio (no deberia pasar)
+            flash("Error: El sitio histórico no fue encontrado para su eliminación.", "error")
+            
     except Exception as e:
         flash(f"Ocurrió un error al intentar eliminar el sitio: {e}.", "error")
     
