@@ -7,7 +7,7 @@ from src.core import auth
 from src.core import board
 from src.web.handlers.auth import is_autenticated
 from src.web.handlers.auth import login_required
-from src.web.handlers.auth import check_permission
+from src.web.handlers.auth import check
 
 bp = Blueprint("usuarios", __name__, url_prefix="/manejo_usuarios")
 
@@ -15,9 +15,9 @@ bp = Blueprint("usuarios", __name__, url_prefix="/manejo_usuarios")
 @bp.get("/")
 #Este es para que no te deje entrar si no estas logueado
 @login_required
+@check("user_index")
 def index():
-    if not check_permission("user_index"):
-        return abort(403)
+
     
     page = request.args.get("page", 1, type=int)
     per_page = 25  # elementos por página
@@ -42,10 +42,8 @@ def index():
 
 @bp.route("/eliminar/<int:usuario_id>", methods=["POST"])
 @login_required
+@check("user_destroy")
 def eliminar(usuario_id):
-
-    if not check_permission("user_destroy"):
-        return abort(403)
     
     user = auth.get_user_by_id(usuario_id)  
 
@@ -53,13 +51,12 @@ def eliminar(usuario_id):
 
     return redirect(url_for("usuarios.index"))
 
+
 @bp.route("/desactivar/<int:usuario_id>", methods=["POST"])
 @login_required
+@check("user_deactivate")
 def desactivar(usuario_id):
 
-    if not check_permission("user_deactivate"):
-        return abort(403)
-    
     user = auth.get_user_by_id(usuario_id)
     if not user.esAdmin: 
         user.activo = False
@@ -67,11 +64,11 @@ def desactivar(usuario_id):
 
     return redirect(url_for("usuarios.index"))
 
+
 @bp.route("/activar/<int:usuario_id>", methods=["POST"])
 @login_required
+@check("user_activate")
 def activar(usuario_id):
-    if not check_permission("user_activate"):
-        return abort(403)
     
     user = auth.get_user_by_id(usuario_id)
     user.activo = True
@@ -82,9 +79,8 @@ def activar(usuario_id):
 
 @bp.route("/AgregarUsuario", methods=["GET","POST"])
 @login_required
+@check("user_new")
 def agregar_usuario():
-    if not check_permission("user_new"):
-        return abort(403)
     
     if request.method == "POST":
         if (auth.comprobar_email(request.form["email"])):
@@ -125,9 +121,8 @@ def agregar_usuario():
 
 @bp.route("/modificar/<int:usuario_id>", methods=["GET", "POST"])
 @login_required
+@check("user_update")
 def modificar(usuario_id):
-    if not check_permission("user_update"):
-        return abort(403)
     
     user = auth.get_user_by_id(usuario_id)
     rolesUsuario = auth.listar_roles_usuario(user)
@@ -163,9 +158,9 @@ def modificar(usuario_id):
 
 @bp.route("/detalles/<int:usuario_id>", methods=["GET", "POST"])
 @login_required
+@check("user_show")
 def ver_detalles(usuario_id):
-    if not check_permission("user_show"):
-        return abort(403)
+
     if request.method == "POST":
         usuario = auth.get_user_by_id(usuario_id)
         roles = auth.listar_roles_usuario(usuario)
@@ -176,9 +171,8 @@ def ver_detalles(usuario_id):
 
 @bp.route("/cambiar_contraseña/<int:usuario_id>", methods=["GET", "POST"])
 @login_required
+@check("user_update")
 def cambiar_contraseña(usuario_id):
-    if not check_permission("user_update"):
-        return abort(403)
     
     user = auth.get_user_by_id(usuario_id)
     step = request.form.get("step")
@@ -213,10 +207,8 @@ def cambiar_contraseña(usuario_id):
 
 @bp.route("/busqueda_avanzada", methods=["GET", "POST"])
 @login_required
+@check("user_show")
 def busqueda_avanzada():
-
-    if not check_permission("user_show"):
-        return abort(403)
     
     # Capturamos los filtros
     email = request.args.get("email", "").strip()
