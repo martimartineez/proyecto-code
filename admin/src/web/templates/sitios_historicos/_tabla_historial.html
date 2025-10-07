@@ -85,3 +85,49 @@
   </table>
   </div>
 </div>
+
+{# Paginación del historial (server-side) #}
+{% set page = historial.page %}
+{% set pages = historial.pages %}
+<nav class="historial-wrap" aria-label="Paginación historial" style="margin-top:10px;">
+  <div style="display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;">
+    {% if page > 1 %}
+      <a href="{{ url_for(request.endpoint, sitio_id=request.view_args.get('sitio_id'), usuario_id=filtros.usuario_id, accion=filtros.accion, desde=filtros.desde, hasta=filtros.hasta, page=page-1) }}">&laquo; Anterior</a>
+    {% else %}
+      <span style="opacity:.4;">&laquo; Anterior</span>
+    {% endif %}
+    {# Numeración compacta con elipsis #}
+    {% set start = 1 if page - 2 < 1 else page - 2 %}
+    {% set end = pages if page + 2 > pages else page + 2 %}
+
+    {# Siempre mostrar la primera página si no está en la ventana #}
+    {% if start > 1 %}
+      <a href="{{ url_for(request.endpoint, sitio_id=request.view_args.get('sitio_id'), usuario_id=filtros.usuario_id, accion=filtros.accion, desde=filtros.desde, hasta=filtros.hasta, page=1) }}">1</a>
+    {% endif %}
+    {% if start > 2 %}
+      <span style="opacity:.6;">…</span>
+    {% endif %}
+
+    {# Ventana central #}
+    {% for p in range(start, end + 1) %}
+      {% if p == page %}
+        <strong>{{ p }}</strong>
+      {% else %}
+        <a href="{{ url_for(request.endpoint, sitio_id=request.view_args.get('sitio_id'), usuario_id=filtros.usuario_id, accion=filtros.accion, desde=filtros.desde, hasta=filtros.hasta, page=p) }}">{{ p }}</a>
+      {% endif %}
+    {% endfor %}
+
+    {# Siempre mostrar la última página si no está en la ventana #}
+    {% if end < pages - 1 %}
+      <span style="opacity:.6;">…</span>
+    {% endif %}
+    {% if end < pages %}
+      <a href="{{ url_for(request.endpoint, sitio_id=request.view_args.get('sitio_id'), usuario_id=filtros.usuario_id, accion=filtros.accion, desde=filtros.desde, hasta=filtros.hasta, page=pages) }}">{{ pages }}</a>
+    {% endif %}
+    {% if page < pages %}
+      <a href="{{ url_for(request.endpoint, sitio_id=request.view_args.get('sitio_id'), usuario_id=filtros.usuario_id, accion=filtros.accion, desde=filtros.desde, hasta=filtros.hasta, page=page+1) }}">Siguiente &raquo;</a>
+    {% else %}
+      <span style="opacity:.4;">Siguiente &raquo;</span>
+    {% endif %}
+  </div>
+</nav>
