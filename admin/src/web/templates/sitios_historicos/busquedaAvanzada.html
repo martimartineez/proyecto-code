@@ -90,12 +90,12 @@
 
     <div>
       <label>Desde:</label>
-      <input type="date" name="fecha_desde" value="{{ request_args.get('fecha_desde','') }}">
+      <input type="date" name="fecha_desde" value="{{ request_args.get('fecha_desde','') }}" max="{{ date.today().isoformat() }}">
     </div>
 
     <div>
       <label>Hasta:</label>
-      <input type="date" name="fecha_hasta" value="{{ request_args.get('fecha_hasta','') }}">
+      <input type="date" name="fecha_hasta" value="{{ request_args.get('fecha_hasta','') }}" max="{{ date.today().isoformat() }}">
     </div>
 
     <div>

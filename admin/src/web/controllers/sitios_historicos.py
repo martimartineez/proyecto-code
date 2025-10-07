@@ -5,7 +5,7 @@ from src.core.auth import Usuario
 from src.core.board import SitioHistorico
 from src.core.database import db
 from src.core.board.ciudad import Ciudad
-from datetime import datetime
+from datetime import datetime, date
 from sqlalchemy import or_
 from src.core.board.tag import Tag
 from src.web.handlers.auth import login_required, check_permission
@@ -395,7 +395,8 @@ def busqueda_avanzada():
         request_args=request.args,
         tags=tags,
         permiso=permiso,
-        permisocsv=permisocsv
+        permisocsv=permisocsv,
+        date=date
     )
 
 
