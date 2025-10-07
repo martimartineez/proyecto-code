@@ -47,10 +47,7 @@ def eliminar(usuario_id):
     if not check_permission("user_destroy"):
         return abort(403)
     
-    user = auth.get_user_by_id(usuario_id)
-    # Eliminacion fisica
-    # if user:
-    #     auth.delete_user(user)
+    user = auth.get_user_by_id(usuario_id)  
 
     auth.baja_logica_usuario(auth.get_user_by_id(usuario_id))
 
@@ -98,12 +95,18 @@ def agregar_usuario():
             apellido = request.form["apellido"]
             email = request.form["email"]
             password = request.form["password"]
+            if not nombre or not apellido or not email or not password:
+                flash('Todos los campos son obligatorios','error')
+                return redirect(url_for("usuarios.agregar_usuario"))
+            
             roles_ids = request.form.getlist("roles")
             roles_ids = list(map(int, roles_ids))    
             if board.get_id_rol_admin() in(roles_ids):
                 admin = True
             else:
                 admin = False
+
+            
 
             auth.create_user(
                 nombre=nombre,
@@ -131,9 +134,16 @@ def modificar(usuario_id):
     roles = board.list_roles()
 
     if request.method == "POST":
-        user.nombre = request.form["nombre"]
-        user.apellido = request.form["apellido"]
-        user.email = request.form["email"]
+        nombre = request.form["nombre"]
+        apellido = request.form["apellido"]
+        email = request.form["email"]
+        if not nombre or not apellido or not email:
+            flash('Todos los campos son obligatorios','error')
+            return redirect(url_for("usuarios.agregar_usuario"))
+        user.nombre = nombre
+        user.apellido = apellido
+        user.email = email
+        
         roles_ids = request.form.getlist("rol")
         user.roles = [board.get_rol_by_id(int(rol_id)) for rol_id in roles_ids]
         roles_ids = list(map(int, roles_ids))    

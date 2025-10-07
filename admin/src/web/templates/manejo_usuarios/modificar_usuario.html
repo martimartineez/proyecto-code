@@ -10,11 +10,13 @@
     <div class="modificar-usuario-flex">
         <div style="flex: 1;">
             <label for="nombre">Nombre:</label>
-            <input type="text" id="nombre" name="nombre" value="{{ usuario.nombre }}" required>
+            <input type="text" id="nombre" name="nombre" value="{{ usuario.nombre }}" required
+                pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+">
         </div>
         <div style="flex: 1;">
             <label for="apellido">Apellido:</label>
-            <input type="text" id="apellido" name="apellido" value="{{ usuario.apellido }}" required>
+            <input type="text" id="apellido" name="apellido" value="{{ usuario.apellido }}" required
+                pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+">
         </div>
     </div>
     <label for="email">Email:</label>

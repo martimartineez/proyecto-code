@@ -405,7 +405,7 @@ def run():
     print("Creating roles...")
     rol_admin = board.create_rol(nombre="Admin")
     rol_editor = board.create_rol(nombre="Editor")
-    ##rol_user = board.create_rol(nombre="User")
+    rol_user = board.create_rol(nombre="Usuario")
     print("Created roles! 👍🏻")
 
     print('Creando permisos..')
