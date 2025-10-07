@@ -16,14 +16,13 @@ bp = Blueprint("usuarios", __name__, url_prefix="/manejo_usuarios")
 #Este es para que no te deje entrar si no estas logueado
 @login_required
 def index():
-
     if not check_permission("user_index"):
         return abort(403)
     
     page = request.args.get("page", 1, type=int)
-    per_page = 25 # elementos por pagina
+    per_page = 25  # elementos por página
 
-    todos = auth.list_usuarios()  # esto devuelve una lista
+    todos = auth.list_usuarios()  # lista de todos los usuarios
     total = len(todos)
     inicio = (page - 1) * per_page
     fin = inicio + per_page
@@ -31,9 +30,14 @@ def index():
 
     roles = board.list_roles()
 
-    return render_template("manejo_usuarios/user_management.html", usuarios=usuarios, roles=roles,page=page,
+    return render_template(
+        "manejo_usuarios/user_management.html",
+        usuarios=usuarios,
+        roles=roles,
+        page=page,
         total=total,
-        per_page=per_page)
+        per_page=per_page
+    )
 
 
 @bp.route("/eliminar/<int:usuario_id>", methods=["POST"])
@@ -218,6 +222,7 @@ def busqueda_avanzada():
     inicio = (page - 1) * per_page
     fin = inicio + per_page
     usuarios = todos[inicio:fin]
+    total_pages = (total + per_page - 1) // per_page
 
     # Filtrar por email
     if email:
@@ -236,6 +241,16 @@ def busqueda_avanzada():
         reverse=(orden == "desc")
     )
 
-    return render_template("manejo_usuarios/busqueda_avanzada.html",usuarios=usuarios,email=email,activo=activo,orden=orden,page=page,total=total,per_page=per_page)
+    return render_template(
+    "manejo_usuarios/busqueda_avanzada.html",
+    usuarios=usuarios,
+    email=email,
+    activo=activo,
+    orden=orden,
+    page=page,
+    total=total,
+    per_page=per_page,
+    total_pages=total_pages
+)
 
 

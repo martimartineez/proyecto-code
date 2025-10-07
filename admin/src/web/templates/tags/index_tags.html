@@ -90,62 +90,65 @@
 </script>
 
 
-<div class="pagination">
+{% if total_pages > 1 %}
+<nav>
+  <ul class="pagination">
+    {# Copiamos los argumentos para mantener filtros y orden #}
+    {% set args = request.args.copy() %}
+    {% if 'page' in args %}{% set _ = args.pop('page') %}{% endif %}
+
     {% if page > 1 %}
-        <a style="
-            display: inline-block; 
-            padding: 8px 12px; 
-            margin: 0 4px; 
-            border: 1px solid #ccc; 
-            text-decoration: none; 
-            color: #333; 
-            border-radius: 4px;"  
-            href="{{ url_for('tags.index', page=page-1, q=q, sort=sort, order=order) }}">Anterior
-        </a>
+    <li>
+      <a href="{{ url_for('tags.index', page=page-1, **args) }}">
+        <button type="button">Anterior</button>
+      </a>
+    </li>
     {% endif %}
 
     {% for p in range(1, total_pages + 1) %}
-        {% if p == page %}
-            <strong style="
-                display: inline-block; 
-                padding: 8px 12px; 
-                margin: 0 4px; 
-                border: 1px solid #ccc; 
-                background-color: #f0f0f0; /* Color de fondo claro para que parezca un botón */
-                color: #333; 
-                border-radius: 4px;
-                font-weight: bold;
-            ">
-                {{ p }}
-            </strong>
-        {% else %}
-            <a style="
-                display: inline-block; 
-                padding: 8px 12px; 
-                margin: 0 4px; 
-                border: 1px solid #ccc; 
-                text-decoration: none; 
-                color: #333; 
-                border-radius: 4px;" 
-            href="{{ url_for('tags.index', page=p, q=q, sort=sort, order=order) }}">
-                {{ p }}
-            </a>
-        {% endif %}
+    <li class="{% if p == page %}active{% endif %}">
+      <a href="{{ url_for('tags.index', page=p, **args) }}">
+        <button type="button">{{ p }}</button>
+      </a>
+    </li>
     {% endfor %}
 
     {% if page < total_pages %}
-        <a style="
-            display: inline-block; 
-            padding: 8px 12px; 
-            margin: 0 4px; 
-            border: 1px solid #ccc; 
-            text-decoration: none; 
-            color: #333; 
-            border-radius: 4px;"  
-        href="{{ url_for('tags.index', page=page+1, q=q, sort=sort, order=order) }}">Siguiente
-        </a>
+    <li>
+      <a href="{{ url_for('tags.index', page=page+1, **args) }}">
+        <button type="button">Siguiente</button>
+      </a>
+    </li>
     {% endif %}
-</div>
+  </ul>
+</nav>
+{% endif %}
 
+
+<style>
+.pagination li {
+  display: inline-block;
+  margin: 2px;
+}
+
+.pagination li a button {
+  background-color: #f8f9fa;
+  border: 1px solid #ccc;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.pagination li.active a button {
+  background-color: #007bff; /* Azul */
+  color: white;
+  border-color: #007bff;
+  font-weight: bold;
+}
+
+.pagination li a button:hover {
+  background-color: #e2e6ea;
+}
+</style>
 
 {% endblock %}
