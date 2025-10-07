@@ -1,4 +1,5 @@
 from src.core import board
+from src.core.board import seeds as board_seeds
 from src.core import auth
 from src.core.database import db
 from src.core.board.ciudad import Ciudad
@@ -23,6 +24,16 @@ def _get_categoria_id(nombre_categoria: str) -> int | None:
 
 
 def run():
+    # 0) Seed geografía completa (Provincias y Ciudades) y Categorías
+    try:
+        board_seeds.seed_geografia_completa()
+    except Exception as exc:
+        print(f"Error en seed_geografia_completa: {exc}")
+    try:
+        board_seeds.seed_categorias()
+    except Exception as exc:
+        print(f"Error en seed_categorias: {exc}")
+
     # Crear rol y usuario "System" si no existen
     admin_role = db.session.query(Rol).filter(Rol.nombre == "SystemAdmin").first()
     if not admin_role:
