@@ -8,7 +8,7 @@ from src.core.board.ciudad import Ciudad
 from datetime import datetime
 from sqlalchemy import or_
 from src.core.board.tag import Tag
-from src.web.handlers.auth import login_required, check_permission
+from src.web.handlers.auth import login_required, check_permission, check
 from sqlalchemy import func
 import io, csv
 from flask import Response
@@ -128,6 +128,7 @@ def _build_historial_view(historial: dict, ciudades, categorias, usuarios_by_id:
 
 @bp.route("/nuevo", methods=["GET", "POST"])
 @login_required
+@check("site_create")
 def agregar_sitio():
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
     hoy = date.today().strftime('%Y-%m-%d')
@@ -171,6 +172,7 @@ def agregar_sitio():
 
 @bp.route("/<int:sitio_id>/editar", methods=["GET", "POST"])
 @login_required
+@check("site_update")
 def editar_sitio(sitio_id):
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
     hoy = date.today().strftime('%Y-%m-%d')
@@ -250,6 +252,7 @@ def editar_sitio(sitio_id):
 
 @bp.post("/<int:sitio_id>/eliminar")
 @login_required
+@check("site_destroy")
 def eliminar_sitio(sitio_id):
     try:
         # 💡 Capturamos el valor devuelto (el nombre del sitio o False)
@@ -269,6 +272,7 @@ def eliminar_sitio(sitio_id):
 
 @bp.route("/sitio/<int:sitio_id>")
 @login_required
+@check("site_show")
 def ver_sitio(sitio_id):
     permiso= check_permission("site_destroy")
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
@@ -320,6 +324,7 @@ def ver_sitio(sitio_id):
 
 @bp.route("/", methods=["GET"])
 @login_required
+@check("site_index")
 def busqueda_avanzada():
     permiso= check_permission("site_destroy")
     provincias = board.listar_provincias()
