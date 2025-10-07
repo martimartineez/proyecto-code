@@ -28,13 +28,7 @@
 <a href="{{ next_url }}">
   <button type="button">Volver atras</button>
 </a>
-{# 💡 FIX: ELIMINAR AHORA SE ALINEA CON LOS OTROS BOTONES #}
-<form method="post" action="{{ url_for('sitios_historicos.eliminar_sitio', sitio_id=sitio.id) }}" 
-      style="display: inline-block;"> 
-    <button type="submit" onclick="return confirm('¿Está seguro de que desea eliminar este sitio? Esta acción es irreversible.');">
-        Eliminar
-    </button>
-</form>
+
 
 {%with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}
@@ -107,7 +101,7 @@
       value="{{ sitio.fechaRegistro.strftime('%Y-%m-%d') if sitio.fechaRegistro else '' }}"
         max="{{ today }}"><br>
     
-    {# 💡 CAMPO VISIBLE FIX (oculto para asegurar False, checkbox para True) #}
+
     <label>Visible a los usuarios:</label>
     <input type="hidden" name="visible" value="False">
     <input type="checkbox" name="visible" value="True" {% if sitio.visible %}checked{% endif %}><br>
@@ -134,7 +128,7 @@
         {% else %}
         ⚠️ Haga clic en el mapa para seleccionar la ubicación (Obligatorio).
         {% endif %}
-    </p>  
+    </p> 
 
     <div style="max-width: 600px; margin: 10px auto;">
         <label>Ubicación (seleccione en el mapa para modificar):</label>
