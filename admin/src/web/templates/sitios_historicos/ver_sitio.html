@@ -186,15 +186,4 @@
 </form>
 
 {% include 'sitios_historicos/_tabla_historial.html' %}
-
-{% set page = historial.page %}
-{% set pages = historial.pages %}
-<div style="margin-top:10px;">
-  {% if page > 1 %}
-  {% endif %}
-  <span style="margin:0 8px;">Página {{ page }} de {{ pages }}</span>
-  {% if page < pages %}
-    <a href="{{ url_for('sitios_historicos.ver_sitio', sitio_id=sitio.id, usuario_id=filtros.usuario_id, accion=filtros.accion, desde=filtros.desde, hasta=filtros.hasta, page=page+1) }}">Siguiente &raquo;</a>
-  {% endif %}
-</div>
 {% endblock %}
