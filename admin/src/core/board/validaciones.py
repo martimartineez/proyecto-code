@@ -47,14 +47,14 @@ def validar_sitio_historico(form_data: dict) -> dict:
     if error_nombre:
         errores["nombre"] = error_nombre
 
-    # 2. Validación de la Descripción Breve (Mínimo: 10)
-    error_desc_breve = _validar_texto_obligatorio(form_data.get("descripcion"), "Descripción Breve", 10, 255)
+    # 2. Validación de la Descripción Breve (Mínimo: 5)
+    error_desc_breve = _validar_texto_obligatorio(form_data.get("descripcion"), "Descripción Breve", 5, 255)
     if error_desc_breve:
         errores["descripcion"] = error_desc_breve
 
-    # 3. Validación de la Descripción Completa (Mínimo: 20)
+    # 3. Validación de la Descripción Completa (Mínimo: 10)
     # Asumo una longitud máxima más grande por ser un campo extenso
-    error_desc_completa = _validar_texto_obligatorio(form_data.get("descripcion_completa"), "Descripción Completa", 20, 5000)
+    error_desc_completa = _validar_texto_obligatorio(form_data.get("descripcion_completa"), "Descripción Completa", 10, 5000)
     if error_desc_completa:
         errores["descripcion_completa"] = error_desc_completa
         
