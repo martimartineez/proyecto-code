@@ -18,7 +18,5 @@ def check_permission(permission):
     user_email = session.get("user")
     user = auth.find_user(user_email)
     permissions = auth.permissions(user)
-    print(permissions)
     
-    #return user is not None and permission in permissions
-    return True
+    return user is not None and permission in permissions

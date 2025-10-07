@@ -165,38 +165,76 @@
 
 {% if total_pages > 1 %}
 <nav>
-    <ul class="pagination">
-        {% set args = request.args.copy() %}
-        {% if 'page' in args %}
-            {% set _ = args.pop('page') %}
-        {% endif %}
+  <ul class="pagination">
+    {% set args = request.args.copy() %}
+    {% if 'page' in args %}{% set _ = args.pop('page') %}{% endif %}
 
-        {% if page > 1 %}
-        <li>
-            <a href="{{ url_for('sitios_historicos.busqueda_avanzada', page=page-1, **args) }}">
-                <button type="button">Anterior</button>
-            </a>
-        </li>
-        {% endif %}
-        
-        <div class="page-numbers">
-            {% for p in range(1, total_pages + 1) %}
-                <div class="page-item {% if p == page %}active{% endif %}">
-                    <a href="{{ url_for('sitios_historicos.busqueda_avanzada', page=p, **args) }}">
-                        <button type="button">{{ p }}</button>
-                    </a>
-                </div>
-            {% endfor %}
-        </div>
-        
-        {% if page < total_pages %}
-        <li>
-            <a href="{{ url_for('sitios_historicos.busqueda_avanzada', page=page+1, **args) }}">
-                <button type="button">Siguiente</button>
-            </a>
-        </li>
-        {% endif %}
-    </ul>
+    {# Botón Anterior #}
+    {% if page > 1 %}
+    <li>
+      <a href="{{ url_for('sitios_historicos.busqueda_avanzada', page=page-1, **args) }}">
+        <button type="button">Anterior</button>
+      </a>
+    </li>
+    {% endif %}
+
+    {# Calculamos los límites de páginas visibles manualmente #}
+    {% set start_page = page - 4 %}
+    {% set end_page = page + 5 %}
+    {% if start_page < 1 %}
+      {% set end_page = end_page + (1 - start_page) %}
+      {% set start_page = 1 %}
+    {% endif %}
+    {% if end_page > total_pages %}
+      {% set start_page = start_page - (end_page - total_pages) %}
+      {% set end_page = total_pages %}
+    {% endif %}
+    {% if start_page < 1 %}
+      {% set start_page = 1 %}
+    {% endif %}
+
+    {# Primera página y puntos suspensivos si corresponde #}
+    {% if start_page > 1 %}
+      <li>
+        <a href="{{ url_for('sitios_historicos.busqueda_avanzada', page=1, **args) }}">
+          <button type="button">1</button>
+        </a>
+      </li>
+      {% if start_page > 2 %}
+        <span>...</span>
+      {% endif %}
+    {% endif %}
+
+    {# Páginas visibles #}
+    {% for p in range(start_page, end_page + 1) %}
+      <li class="{% if p == page %}active{% endif %}">
+        <a href="{{ url_for('sitios_historicos.busqueda_avanzada', page=p, **args) }}">
+          <button type="button">{{ p }}</button>
+        </a>
+      </li>
+    {% endfor %}
+
+    {# Última página y puntos suspensivos si corresponde #}
+    {% if end_page < total_pages %}
+      {% if end_page < total_pages - 1 %}
+        <span>...</span>
+      {% endif %}
+      <li>
+        <a href="{{ url_for('sitios_historicos.busqueda_avanzada', page=total_pages, **args) }}">
+          <button type="button">{{ total_pages }}</button>
+        </a>
+      </li>
+    {% endif %}
+
+    {# Botón Siguiente #}
+    {% if page < total_pages %}
+    <li>
+      <a href="{{ url_for('sitios_historicos.busqueda_avanzada', page=page+1, **args) }}">
+        <button type="button">Siguiente</button>
+      </a>
+    </li>
+    {% endif %}
+  </ul>
 </nav>
 {% endif %}
 
@@ -289,6 +327,33 @@ btnLimpiar.addEventListener('click', () => {
     document.querySelector('#order').value = "asc";
 });
 </script>
+
+
+<style>
+.pagination li {
+  display: inline-block;
+  margin: 2px;
+}
+
+.pagination li a button {
+  background-color: #f8f9fa;
+  border: 1px solid #ccc;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.pagination li.active a button {
+  background-color: #007bff; /* Azul */
+  color: white;
+  border-color: #007bff;
+  font-weight: bold;
+}
+
+.pagination li a button:hover {
+  background-color: #e2e6ea;
+}
+</style>
 
 
 {% endblock %}
