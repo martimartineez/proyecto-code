@@ -287,8 +287,3 @@ def run():
 
     print("Created users! 👍🏻")
 
-    # Asociar rol Admin a los usuarios admin de ejemplo
-    for _u in (user1, user2, user3):
-        if rol_admin not in _u.roles:
-            _u.roles.append(rol_admin)
-    db.session.commit()
