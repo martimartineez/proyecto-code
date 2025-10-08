@@ -12,6 +12,14 @@
 {% endif %}
 {% endwith %}
 
+<div class="stylish-center-btn">
+    <button type="button" onclick="history.back()" class="stylish-btn">Volver</button>
+
+    <a href="{{ url_for('home') }}"><button class="stylish-btn">Página principal</button></a>
+</div>
+
+<h1>Agregar un usuario</h1>
+
 <form method="post">
     <label>Nombre:</label>
     <input type="text" name="nombre" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+"><br>

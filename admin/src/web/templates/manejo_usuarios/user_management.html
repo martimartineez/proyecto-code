@@ -32,7 +32,8 @@
         cursor: pointer;
     }
 
-    .pagination a, .pagination button {
+    .pagination a,
+    .pagination button {
         margin: 0 5px;
         padding: 5px 10px;
         border: 1px solid #007bff;
@@ -42,7 +43,8 @@
         background-color: white;
     }
 
-    .pagination button.active, .pagination a:hover {
+    .pagination button.active,
+    .pagination a:hover {
         background-color: #007bff;
         color: white;
     }
@@ -53,20 +55,94 @@
 </style>
 {% endblock %}
 
+<!-- Importo el header -->
 {% block header %}
 {% include 'header.html'%}
 {% endblock %}
 
+<!-- Arranca el body -->
+
 {% block content %}
 <h1>Usuarios</h1>
 
+<!-- FLASK FLASH -->
+
 {% with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}
-    {% for category, message in messages %}
-        <div class="flash {{ category }}">{{ message }}</div>
-    {% endfor %}
+{% for category, message in messages %}
+<div class="flash {{ category }}">{{ message }}</div>
+{% endfor %}
 {% endif %}
 {% endwith %}
+
+<!-- BOTONES  -->
+
+<div class="stylish-center-btn">
+    <a href="{{ url_for('usuarios.agregar_usuario_post') }}">
+        <button id="agregarUsuarioBtn" class="stylish-btn">Agregar usuario</button>
+    </a>
+
+    <!-- <a href="{{ url_for('usuarios.ver_perfil') }}" method="POST">
+        <button class="stylish-btn">perfil</button>
+    </a> -->
+
+    <a href="{{ url_for('home') }}">
+        <button class="stylish-btn">Volver al inicio</button>
+    </a>
+</div>
+
+
+<!-- FORM DE BUSQUEDA AVANZADA -->
+
+
+<!-- Botón toggle para mostrar/ocultar -->
+<div class="stylish-center-btn">
+    <button type="button" id="toggleBusquedaBtn" class="stylish-btn">Búsqueda Avanzada</button>
+</div>
+
+<!-- Formulario de búsqueda avanzada (oculto por defecto) -->
+<div class="form-box" id="busquedaAvanzadaForm" style="display:none;">
+    <form method="GET" action="{{ url_for('usuarios.index') }}">
+        <div>
+            <label for="email">Buscar por Email:</label>
+            <input type="text" id="email" name="email" value="{{ email }}">
+        </div>
+        <div>
+            <label for="activo">Estado:</label>
+            <select id="activo" name="activo">
+                <option value="" {% if activo=="" %}selected{% endif %}>Todos</option>
+                <option value="true" {% if activo=="true" %}selected{% endif %}>Activos</option>
+                <option value="false" {% if activo=="false" %}selected{% endif %}>Inactivos</option>
+            </select>
+        </div>
+        <div>
+            <label for="orden">Ordenar por fecha:</label>
+            <select id="orden" name="orden">
+                <option value="asc" {% if orden=="asc" %}selected{% endif %}>Ascendente</option>
+                <option value="desc" {% if orden=="desc" %}selected{% endif %}>Descendente</option>
+            </select>
+        </div>
+        <button type="submit">Buscar</button>
+    </form>
+</div>
+
+<script>
+    const toggleBtn = document.getElementById('toggleBusquedaBtn');
+    const form = document.getElementById('busquedaAvanzadaForm');
+
+    toggleBtn.addEventListener('click', () => {
+        if (form.style.display === 'none' || form.style.display === '') {
+            form.style.display = 'block';
+            toggleBtn.textContent = '🔽 Ocultar Búsqueda Avanzada';
+        } else {
+            form.style.display = 'none';
+            toggleBtn.textContent = 'Búsqueda Avanzada';
+        }
+    });
+</script>
+
+
+<!-- LA TABLA DE USUARIOS -->
 
 <table>
     <thead>
@@ -83,25 +159,38 @@
             <td>{{ usuario.nombre }}</td>
             <td>{{ usuario.email }}</td>
             <td>
-                <form action="{{ url_for('usuarios.ver_detalles', usuario_id=usuario.id) }}" method="post" style="display:inline;">
+                <form action="{{ url_for('usuarios.ver_detalles', usuario_id=usuario.id) }}" method="post"
+                    style="display:inline;">
                     <button type="submit">Ver detalles</button>
                 </form>
-                <form action="{{ url_for('usuarios.modificar', usuario_id=usuario.id) }}" method="get" style="display:inline;">
+                <form action="{{ url_for('usuarios.modificar', usuario_id=usuario.id) }}" method="get"
+                    style="display:inline;">
                     <button type="submit">Modificar</button>
                 </form>
-                {% if not usuario.esAdmin %}
-                    {% if usuario.activo %}
-                        <form action="{{ url_for('usuarios.desactivar', usuario_id=usuario.id) }}" method="post" style="display:inline;">
-                            <button type="submit" onclick="return confirm('¿Seguro que deseas desactivar este usuario?');">Desactivar</button>
-                        </form>
-                    {% else %}
-                        <form action="{{ url_for('usuarios.activar', usuario_id=usuario.id) }}" method="post" style="display:inline;">
-                            <button type="submit" onclick="return confirm('¿Seguro que deseas activar este usuario?');">Activar</button>
-                        </form>
-                    {% endif %}
+                {% set esAdmin = usuario.roles | selectattr("nombre", "equalto", "Admin") | list | length > 0 %}
+
+                {% if not esAdmin %}
+                {% if usuario.activo %}
+                <form action="{{ url_for('usuarios.desactivar', usuario_id=usuario.id) }}" method="post"
+                    style="display:inline;">
+                    <button type="submit" onclick="return confirm('¿Seguro que deseas desactivar este usuario?');">
+                        Desactivar
+                    </button>
+                </form>
+                {% else %}
+                <form action="{{ url_for('usuarios.activar', usuario_id=usuario.id) }}" method="post"
+                    style="display:inline;">
+                    <button type="submit" onclick="return confirm('¿Seguro que deseas activar este usuario?');">
+                        Activar
+                    </button>
+                </form>
                 {% endif %}
-                <form action="{{ url_for('usuarios.eliminar', usuario_id=usuario.id) }}" method="post" style="display:inline;">
-                    <button type="submit" onclick="return confirm('¿Seguro que deseas eliminar este usuario?');">Eliminar</button>
+                {% endif %}
+
+                <form action="{{ url_for('usuarios.eliminar', usuario_id=usuario.id) }}" method="post"
+                    style="display:inline;">
+                    <button type="submit"
+                        onclick="return confirm('¿Seguro que deseas eliminar este usuario?');">Eliminar</button>
                 </form>
             </td>
         </tr>
@@ -113,88 +202,72 @@
 <!-- 🔹 Paginación avanzada estilo sitios históricos -->
 {% if total > per_page %}
 <nav>
-  <ul class="pagination">
-    {% set args = request.args.copy() %}
-    {% if 'page' in args %}{% set _ = args.pop('page') %}{% endif %}
+    <ul class="pagination">
+        {% set args = request.args.copy() %}
+        {% if 'page' in args %}{% set _ = args.pop('page') %}{% endif %}
 
-    {% set total_pages = (total // per_page) + (1 if total % per_page else 0) %}
-    {% set start_page = page - 4 %}
-    {% set end_page = page + 5 %}
-    {% if start_page < 1 %}
-        {% set end_page = end_page + (1 - start_page) %}
-        {% set start_page = 1 %}
-    {% endif %}
-    {% if end_page > total_pages %}
-        {% set start_page = start_page - (end_page - total_pages) %}
-        {% set end_page = total_pages %}
-    {% endif %}
-    {% if start_page < 1 %}
-        {% set start_page = 1 %}
-    {% endif %}
+        {% set total_pages = (total // per_page) + (1 if total % per_page else 0) %}
+        {% set start_page = page - 4 %}
+        {% set end_page = page + 5 %}
+        {% if start_page < 1 %} {% set end_page=end_page + (1 - start_page) %} {% set start_page=1 %} {% endif %} {% if
+            end_page> total_pages %}
+            {% set start_page = start_page - (end_page - total_pages) %}
+            {% set end_page = total_pages %}
+            {% endif %}
+            {% if start_page < 1 %} {% set start_page=1 %} {% endif %} {% if page> 1 %}
+                <li><a href="{{ url_for('usuarios.index', page=page-1, **args) }}">Anterior</a></li>
+                {% endif %}
 
-    {% if page > 1 %}
-        <li><a href="{{ url_for('usuarios.index', page=page-1, **args) }}">Anterior</a></li>
-    {% endif %}
+                {% if start_page > 1 %}
+                <li><a href="{{ url_for('usuarios.index', page=1, **args) }}">1</a></li>
+                {% if start_page > 2 %}<span>...</span>{% endif %}
+                {% endif %}
 
-    {% if start_page > 1 %}
-        <li><a href="{{ url_for('usuarios.index', page=1, **args) }}">1</a></li>
-        {% if start_page > 2 %}<span>...</span>{% endif %}
-    {% endif %}
+                {% for p in range(start_page, end_page + 1) %}
+                <li>
+                    <a href="{{ url_for('usuarios.index', page=p, **args) }}"
+                        class="{% if p==page %}active{% endif %}">{{ p }}</a>
+                </li>
+                {% endfor %}
 
-    {% for p in range(start_page, end_page + 1) %}
-        <li>
-            <a href="{{ url_for('usuarios.index', page=p, **args) }}" class="{% if p==page %}active{% endif %}">{{ p }}</a>
-        </li>
-    {% endfor %}
+                {% if end_page < total_pages %} {% if end_page < total_pages - 1 %}<span>...</span>{% endif %}
+                    <li><a href="{{ url_for('usuarios.index', page=total_pages, **args) }}">{{ total_pages }}</a></li>
+                    {% endif %}
 
-    {% if end_page < total_pages %}
-        {% if end_page < total_pages - 1 %}<span>...</span>{% endif %}
-        <li><a href="{{ url_for('usuarios.index', page=total_pages, **args) }}">{{ total_pages }}</a></li>
-    {% endif %}
-
-    {% if page < total_pages %}
-        <li><a href="{{ url_for('usuarios.index', page=page+1, **args) }}">Siguiente</a></li>
-    {% endif %}
-  </ul>
+                    {% if page < total_pages %} <li><a
+                            href="{{ url_for('usuarios.index', page=page+1, **args) }}">Siguiente</a></li>
+                        {% endif %}
+    </ul>
 </nav>
 {% endif %}
 
-<div class="center-btn">
-    <a href="{{ url_for('usuarios.agregar_usuario') }}"><button id="agregarUsuarioBtn">Agregar usuario</button></a>
-</div>
 
-<div class="center-btn">
-    <a href="{{ url_for('usuarios.busqueda_avanzada') }}"><button>Busqueda Avanzada</button></a>
-</div>
-
-<div class="center-btn">
-    <a href="{{ url_for('home') }}"><button class="Volver">Volver al inicio</button></a>
-</div>
 
 <style>
-.pagination li {
-  display: inline-block;
-  margin: 2px;
-}
+    .pagination li {
+        display: inline-block;
+        margin: 2px;
+    }
 
-.pagination li a button {
-  background-color: #f8f9fa;
-  border: 1px solid #ccc;
-  padding: 5px 10px;
-  cursor: pointer;
-  border-radius: 4px;
-}
+    .pagination li a button {
+        background-color: #f8f9fa;
+        border: 1px solid #ccc;
+        padding: 5px 10px;
+        cursor: pointer;
+        border-radius: 4px;
+    }
 
-.pagination li.active a button {
-  background-color: #007bff; /* Azul */
-  color: white;
-  border-color: #007bff;
-  font-weight: bold;
-}
+    .pagination li.active a button {
+        background-color: #007bff;
+        /* Azul */
+        color: white;
+        border-color: #007bff;
+        font-weight: bold;
+    }
 
-.pagination li a button:hover {
-  background-color: #e2e6ea;
-}
+    .pagination li a button:hover {
+        background-color: #e2e6ea;
+    }
 </style>
 
 
