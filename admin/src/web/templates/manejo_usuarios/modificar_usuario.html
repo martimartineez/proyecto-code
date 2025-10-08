@@ -14,7 +14,8 @@
 </div>
 
 <!-- Formulario para modificar usuario -->
-<form class="modificar-usuario-form" action="{{ url_for('usuarios.modificar', usuario_id=usuario.id) }}" method="post">
+<form class="modificar-usuario-form" action="{{ url_for('usuarios.modificar_post', usuario_id=usuario.id) }}"
+    method="post">
     <div class="modificar-usuario-flex">
         <div style="flex: 1;">
             <label for="nombre">Nombre:</label>

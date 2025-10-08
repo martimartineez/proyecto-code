@@ -159,14 +159,17 @@
             <td>{{ usuario.nombre }}</td>
             <td>{{ usuario.email }}</td>
             <td>
-                <form action="{{ url_for('usuarios.ver_detalles', usuario_id=usuario.id) }}" method="post"
+                <!-- BOTON DETALLES -->
+                <form action="{{ url_for('usuarios.ver_detalles', usuario_id=usuario.id) }}" method="get"
                     style="display:inline;">
                     <button type="submit">Ver detalles</button>
                 </form>
-                <form action="{{ url_for('usuarios.modificar', usuario_id=usuario.id) }}" method="get"
+                <!-- BOTON MODIFICAR -->
+                <form action="{{ url_for('usuarios.modificar_get', usuario_id=usuario.id) }}" method="get"
                     style="display:inline;">
                     <button type="submit">Modificar</button>
                 </form>
+                <!-- BOTON DESACTIVAR/ACTIVAR -->
                 {% set esAdmin = usuario.roles | selectattr("nombre", "equalto", "Admin") | list | length > 0 %}
 
                 {% if not esAdmin %}
@@ -186,7 +189,7 @@
                 </form>
                 {% endif %}
                 {% endif %}
-
+                <!-- BOTON ELIMINAR -->
                 <form action="{{ url_for('usuarios.eliminar', usuario_id=usuario.id) }}" method="post"
                     style="display:inline;">
                     <button type="submit"

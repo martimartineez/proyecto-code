@@ -43,7 +43,7 @@
 <div class="stylish-center-btn">
     <button type="button" onclick="history.back()" class="stylish-btn">Volver</button>
 
-    <a href="{{ url_for('usuarios.modificar', usuario_id=usuario.id) }}" method="get">
+    <a href="{{ url_for('usuarios.modificar_get', usuario_id=usuario.id) }}" method="get">
         <button class="stylish-btn">Modificar</button></a>
 
     <a href="{{ url_for('home') }}"><button class="stylish-btn">Volver al inicio</button></a>
