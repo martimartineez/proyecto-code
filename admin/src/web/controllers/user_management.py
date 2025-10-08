@@ -28,6 +28,8 @@ def index():
     email = request.args.get("email", "").strip()
     activo = request.args.get("activo", "")  # "" | "true" | "false"
     orden = request.args.get("orden", "asc")  # "asc" | "desc"
+    rol_filtro = request.args.get("rol", "")  # <-- Nuevo filtro por rol
+
 
     # 3️⃣ Obtener todos los usuarios
     todos = auth.list_usuarios()  # lista completa de usuarios
@@ -46,6 +48,10 @@ def index():
         todos.sort(key=lambda u: u.fechaCreacion, reverse=True)
     else:
         todos.sort(key=lambda u: u.fechaCreacion)
+
+    # Filtro por rol
+    if rol_filtro:
+        todos = [u for u in todos if any(r.nombre == rol_filtro for r in u.roles)]
 
     # 6️⃣ Paginación
     total = len(todos)
@@ -66,7 +72,8 @@ def index():
         per_page=per_page,
         email=email,
         activo=activo,
-        orden=orden
+        orden=orden,
+        rol_filtro=rol_filtro
     )
 
 
@@ -79,6 +86,7 @@ def eliminar(usuario_id):
 
     auth.baja_logica_usuario(auth.get_user_by_id(usuario_id))
 
+    flash(f"Se borro el usuario: '{user.nombre}'",'success')
     return redirect(url_for("usuarios.index"))
 
 
@@ -96,7 +104,7 @@ def desactivar(usuario_id):
     if not "Admin" in rolesUsuario: 
         user.activo = False
         auth.db.session.commit()
-
+    flash(f"Se desactivo el usuario: '{user.nombre}'",'success')
     return redirect(url_for("usuarios.index"))
 
 
@@ -109,6 +117,7 @@ def activar(usuario_id):
     user.activo = True
     auth.db.session.commit()
 
+    flash(f"Se activo el usuario: '{user.nombre}'",'success')
     return redirect(url_for("usuarios.index"))
 
 
@@ -154,6 +163,7 @@ def agregar_usuario_post():
         roles=[board.get_rol_by_id(int(rol_id)) for rol_id in roles_ids]
     )
 
+    flash(f"Se agrego el usuario: '{nombre}'",'success')
     return redirect(url_for("usuarios.index"))
 
 @bp.get("/modificar/<int:usuario_id>")
@@ -227,6 +237,7 @@ def funcion_modificar(user,form):
 
     auth.db.session.commit()
 
+    flash(f"Se modifico: '{user.nombre}'",'success')
     return redirect(url_for("usuarios.index"))
 
 
@@ -296,7 +307,7 @@ def cambiar_contraseña(usuario_id):
 
         auth.update_password(usuario_id, nueva)
 
-        flash("Contraseña cambiada correctamente.", "success")
+        flash("Contraseña actualizada correctamente.", "success")
         return redirect(url_for("home"))
 
     
