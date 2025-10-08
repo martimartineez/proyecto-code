@@ -22,12 +22,14 @@
 
 <h2>Agregar Sitio Histórico</h2>
 
-<a href="/">
-    <button type="button">Volver a inicio</button>
-</a>
-<a href="{{ next_url }}">
-  <button type="button">Volver atras</button>
-</a>
+<div>
+    <a href="{{ next_url }}">
+        <button type="button" class="button-22" role="button">Volver atras</button>
+    </a>
+    <a href="/">
+        <button type="button" class="button-22" role="button">Volver a inicio</button>
+    </a>
+</div>
 {%with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}
 {% for category, message in messages %}
@@ -36,79 +38,100 @@
 {% endif %}
 {% endwith %}
 
+
 <form method="post" id="agregarSitioForm">
-    <label>Nombre :</label>
-    <div class="error-message" id="error-nombre">⚠️ El nombre debe tener entre 3 y 100 caracteres.</div>
-    <input type="text" name="nombre" id="nombreInput" maxlength="100"><br>
-
-    <label>Descripción breve :</label>
-    <div class="error-message" id="error-descripcion">⚠️ La descripción debe tener entre 10 y 255 caracteres.</div>
-    <input type="text" name="descripcion" id="descripcionInput" maxlength="255"><br>
-
-    <label>Descripción completa :</label>
-    <div class="error-message" id="error-descripcion_completa">⚠️ La descripción completa debe tener entre 20 y 5000 caracteres.</div>
-    <input type="text" name="descripcion_completa" id="descripcionCompletaInput" maxlength="5000"><br>
-
-    <label>Provincia:</label>
-    <div class="error-message" id="error-provincia">⚠️ Por favor, seleccione la provincia.</div>
-    <select id="provinciaSelect" name="provincia">
-        <option value="">Seleccione provincia</option>
-        {% for p in provincias %}
-        <option value="{{ p.id }}">{{ p.nombre }}</option>
-        {% endfor %}
-    </select><br>
-
-    <label>Ciudad:</label>
-    <div class="error-message" id="error-ciudad">⚠️ Por favor, seleccione la ciudad.</div>
-    <select id="ciudadSelect" name="ciudad" disabled>
-        <option value="">Seleccione ciudad</option>
-        {% for c in ciudades %}
-        <option value="{{ c.id }}" data-provincia="{{ c.idProvincia }}">{{ c.nombre }}</option>
-        {% endfor %}
-    </select><br>
-
-    <label>Estado Conservación:</label>
-    <div class="error-message" id="error-estado_conservacion">⚠️ Por favor, seleccione el estado de conservación.</div>
-    <select name="estado_conservacion" id="estadoConservacionSelect">
-        <option value="">Seleccione estado</option>
-        <option value="Bueno">Bueno</option>
-        <option value="Regular">Regular</option>
-        <option value="Malo">Malo</option>
-    </select><br>
-
-    <label>Fecha Inauguracion:</label>
-    <div class="error-message" id="error-fecha_inauguracion">⚠️ Por favor, ingrese la fecha de inauguración.</div>
-    <input type="date" name="fecha_inauguracion" id="fechaInauguracionInput"
-      value=""
-        max="{{ today }}"><br>
-
-    <label>Categoría:</label>
-    <div class="error-message" id="error-categoria">⚠️ Por favor, seleccione la categoría.</div>
-    <select name="categoria" id="categoriaSelect">
-        <option value="">Seleccione categoría</option>
-        {% for c in categorias %}
-        <option value="{{ c.id }}">{{ c.nombre }}</option>
-        {% endfor %}
-    </select><br>
-
-    <label>Fecha Registro:</label>
-    <div class="error-message" id="error-fecha_registro">⚠️ Por favor, ingrese la fecha de registro.</div>
-    <input type="date" name="fecha_registro" id="fechaRegistroInput"
-      value=""
-        max="{{ today }}"><br>
-
-    <label>Tags:</label><br>
-    <div style="border: 1px solid #ccc; padding: 10px; max-height: 150px; overflow-y: auto;">
-        {% for tag in tags %}
-            <input type="checkbox" id="tag_{{ tag.id }}" name="tags" value="{{ tag.id }}">
-            <label for="tag_{{ tag.id }}">{{ tag.nombre }}</label><br>
-        {% endfor %}
-        {% if not tags %}
-          <p>No hay tags disponibles.</p>
-        {% endif %}
+    <div class ="form-group">
+        <label>Nombre :</label>
+        <div class="error-message" id="error-nombre">⚠️ El nombre debe tener entre 3 y 100 caracteres.</div>
+        <input type="text" name="nombre" id="nombreInput" maxlength="100"><br>
     </div>
-    <br>
 
+    <div class ="form-group">
+        <label>Descripción breve :</label>
+        <div class="error-message" id="error-descripcion">⚠️ La descripción debe tener entre 10 y 255 caracteres.</div>
+        <input type="text" name="descripcion" id="descripcionInput" maxlength="255"><br>
+    </div>
+
+    <div class ="form-group">
+        <label>Descripción completa :</label>
+        <div class="error-message" id="error-descripcion_completa">⚠️ La descripción completa debe tener entre 20 y 5000 caracteres.</div>
+        <textarea class="form-control" name="descripcion_completa" id="descripcionCompletaInput" maxlength="5000"> </textarea><br>
+    </div>
+
+    <div class ="form-group">
+        <label>Provincia:</label>
+        <div class="error-message" id="error-provincia">⚠️ Por favor, seleccione la provincia.</div>
+        <select class="form-control" id="provinciaSelect" name="provincia">
+            <option value="">Seleccione provincia</option>
+            {% for p in provincias %}
+            <option value="{{ p.id }}">{{ p.nombre }}</option>
+            {% endfor %}
+        </select><br>
+    </div>
+
+    <div class ="form-group">
+        <label>Ciudad:</label>
+        <div class="error-message" id="error-ciudad">⚠️ Por favor, seleccione la ciudad.</div>
+        <select class="form-control" id="ciudadSelect" name="ciudad" disabled>
+            <option value="">Seleccione ciudad</option>
+            {% for c in ciudades %}
+            <option value="{{ c.id }}" data-provincia="{{ c.idProvincia }}">{{ c.nombre }}</option>
+            {% endfor %}
+        </select><br>
+    </div>
+
+    <div class ="form-group">
+        <label>Estado Conservación:</label>
+        <div class="error-message" id="error-estado_conservacion">⚠️ Por favor, seleccione el estado de conservación.</div>
+        <select class="form-control" name="estado_conservacion" id="estadoConservacionSelect">
+            <option value="">Seleccione estado</option>
+            <option value="Bueno">Bueno</option>
+            <option value="Regular">Regular</option>
+            <option value="Malo">Malo</option>
+        </select><br>
+    </div>
+
+        <div class ="form-group">
+        <label>Categoría:</label>
+        <div class="error-message" id="error-categoria">⚠️ Por favor, seleccione la categoría.</div>
+        <select name="categoria" id="categoriaSelect" class="form-control">
+            <option value="">Seleccione categoría</option>
+            {% for c in categorias %}
+            <option value="{{ c.id }}">{{ c.nombre }}</option>
+            {% endfor %}
+        </select><br>
+    </div>
+
+    <div class ="form-group">
+        <label>Fecha Inauguracion:</label>
+        <div class="error-message" id="error-fecha_inauguracion">⚠️ Por favor, ingrese la fecha de inauguración.</div>
+        <input type="date" name="fecha_inauguracion" id="fechaInauguracionInput" class="form-control"
+        value=""
+            max="{{ today }}"><br>
+    </div>
+
+    <div class ="form-group">
+        <label>Fecha Registro:</label>
+        <div class="error-message" id="error-fecha_registro">⚠️ Por favor, ingrese la fecha de registro.</div>
+        <input type="date" name="fecha_registro" id="fechaRegistroInput" class="form-control"
+        value=""
+            max="{{ today }}"><br>
+    </div>
+
+    <div class ="form-group">
+        <label>Tags:</label><br>
+        <div style="border: 1px solid #ccc; padding: 10px; max-height: 150px; overflow-y: auto;">
+            {% for tag in tags %}
+                <input type="checkbox" id="tag_{{ tag.id }}" name="tags" value="{{ tag.id }}">
+                <label for="tag_{{ tag.id }}">{{ tag.nombre }}</label><br>
+            {% endfor %}
+            {% if not tags %}
+            <p>No hay tags disponibles.</p>
+            {% endif %}
+        </div>
+        <br>
+    </div>
+    
     <input type="hidden" name="latitud" id="latitud">
     <input type="hidden" name="longitud" id="longitud">
 
@@ -121,7 +144,7 @@
         <div id="map"></div>
     </div>
 
-    <button type="submit">Guardar</button>
+    <button type="submit" class="button-22" role="button">Guardar</button>
 </form>
 
 <script>

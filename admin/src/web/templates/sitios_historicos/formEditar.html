@@ -22,12 +22,14 @@
 
 <h2>Editar Sitio Histórico</h2>
 
-<a href="/">
-    <button type="button">Volver a inicio</button>
-</a>
-<a href="{{ next_url }}">
-  <button type="button">Volver atras</button>
-</a>
+<div>
+  <a href="/">
+      <button type="button" class="button-22" role="button">Volver a inicio</button>
+  </a>
+  <a href="{{ next_url }}">
+    <button type="button" class="button-22" role="button">Volver atras</button>
+  </a>
+</div>
 
 
 {%with messages = get_flashed_messages(with_categories=true) %}
@@ -135,7 +137,7 @@
         <div id="map"></div>
     </div>
 
-    <button type="submit">Guardar Cambios</button>
+    <button type="submit" class="button-22" role="button">Guardar Cambios</button>
 </form>
 
 <hr>
@@ -173,7 +175,7 @@
   <label>Hasta:</label>
   <input type="date" name="hasta" value="{{ filtros.hasta or '' }}">
 
-  <button type="submit">Filtrar</button>
+  <button type="submit" class="button-18" role="button">Filtrar</button>
 </form>
 
 {% include 'sitios_historicos/_tabla_historial.html' %}

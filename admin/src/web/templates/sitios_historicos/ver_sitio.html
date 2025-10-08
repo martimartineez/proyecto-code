@@ -4,21 +4,26 @@
 
 {% block content %}
 <h1>Sitio Histórico</h1>
-<a href="/">
-    <button type="button">Volver a inicio</button>
-</a>
-<a href="{{ next_url }}">
-  <button type="button">Volver atras</button>
-</a>
-<a href="{{ url_for('sitios_historicos.agregar_sitio', next=request.path) }}">
-  <button type="button">Agregar sitio</button>
-</a>
-<a href="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id, next=request.path) }}">
-  <button type="button">Editar</button>
-</a>
+<div>
+  <a href="/">
+      <button type="button" class="button-22" role="button">Volver a inicio</button>
+  </a>
+  <a href="{{ next_url }}">
+    <button type="button" class="button-22" role="button">Volver atras</button>
+  </a>
+</div>
+<div>
+  <a href="{{ url_for('sitios_historicos.agregar_sitio', next=request.path) }}">
+    <button type="button" class="button-18" role="button">Agregar sitio</button>
+  </a>
+  <a href="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id, next=request.path) }}">
+    <button type="button" class="button-18" role="button">Editar</button>
+  </a>
+</div>
 <br> {% if permiso %}
   <form action="{{ url_for('sitios_historicos.eliminar_sitio', sitio_id=sitio.id)}}" method="post" style="display:inline-block;">
-    <button type="submit" onclick="return confirm('¿Estás seguro de que quieres eliminar el sitio historico: {{ sitio.nombre }}?');">Eliminar</button>
+    <button type="submit" onclick="return confirm('¿Estás seguro de que quieres eliminar el sitio historico: {{ sitio.nombre }}?');"
+    class="button-22" role="button">Eliminar</button>
   </form>
 {% endif %}
 {%with messages = get_flashed_messages(with_categories=true) %}
@@ -179,7 +184,7 @@
   <label>Hasta:</label>
   <input type="date" name="hasta" value="{{ filtros.hasta or '' }}">
 
-  <button type="submit">Filtrar</button>
+  <button type="submit" class="button-22" role="button">Filtrar</button>
 </form>
 
 {% include 'sitios_historicos/_tabla_historial.html' %}
