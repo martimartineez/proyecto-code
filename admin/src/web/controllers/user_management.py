@@ -17,6 +17,9 @@ bp = Blueprint("usuarios", __name__, url_prefix="/manejo_usuarios")
 @login_required
 @check("user_index")
 def index():
+    """
+    La funcion maneja la vista de gestión de usuarios con paginación y filtros para la busqueda.
+    """
     # 1️⃣ Página y paginación
     page = request.args.get("page", 1, type=int)
     per_page = 25  # elementos por página
@@ -83,6 +86,9 @@ def eliminar(usuario_id):
 @login_required
 @check("user_deactivate")
 def desactivar(usuario_id):
+    """
+     Solo desactiva al usuario si no es admin
+    """
 
     user = auth.get_user_by_id(usuario_id)
     rolesUsuario = auth.listar_roles_usuario(user)
@@ -110,7 +116,7 @@ def activar(usuario_id):
 @check("user_new")
 @bp.get("/agregar_usuario")
 def agregar_usuario_get():
-    # Esto se ejecuta solo cuando el navegador hace GET
+    
     roles = board.list_roles()
     return render_template("manejo_usuarios/formAgregar.html", roles=roles)
 
@@ -119,7 +125,11 @@ def agregar_usuario_get():
 @check("user_new")
 @bp.post("/agregar_usuario")
 def agregar_usuario_post():
-    # Esto se ejecuta solo cuando se hace POST
+    """
+    Agrega un nuevo usuario al sistema.
+    Verifica que el email no exista y que todos los campos obligatorios estén completos.
+    """
+    
     if auth.comprobar_email(request.form["email"]):
         flash("El email ya existe. Por favor, elija otro.", "error")
         return redirect(url_for("usuarios.agregar_usuario_get"))
@@ -150,6 +160,9 @@ def agregar_usuario_post():
 @login_required
 @check("user_update")
 def modificar_get(usuario_id):
+    """
+    Muestra el formulario para modificar un usuario.
+    """
 
     user = auth.get_user_by_id(usuario_id)
     rolesUsuario = auth.listar_roles_usuario(user)
@@ -170,6 +183,9 @@ def modificar_post(usuario_id):
 @login_required
 @check("profile_update")
 def modificar_mi_perfil_get():
+    """
+    Muestra el formulario para modificar el usuario logueado."
+    """
 
     user = auth.get_user_by_id(session['user_id'])
     rolesUsuario = auth.listar_roles_usuario(user)
@@ -188,6 +204,10 @@ def modificar_mi_perfil_post():
 
 
 def funcion_modificar(user,form):
+    """
+    Funcion que usa modificar y modificar perfil, toma el usuario y el form.
+    Actualiza los datos del usuario y sus roles.
+    """
 
     nombre = form["nombre"]
     apellido = form["apellido"]
@@ -237,6 +257,12 @@ def ver_perfil():
 @login_required
 @check("change_password")
 def cambiar_contraseña(usuario_id):
+
+    """
+    Permite cambiar la contraseña de un usuario.
+    Si el usuario es admin, puede cambiar la contraseña sin verificar la actual.
+    Si no es admin, debe verificar la contraseña actual antes de cambiarla.
+    """
     
     user = auth.get_user_by_id(usuario_id)
     step = request.form.get("step")
