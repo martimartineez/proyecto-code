@@ -8,7 +8,7 @@
     <button type="button" type="button" class="button-22">Página principal</button>
 </a>
 <div>
-  <a href="{{ url_for('sitios_historicos.agregar_sitio') }}">
+  <a href="{{ url_for('sitios_historicos.agregar_sitio_get') }}">
       <button type="button" type="button" class="button-18" role="button">Agregar sitio histórico</button>
   </a>
   {% if permisocsv %}
@@ -167,7 +167,7 @@
                 <a href="{{ url_for('sitios_historicos.ver_sitio', sitio_id=sitio.id) }}">
                   <button type="button" class="button-18" role="button">Ver detalle</button>
                 </a>
-                <a href="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id) }}">
+                <a href="{{ url_for('sitios_historicos.editar_sitio_get', sitio_id=sitio.id) }}">
                      <button type="button" class="button-18" role="button">Editar</button>
                 </a>
                 {% if permiso %}

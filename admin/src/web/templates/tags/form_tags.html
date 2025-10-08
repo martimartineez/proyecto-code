@@ -3,7 +3,7 @@
 {% block content %}
 
 {% set title = 'Agregar Tag' if action == 'agregar' else 'Editar Tag' %}
-{% set form_action = url_for('tags.agregar_tag') if action == 'agregar' else url_for('tags.editar_tag', tag_id=tag.id) %}
+{% set form_action = url_for('tags.agregar_tag_post') if action == 'agregar' else url_for('tags.editar_tag_post', tag_id=tag.id) %}
 {% set tag_nombre = tag.nombre if tag else '' %}
 
 <style>

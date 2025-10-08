@@ -39,7 +39,7 @@
 {% endwith %}
 
 
-<form method="post" id="agregarSitioForm">
+<form method="post" action="{{ url_for('sitios_historicos.agregar_sitio_post') }}" id="agregarSitioForm">
     <div class ="form-group">
         <label>Nombre :</label>
         <div class="error-message" id="error-nombre">⚠️ El nombre debe tener entre 3 y 100 caracteres.</div>

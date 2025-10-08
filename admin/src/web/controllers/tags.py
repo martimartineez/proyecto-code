@@ -30,83 +30,170 @@ def index():
         order=order
     )
 
-
-
-@bp.route("/nuevo", methods=["GET", "POST"])
+@bp.get("/nuevo")
 @login_required
 @check("tag_create")
-def agregar_tag():
-    if request.method == "POST":
-        # Validar datos con la capa separada
-        errores = validar_tag(request.form)
-        
-        if errores:
-            # Mostrar errores en flash messages y re-renderizar
-            for campo, msg in errores.items():
-                # Nota: Uso "flash" con categoría "error"
-                flash(f"{msg}", "error")
-            # Devolver el formulario con los datos ingresados para que no los pierda (opcional)
-            return render_template("tags/form_tags.html", action="agregar", form_data=request.form), 400
-        
-        resultado = board.crear_tag(request.form)
-        
-        if resultado and resultado != "DUPLICATE_ERROR":
-            # Caso 1: Éxito
-            flash("Tag agregado exitosamente.", "success")
-            return redirect(url_for("tags.index"))
-        
-        elif resultado == "DUPLICATE_ERROR":
-            # Caso 2: El Tag ya existe
-            flash(f"Error: Ya existe un Tag con el nombre '{request.form.get('nombre')}' o uno muy similar.", "error")
-            # Dejamos que la ejecución siga para que se vuelva a renderizar el formulario
-            
-        else:
-            # Caso 3: Otro error (ej: error de servidor o nombre vacío)
-            flash("Ocurrió un error inesperado al intentar agregar el Tag.", "error")
-            
-    # Si es GET o si el POST falló (Casos 2 y 3), se renderiza el formulario
+def agregar_tag_get():
     return render_template("tags/form_tags.html", action="agregar")
 
+@bp.post("/nuevo")
+@login_required
+@check("tag_create")
+def agregar_tag_post():
+    # Validar datos con la capa separada
+    errores = validar_tag(request.form)
+    
+    if errores:
+        # Mostrar errores en flash messages y re-renderizar
+        for campo, msg in errores.items():
+            flash(f"{msg}", "error")
+        # Devolver el formulario con los datos ingresados
+        return render_template("tags/form_tags.html", action="agregar", form_data=request.form), 400
+    
+    resultado = board.crear_tag(request.form)
+    
+    if resultado and resultado != "DUPLICATE_ERROR":
+        # Caso 1: Éxito
+        flash("Tag agregado exitosamente.", "success")
+        return redirect(url_for("tags.index"))
+    
+    elif resultado == "DUPLICATE_ERROR":
+        # Caso 2: El Tag ya existe
+        flash(f"Error: Ya existe un Tag con el nombre '{request.form.get('nombre')}' o uno muy similar.", "error")
+        
+    else:
+        # Caso 3: Otro error (ej: error de servidor o nombre vacío)
+        flash("Ocurrió un error inesperado al intentar agregar el Tag.", "error")
+        
+    # Si el POST falló (Casos 2 y 3), se vuelve a renderizar el formulario con el mensaje flash
+    return render_template("tags/form_tags.html", action="agregar", form_data=request.form)
 
-@bp.route("/<int:tag_id>/editar", methods=["GET", "POST"])
+
+
+# @bp.route("/nuevo", methods=["GET", "POST"])
+# @login_required
+# @check("tag_create")
+# def agregar_tag():
+#     if request.method == "POST":
+#         # Validar datos con la capa separada
+#         errores = validar_tag(request.form)
+        
+#         if errores:
+#             # Mostrar errores en flash messages y re-renderizar
+#             for campo, msg in errores.items():
+#                 # Nota: Uso "flash" con categoría "error"
+#                 flash(f"{msg}", "error")
+#             # Devolver el formulario con los datos ingresados para que no los pierda (opcional)
+#             return render_template("tags/form_tags.html", action="agregar", form_data=request.form), 400
+        
+#         resultado = board.crear_tag(request.form)
+        
+#         if resultado and resultado != "DUPLICATE_ERROR":
+#             # Caso 1: Éxito
+#             flash("Tag agregado exitosamente.", "success")
+#             return redirect(url_for("tags.index"))
+        
+#         elif resultado == "DUPLICATE_ERROR":
+#             # Caso 2: El Tag ya existe
+#             flash(f"Error: Ya existe un Tag con el nombre '{request.form.get('nombre')}' o uno muy similar.", "error")
+#             # Dejamos que la ejecución siga para que se vuelva a renderizar el formulario
+            
+#         else:
+#             # Caso 3: Otro error (ej: error de servidor o nombre vacío)
+#             flash("Ocurrió un error inesperado al intentar agregar el Tag.", "error")
+            
+#     # Si es GET o si el POST falló (Casos 2 y 3), se renderiza el formulario
+#     return render_template("tags/form_tags.html", action="agregar")
+
+
+
+@bp.get("/<int:tag_id>/editar")
 @login_required
 @check("tag_update")
-def editar_tag(tag_id):
+def editar_tag_get(tag_id):
+    tag = board.obtener_tag(tag_id)
+    if not tag:
+        flash("Tag no encontrado.", "error")
+        return redirect(url_for("tags.index"))
+    # Renderiza el formulario con los datos del tag
+    return render_template("tags/form_tags.html", tag=tag, action="editar")
+
+@bp.post("/<int:tag_id>/editar")
+@login_required
+@check("tag_update")
+def editar_tag_post(tag_id):
     tag = board.obtener_tag(tag_id)
     if not tag:
         flash("Tag no encontrado.", "error")
         return redirect(url_for("tags.index"))
 
-    if request.method == "POST":
-        # Validar datos con la capa separada
-        errores = validar_tag(request.form)
+    # Validar datos con la capa separada
+    errores = validar_tag(request.form)
+    
+    if errores:
+        # Mostrar errores y re-renderizar
+        for campo, msg in errores.items():
+            flash(f"{msg}", "error")
+        # Devolver el formulario con el tag existente y los datos POST
+        return render_template("tags/form_tags.html", tag=tag, action="editar", form_data=request.form), 400
+
+    resultado = board.editar_tag(tag_id, request.form)
+    
+    if resultado is True:
+        # Caso 1: Éxito (incluye si el nombre no se modificó)
+        flash("Tag editado exitosamente.", "success")
+        return redirect(url_for("tags.index"))
+    
+    elif resultado == "DUPLICATE_ERROR":
+        # Caso 2: El nuevo nombre/slug ya existe en OTRO tag
+        flash(f"Error: Ya existe un Tag con el nombre '{request.form.get('nombre')}' o no esta disponible para usar.", "error")
         
-        if errores:
-            # Mostrar errores y re-renderizar
-            for campo, msg in errores.items():
-                flash(f"{msg}", "error")
-            # Devolver el formulario con el tag existente y los datos POST
-            return render_template("tags/form_tags.html", tag=tag, action="editar", form_data=request.form), 400
+    else:
+        # Caso 3: Otro error (servidor, nombre vacío)
+        flash("Ocurrió un error inesperado al intentar editar el Tag.", "error")
+    
+    # Si el POST falló (Casos 2 y 3), se vuelve a renderizar el formulario con el mensaje flash
+    return render_template("tags/form_tags.html", tag=tag, action="editar", form_data=request.form)
+
+# @bp.route("/<int:tag_id>/editar", methods=["GET", "POST"])
+# @login_required
+# @check("tag_update")
+# def editar_tag(tag_id):
+#     tag = board.obtener_tag(tag_id)
+#     if not tag:
+#         flash("Tag no encontrado.", "error")
+#         return redirect(url_for("tags.index"))
+
+#     if request.method == "POST":
+#         # Validar datos con la capa separada
+#         errores = validar_tag(request.form)
+        
+#         if errores:
+#             # Mostrar errores y re-renderizar
+#             for campo, msg in errores.items():
+#                 flash(f"{msg}", "error")
+#             # Devolver el formulario con el tag existente y los datos POST
+#             return render_template("tags/form_tags.html", tag=tag, action="editar", form_data=request.form), 400
 
 
-        resultado = board.editar_tag(tag_id, request.form)
+#         resultado = board.editar_tag(tag_id, request.form)
         
-        if resultado is True:
-            # Caso 1: Éxito (incluye si el nombre no se modificó)
-            flash("Tag editado exitosamente.", "success")
-            return redirect(url_for("tags.index"))
+#         if resultado is True:
+#             # Caso 1: Éxito (incluye si el nombre no se modificó)
+#             flash("Tag editado exitosamente.", "success")
+#             return redirect(url_for("tags.index"))
         
-        elif resultado == "DUPLICATE_ERROR":
-            # Caso 2: El nuevo nombre/slug ya existe en OTRO tag
-            flash(f"Error: Ya existe un Tag con el nombre '{request.form.get('nombre')}' o no esta disponible para usar.", "error")
-            # Dejamos que el flujo continúe para que se muestre el formulario de edición con el error
+#         elif resultado == "DUPLICATE_ERROR":
+#             # Caso 2: El nuevo nombre/slug ya existe en OTRO tag
+#             flash(f"Error: Ya existe un Tag con el nombre '{request.form.get('nombre')}' o no esta disponible para usar.", "error")
+#             # Dejamos que el flujo continúe para que se muestre el formulario de edición con el error
             
-        else:
-            # Caso 3: Otro error (servidor, nombre vacío)
-            flash("Ocurrió un error inesperado al intentar editar el Tag.", "error")
+#         else:
+#             # Caso 3: Otro error (servidor, nombre vacío)
+#             flash("Ocurrió un error inesperado al intentar editar el Tag.", "error")
 
-    # Renderiza el formulario (GET o después de un error POST)
-    return render_template("tags/form_tags.html", tag=tag, action="editar")
+#     # Renderiza el formulario (GET o después de un error POST)
+#     return render_template("tags/form_tags.html", tag=tag, action="editar")
 
 
 @bp.post("/<int:tag_id>/eliminar")
