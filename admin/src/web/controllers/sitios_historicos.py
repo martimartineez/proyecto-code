@@ -168,8 +168,10 @@ def agregar_sitio_post():
         return redirect(url_for("sitios_historicos.agregar_sitio_get", next=next_url))
     
     try:
-        board.crear_sitio(request.form)
-        flash("Sitio histórico agregado exitosamente.", "success")
+        nombre_sitio = board.crear_sitio(request.form)
+        if nombre_sitio:
+            # Usamos el nombre devuelto en el mensaje flash
+            flash(f"El sitio histórico '{nombre_sitio.nombre}' ha sido agregado exitosamente.", "success")
         return redirect(url_for("sitios_historicos.busqueda_avanzada"))
     except Exception as e:
         flash(f"Ocurrió un error al intentar agregar el sitio: {e}.", "error")
@@ -261,8 +263,13 @@ def editar_sitio_post(sitio_id):
         return redirect(url_for("sitios_historicos.editar_sitio_get", sitio_id=sitio_id, next=next_url))
         
     try:
-        board.editar_sitio(sitio_id, request.form)
-        flash("Sitio histórico editado exitosamente.", "success")
+        nombre_sitio = board.editar_sitio(sitio_id, request.form)
+        if nombre_sitio:
+            # Usamos el nombre devuelto en el mensaje flash
+            flash(f"El sitio histórico '{nombre_sitio.nombre}' ha sido editado exitosamente.", "success")
+        elif nombre_sitio is False:
+             # Esto ocurre si obtener_sitio(sitio_id) no encontró el sitio (no deberia pasar)
+            flash("Error: El sitio histórico no fue encontrado para su edicion.", "error")
         return redirect(url_for("sitios_historicos.busqueda_avanzada"))
     except Exception as e:
         flash(f"Ocurrió un error al intentar editar el sitio: {e}.", "error")
@@ -285,7 +292,7 @@ def eliminar_sitio(sitio_id):
         
         if nombre_sitio:
             # Usamos el nombre devuelto en el mensaje flash
-            flash(f"El sitio histórico '{nombre_sitio}' ha sido eliminado exitosamente.", "success")
+            flash(f"El sitio histórico '{nombre_sitio.nombre}' ha sido eliminado exitosamente.", "success")
         elif nombre_sitio is False:
              # Esto ocurre si obtener_sitio(sitio_id) no encontró el sitio (no deberia pasar)
             flash("Error: El sitio histórico no fue encontrado para su eliminación.", "error")
