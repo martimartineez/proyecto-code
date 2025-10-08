@@ -405,7 +405,7 @@ def run():
     print("Creating roles...")
     rol_admin = board.create_rol(nombre="Admin")
     rol_editor = board.create_rol(nombre="Editor")
-    #rol_user = board.create_rol(nombre="Usuario")
+    rol_user = board.create_rol(nombre="Usuario")
     print("Created roles! 👍🏻")
 
     print('Creando permisos..')
@@ -492,6 +492,236 @@ def run():
         activo=True,
         esAdmin=False,
         roles=[rol_admin, rol_editor]
+    )
+
+    user4 = auth.create_user(
+        nombre="Paola",
+        apellido="Argento",
+        password="paola123",
+        email="paola.a@gmail.com",
+        activo=False,
+        esAdmin=False,
+        roles=[rol_admin, rol_editor]
+    )
+
+    user5 = auth.create_user(
+        nombre="Dardo",
+        apellido="Funes",
+        password="dardo",
+        email="dardo.f@empresa.com",
+        activo=True,
+        esAdmin=False,
+        roles=[rol_admin]
+    )
+
+    user6 = auth.create_user(
+        nombre="María",
+        apellido="Elena",
+        password="mariaelena",
+        email="me.fuseneco@otro.com",
+        activo=True,
+        esAdmin=False,
+        roles=[rol_editor]
+    )
+
+    user7 = auth.create_user(
+        nombre="Elvira",
+        apellido="Roca",
+        password="elvira",
+        email="elviraroca@gmail.com",
+        activo=True,
+        esAdmin=False,
+        roles=[rol_admin]
+    )
+
+    user8 = auth.create_user(
+        nombre="Roberto",
+        apellido="Gómez",
+        password="roberto",
+        email="roberto.g@mail.com",
+        activo=True,
+        esAdmin=False,
+        roles=[rol_admin]
+    )
+
+    user9 = auth.create_user(
+        nombre="Ana",
+        apellido="Pérez",
+        password="ana123",
+        email="ana.perez@dominio.net",
+        activo=True,
+        esAdmin=False,
+        roles=[rol_editor]
+    )
+
+    user10 = auth.create_user(
+        nombre="Carlos",
+        apellido="López",
+        password="carlos",
+        email="carlos.l@empresa.com",
+        activo=True,
+        esAdmin=False,
+        roles=[rol_admin]
+    )
+
+    user11 = auth.create_user(
+        nombre="Laura",
+        apellido="Martínez",
+        password="laura456",
+        email="laura.m@test.org",
+        activo=False,
+        esAdmin=False,
+        roles=[rol_admin]
+    )
+
+    user12 = auth.create_user(
+        nombre="Jorge",
+        apellido="Rodríguez",
+        password="jorge",
+        email="jorge.r@system.io",
+        activo=True,
+        esAdmin=False,
+        roles=[rol_admin]
+    )
+
+    user13 = auth.create_user(
+        nombre="Sofía",
+        apellido="Sánchez",
+        password="sofia",
+        email="sofia.s@newmail.co",
+        activo=True,
+        esAdmin=False,
+        roles=[rol_editor]
+    )
+
+    user14 = auth.create_user(
+        nombre="Martín",
+        apellido="García",
+        password="martin",
+        email="martin.g@web.es",
+        activo=True,
+        esAdmin=False,
+        roles=[rol_admin]
+    )
+
+    user15 = auth.create_user(
+        nombre="Valentina",
+        apellido="Diaz",
+        password="valentina",
+        email="v.diaz@mailserver.net",
+        activo=True,
+        esAdmin=False,
+        roles=[rol_editor]
+    )
+
+    user16 = auth.create_user(
+        nombre="Diego",
+        apellido="Hernández",
+        password="diego",
+        email="d.h@pro.com",
+        activo=True,
+        esAdmin=False,
+        roles=[rol_admin]
+    )
+
+    user17 = auth.create_user(
+        nombre="Florencia",
+        apellido="Ruiz",
+        password="florencia",
+        email="florencia.r@temp.net",
+        activo=True,
+        esAdmin=False,
+        roles=[rol_admin]
+    )
+
+    user18 = auth.create_user(
+        nombre="Emiliano",
+        apellido="Castro",
+        password="emiliano",
+        email="emi.c@data.org",
+        activo=False,
+        esAdmin=False,
+        roles=[rol_admin]
+    )
+
+    user19 = auth.create_user(
+        nombre="Camila",
+        apellido="Flores",
+        password="camila",
+        email="camila.f@work.co",
+        activo=True,
+        esAdmin=False,
+        roles=[rol_editor]
+    )
+
+    user20 = auth.create_user(
+        nombre="Lucas",
+        apellido="Morales",
+        password="lucas",
+        email="lucas.m@mail.io",
+        activo=True,
+        esAdmin=False,
+        roles=[rol_admin]
+    )
+
+    user21 = auth.create_user(
+        nombre="Andrea",
+        apellido="Vargas",
+        password="andrea",
+        email="andrea.v@sistema.com",
+        activo=True,
+        esAdmin=False,
+        roles=[rol_admin]
+    )
+
+    user22 = auth.create_user(
+        nombre="Federico",
+        apellido="Blanco",
+        password="federico",
+        email="fede.b@email.net",
+        activo=True,
+        esAdmin=False,
+        roles=[rol_editor]
+    )
+
+    user23 = auth.create_user(
+        nombre="Gabriela",
+        apellido="Ramos",
+        password="gabriela",
+        email="g.ramos@secure.org",
+        activo=True,
+        esAdmin=False,
+        roles=[rol_admin]
+    )
+
+    user24 = auth.create_user(
+        nombre="Hernán",
+        apellido="Acosta",
+        password="hernan",
+        email="hernan.a@client.com",
+        activo=False,
+        esAdmin=False,
+        roles=[rol_admin]
+    )
+
+    user25 = auth.create_user(
+        nombre="Lautaro",
+        apellido="Messi",
+        password="secreto",
+        email="lau@gmail.com",
+        activo=False,
+        esAdmin=False,
+        roles=[rol_admin]
+    )
+
+    user26 = auth.create_user(
+        nombre="Martin",
+        apellido="Martinez",
+        password="secreto",
+        email="martin@gmail.com",
+        activo=False,
+        esAdmin=False,
+        roles=[rol_admin]
     )
 
     print("Created users! 👍🏻")
