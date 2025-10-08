@@ -504,3 +504,179 @@ form {
 .width-100 {
     width: 100%;
 }
+
+/* ==================== */
+/* 🧱 ESTILOS BASE */
+/* ==================== */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+th,
+td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    font-size: 15px;
+}
+
+thead {
+    background-color: #f8f8f8;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #333;
+}
+
+/* Botones dentro de las celdas */
+td a button,
+td form button {
+    margin: 3px;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 6px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.2s;
+}
+
+td a button:hover,
+td form button:hover {
+    background-color: #0056b3;
+}
+
+/* ==================== */
+/* 📱 MÓVILES (<767px) */
+/* ==================== */
+@media screen and (max-width: 767px) {
+
+    /* Ocultar cabeceras */
+    thead {
+        display: none;
+    }
+
+    table,
+    tbody,
+    tr,
+    td {
+        display: block;
+        width: 100%;
+    }
+
+    tr {
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        background-color: #fff;
+        padding: 10px;
+    }
+
+    td {
+        border: none;
+        padding: 10px 8px;
+        position: relative;
+        text-align: right;
+        font-size: 14px;
+    }
+
+    td::before {
+        content: attr(data-label);
+        float: left;
+        font-weight: bold;
+        color: #555;
+        text-transform: uppercase;
+    }
+
+    /* Ajuste especial para columna de acciones */
+    td:last-child {
+        text-align: center;
+        border-top: 1px solid #eee;
+        padding-top: 12px;
+    }
+
+    td:last-child::before {
+        content: '';
+    }
+
+    td a,
+    td form {
+        display: inline-block;
+        margin: 5px;
+    }
+
+    button {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+}
+
+/* ==================== */
+/* 💻 TABLETS (768px–1024px) */
+/* ==================== */
+@media screen and (min-width: 768px) and (max-width: 1024px) {
+
+    th,
+    td {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+
+    table {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    td a button,
+    td form button {
+        padding: 6px 8px;
+        font-size: 13px;
+    }
+
+    /* Reducir espacios en tablas grandes */
+    table {
+        table-layout: fixed;
+    }
+
+    th,
+    td {
+        word-wrap: break-word;
+    }
+}
+
+/* ==================== */
+/* 🖥️ ESCRITORIO (>1025px) */
+/* ==================== */
+@media screen and (min-width: 1025px) {
+
+    table {
+        font-size: 15px;
+    }
+
+    th,
+    td {
+        padding: 14px 18px;
+    }
+
+    td a button,
+    td form button {
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+
+    tr:hover {
+        background-color: #f9fafb;
+    }
+}
+
+.tabla-usuarios {
+    width: 100%;
+    overflow-x: auto;
+}
