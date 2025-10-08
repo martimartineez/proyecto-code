@@ -137,12 +137,7 @@ def crear_sitio(form, id_usuario: int | None = None):
         anioInauguracion=_parse_date(form.get("fecha_inauguracion")),
         fechaRegistro=_parse_date(form.get("fecha_registro")) or datetime.now(),
         # Manejar hidden + checkbox (dos valores). True si cualquiera es truthy
-        visible=(
-            any(
-                str(v).lower() in ("true", "1", "yes", "on", "t")
-                for v in form.getlist("visible")
-            )
-        ),
+        visible=True,
         baja=False,
     )
 
@@ -274,6 +269,9 @@ def eliminar_sitio(sitio_id: int, id_usuario: int | None = None):
     sitio = obtener_sitio(sitio_id)
     if not sitio:
         return False
+    
+    nombre_sitio = sitio.nombre  # Guardar el nombre antes de eliminar
+
     prev_baja = sitio.baja
     sitio.baja = True
     db.session.commit()
@@ -291,6 +289,8 @@ def eliminar_sitio(sitio_id: int, id_usuario: int | None = None):
     except Exception:
         db.session.rollback()
         raise
+    #si todo salio bien retorno el nombre del sitio eliminado
+    return nombre_sitio
 
 
 def listar_historial_sitio(

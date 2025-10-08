@@ -5,10 +5,10 @@ from src.core.auth import Usuario
 from src.core.board import SitioHistorico
 from src.core.database import db
 from src.core.board.ciudad import Ciudad
-from datetime import datetime
+from datetime import datetime, date
 from sqlalchemy import or_
 from src.core.board.tag import Tag
-from src.web.handlers.auth import login_required, check_permission
+from src.web.handlers.auth import login_required, check_permission, check
 from sqlalchemy import func
 import io, csv
 from flask import Response
@@ -128,6 +128,7 @@ def _build_historial_view(historial: dict, ciudades, categorias, usuarios_by_id:
 
 @bp.route("/nuevo", methods=["GET", "POST"])
 @login_required
+@check("site_create")
 def agregar_sitio():
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
     hoy = date.today().strftime('%Y-%m-%d')
@@ -171,6 +172,7 @@ def agregar_sitio():
 
 @bp.route("/<int:sitio_id>/editar", methods=["GET", "POST"])
 @login_required
+@check("site_update")
 def editar_sitio(sitio_id):
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
     hoy = date.today().strftime('%Y-%m-%d')
@@ -250,10 +252,19 @@ def editar_sitio(sitio_id):
 
 @bp.post("/<int:sitio_id>/eliminar")
 @login_required
+@check("site_destroy")
 def eliminar_sitio(sitio_id):
     try:
-        board.eliminar_sitio(sitio_id)
-        flash("Sitio histórico eliminado exitosamente.", "success")
+        # 💡 Capturamos el valor devuelto (el nombre del sitio o False)
+        nombre_sitio = board.eliminar_sitio(sitio_id) 
+        
+        if nombre_sitio:
+            # Usamos el nombre devuelto en el mensaje flash
+            flash(f"El sitio histórico '{nombre_sitio}' ha sido eliminado exitosamente.", "success")
+        elif nombre_sitio is False:
+             # Esto ocurre si obtener_sitio(sitio_id) no encontró el sitio (no deberia pasar)
+            flash("Error: El sitio histórico no fue encontrado para su eliminación.", "error")
+            
     except Exception as e:
         flash(f"Ocurrió un error al intentar eliminar el sitio: {e}.", "error")
     
@@ -261,6 +272,7 @@ def eliminar_sitio(sitio_id):
 
 @bp.route("/sitio/<int:sitio_id>")
 @login_required
+@check("site_show")
 def ver_sitio(sitio_id):
     permiso= check_permission("site_destroy")
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
@@ -312,6 +324,7 @@ def ver_sitio(sitio_id):
 
 @bp.route("/", methods=["GET"])
 @login_required
+@check("site_index")
 def busqueda_avanzada():
     permiso= check_permission("site_destroy")
     provincias = board.listar_provincias()
@@ -333,7 +346,7 @@ def busqueda_avanzada():
 
     per_page = 25
 
-    query = db.session.query(SitioHistorico)
+    query = db.session.query(SitioHistorico).join(Ciudad)
     buscar = request.args.get("buscar", "").strip()
     if tag_ids:
         query = query.join(SitioHistorico.tags).filter(Tag.id.in_(tag_ids))
@@ -341,7 +354,7 @@ def busqueda_avanzada():
         query = query.having(func.count(Tag.id) == len(tag_ids))
 
     if provincia_id:
-        query = query.join(Ciudad).filter(Ciudad.idProvincia == provincia_id)
+        query = query.filter(Ciudad.idProvincia == provincia_id)
     if ciudad_id:
         query = query.filter(SitioHistorico.idCiudad == ciudad_id)
     if categoria_id:
@@ -372,13 +385,15 @@ def busqueda_avanzada():
         "ciudad": Ciudad.nombre,
     }
     column = valid_sort_columns.get(sort_by, SitioHistorico.fechaRegistro)
-    query = query.join(Ciudad) if sort_by == "ciudad" else query
+    query = query if sort_by == "ciudad" else query
     query = query.order_by(column.desc() if order == "desc" else column.asc())
 
     
     total_results = query.count()
     total_pages = (total_results + per_page - 1) // per_page
     sitios = query.offset((page - 1) * per_page).limit(per_page).all()
+
+    permisocsv= check_permission("site_destroy")
 
     return render_template(
         "sitios_historicos/busquedaAvanzada.html",
@@ -392,11 +407,14 @@ def busqueda_avanzada():
         request_args=request.args,
         tags=tags,
         permiso=permiso,
+        permisocsv=permisocsv,
+        date=date
     )
 
 
 @bp.route("/exportar_csv")
 @login_required
+@check("site_export")
 def exportar_csv():
     provincia_id = request.args.get("provincia")
     ciudad_id = request.args.get("ciudad")
@@ -469,6 +487,7 @@ def exportar_csv():
         })
     timestamp = datetime.now().strftime("%Y%m%d_%H%M")
     filename = f"sitios_{timestamp}.csv"
+
 
     output = io.StringIO()
     fieldnames = ["Nombre", "Descripcion", "Ciudad", "Provincia", "Estado", "FechaRegistro", "Coordenadas", "Tags"]

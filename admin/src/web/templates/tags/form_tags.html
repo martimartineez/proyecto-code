@@ -6,14 +6,23 @@
 {% set form_action = url_for('tags.agregar_tag') if action == 'agregar' else url_for('tags.editar_tag', tag_id=tag.id) %}
 {% set tag_nombre = tag.nombre if tag else '' %}
 
+<style>
+  .error-message {
+    color: red;
+    font-size: 0.9em;
+    margin-top: -10px; 
+    margin-bottom: 10px;
+    display: none; /* Inicialmente oculto */
+  }
+</style>
 <h2>{{ title }}</h2>
 
-<a href="/">
-    <button type="button">Volver a inicio</button>
-</a>
-<a href="{{ url_for('tags.index') }}">
-    <button type="button">Volver a lista de tags</button>
-</a>
+<div>
+    <button type="button" onclick="history.back()" class="button-22" role="button">Volver</button>
+  <a href="/">
+    <button type="button" class="button-22" role="button">Página principal</button>
+  </a>
+</div>
 
 {%with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}
@@ -24,11 +33,54 @@
 {% endwith %}
 
 
-<form method="post" action="{{ form_action }}">
-    <label for="nombre">Nombre del Tag:</label>
-    <input type="text" id="nombre" name="nombre" value="{{ tag_nombre }}" required><br>
-
-    <button type="submit">{{ 'Guardar' if action == 'agregar' else 'Guardar cambios' }}</button>
+<form method="post" action="{{ form_action }}" id="tagForm">
+  <div class="form-group">
+    <label for="nombre" >Nombre del Tag:</label>
+    <div class="error-message" id="error-nombre">⚠️ El nombre del Tag debe tener entre 3 y 50 caracteres.</div>
+    <input class="form-control" type="text" id="nombre" name="nombre" value="{{ tag_nombre }}" maxlength="50" required><br>
+  </div>
+    <button type="submit" class="button-18" role="button">{{ 'Guardar' if action == 'agregar' else 'Guardar cambios' }}</button>
 </form>
 
+<script>
+  (function() {
+    const form = document.getElementById('tagForm');
+    const inputNombre = document.getElementById('nombre');
+    const errorNombre = document.getElementById('error-nombre');
+    const minLength = 3;
+    const maxLength = 50;
+
+    function validateForm(event) {
+        let formIsValid = true;
+        // Ocultar error al inicio de la validación
+        errorNombre.style.display = 'none'; 
+
+        const nombreValue = inputNombre.value.trim();
+
+        // Chequea vacío o fuera del rango [3, 50]
+        if (nombreValue.length < minLength || nombreValue.length > maxLength) {
+            formIsValid = false;
+            errorNombre.style.display = 'block';
+        }
+
+        if (!formIsValid) {
+            event.preventDefault(); // Detiene el envío
+            inputNombre.focus();    // Enfoca el campo con error
+        }
+    }
+
+    // Oculta el mensaje de error tan pronto como el usuario escribe un valor válido
+    function checkLength() {
+        const value = this.value.trim();
+        if (value.length >= minLength && value.length <= maxLength) {
+            errorNombre.style.display = 'none';
+        }
+    }
+    
+    // Asignar listeners
+    form.addEventListener('submit', validateForm);
+    inputNombre.addEventListener('input', checkLength);
+
+  })();
+</script>
 {% endblock %}

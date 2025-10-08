@@ -3,15 +3,16 @@
 {% block content %}
 <h1>Gestión de Tags</h1>
 
-<p>
-    <a href="/">
-    <button type="button">Volver a inicio</button>
+
+<div>
+    <a href="{{ url_for('home') }}">
+      <button type="button" class="button-22" role="button">Página principal</button>
     </a>
-    <a href="{{ url_for('tags.agregar_tag') }}">
-        <button type="button">Agregar nuevo tag</button>
-    </a>
-    
-</p>
+</div>
+<a href="{{ url_for('tags.agregar_tag') }}">
+    <button type="button" class="button-18" role="button">Agregar nuevo tag</button>
+</a>
+
 {%with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}
 {% for category, message in messages %}
@@ -33,10 +34,12 @@
             <td>{{ tag.nombre }}</td>
             <td>
                 <a href="{{ url_for('tags.editar_tag', tag_id=tag.id) }}">
-                    <button type="button">Editar</button>
+                    <button type="button" class="button-18" role="button">Editar</button>
                 </a>
                 <form action="{{ url_for('tags.eliminar_tag', tag_id=tag.id)}}" method="post" style="display:inline;">
-                    <button type="submit" onclick="return confirm('¿Estás seguro de que quieres eliminar el tag: {{ tag.nombre }}?');">Eliminar</button>
+                    <button class="button-18" role="button" 
+                    type="submit" onclick="return confirm('¿Estás seguro de que quieres eliminar el tag: {{ tag.nombre }}?');">Eliminar
+                    </button>
                 </form>
             </td>
         </tr>
@@ -46,9 +49,10 @@
 
 
 <form method="get" action="{{ url_for('tags.index') }}" id="sortForm">
-    <input type="text" name="q" value="{{ q or '' }}" placeholder="Buscar por nombre">
-    
-    <p>
+    <div class="form-group">
+      <input type="text" name="q" value="{{ q or '' }}" placeholder="Buscar por nombre" class="form-control">
+    </div>
+    <div class="form-group">
         <strong>Criterios de Ordenamiento:</strong><br>
         <label>
             <input type="checkbox" name="sort_criteria" value="nombre" {% if "nombre" in sort %}checked{% endif %}> Nombre
@@ -56,23 +60,25 @@
         <label>
             <input type="checkbox" name="sort_criteria" value="fecha" {% if "fecha" in sort %}checked{% endif %}> Fecha de creación
         </label>
-    </p>
+    </div>
 
     <input type="hidden" name="sort" id="sortHidden" value="{{ sort or '' }}">
 
-    <p>
+    <div class="form-group">
         <strong>Dirección de Ordenamiento:</strong><br>
-        <select name="order">
+        <select name="order" class="form-control">
             <option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascendente</option>
             <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descendente</option>
         </select>
-    </p>
+    </div>
+    <br>
 
-    <button type="submit">Aplicar Filtros y Orden</button>
-    
     <a href="{{ url_for('tags.index') }}" style="margin-left: 10px;">
-        <button type="button">Limpiar Filtros</button>
+      <button type="button"class="button-18" role="button">Limpiar Filtros</button>
     </a>
+    <button type="submit"class="button-18" role="button">Aplicar Filtros y Orden</button>
+    
+
     
 </form>
 

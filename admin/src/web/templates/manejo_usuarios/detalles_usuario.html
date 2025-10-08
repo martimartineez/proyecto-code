@@ -41,12 +41,12 @@
 {% block content %}
 
 <div class="stylish-center-btn">
-    <button type="button" onclick="history.back()" class="stylish-btn">Volver</button>
+    <button type="button" onclick="history.back()" class="button-22" role="button">Volver</button>
 
     <a href="{{ url_for('usuarios.modificar_get', usuario_id=usuario.id) }}" method="get">
-        <button class="stylish-btn">Modificar</button></a>
+        <button class="button-22">Modificar</button></a>
 
-    <a href="{{ url_for('home') }}"><button class="stylish-btn">Volver al inicio</button></a>
+    <a href="{{ url_for('home') }}"><button class="button-22" role="button">Página principal</button></a>
 </div>
 
 <h1>Usuario</h1>
@@ -77,6 +77,8 @@
             <strong>Fecha de creación:</strong> {{ usuario.fechaCreacion }}<br>
         </td>
     </table>
-
+    <a href="{{ url_for('usuarios.modificar', usuario_id=usuario.id) }}" method="get">
+        <button class="button-18" role="button">Editar</button>
+    </a>
 
     {% endblock %}
