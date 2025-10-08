@@ -78,7 +78,7 @@
 <!-- BOTONES  -->
 
 <div class="stylish-center-btn">
-    <a href="{{ url_for('usuarios.agregar_usuario') }}">
+    <a href="{{ url_for('usuarios.agregar_usuario_post') }}">
         <button id="agregarUsuarioBtn" class="stylish-btn">Agregar usuario</button>
     </a>
 
@@ -136,7 +136,7 @@
             toggleBtn.textContent = '🔽 Ocultar Búsqueda Avanzada';
         } else {
             form.style.display = 'none';
-            toggleBtn.textContent = '🔍 Búsqueda Avanzada';
+            toggleBtn.textContent = 'Búsqueda Avanzada';
         }
     });
 </script>

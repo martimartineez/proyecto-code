@@ -130,41 +130,82 @@ def activar(usuario_id):
     return redirect(url_for("usuarios.index"))
 
 
-@bp.route("/AgregarUsuario", methods=["GET","POST"])
+# @bp.route("/AgregarUsuario", methods=["GET","POST"])
+# @login_required
+# @check("user_new")
+# def agregar_usuario():
+    
+#     if request.method == "POST":
+#         if (auth.comprobar_email(request.form["email"])):
+#             flash("El email ya existe. Por favor, elija otro.", "error")
+#             return redirect(url_for("usuarios.agregar_usuario"))
+#         else:
+#             nombre = request.form["nombre"]
+#             apellido = request.form["apellido"]
+#             email = request.form["email"]
+#             password = request.form["password"]
+#             if not nombre or not apellido or not email or not password:
+#                 flash('Todos los campos son obligatorios','error')
+#                 return redirect(url_for("usuarios.agregar_usuario"))
+            
+#             roles_ids = request.form.getlist("roles")
+#             #auth.comprobar_admin(roles_ids)
+
+#             auth.create_user(
+#                 nombre=nombre,
+#                 email=email,
+#                 password=password,
+#                 apellido=apellido,
+#                 activo=True,
+#                 esAdmin=False,
+#                 roles = [board.get_rol_by_id(int(rol_id)) for rol_id in roles_ids]
+#             )
+#             # Redirigir al index dentro del blueprint
+#             return redirect(url_for("usuarios.index"))
+#     else:
+#         roles = board.list_roles()
+#         return render_template("manejo_usuarios/formAgregar.html", roles=roles)
+    
+
 @login_required
 @check("user_new")
-def agregar_usuario():
-    
-    if request.method == "POST":
-        if (auth.comprobar_email(request.form["email"])):
-            flash("El email ya existe. Por favor, elija otro.", "error")
-            return redirect(url_for("usuarios.agregar_usuario"))
-        else:
-            nombre = request.form["nombre"]
-            apellido = request.form["apellido"]
-            email = request.form["email"]
-            password = request.form["password"]
-            if not nombre or not apellido or not email or not password:
-                flash('Todos los campos son obligatorios','error')
-                return redirect(url_for("usuarios.agregar_usuario"))
-            
-            roles_ids = request.form.getlist("roles")
-            #auth.comprobar_admin(roles_ids)
+@bp.get("/agregar_usuario")
+def agregar_usuario_get():
+    # Esto se ejecuta solo cuando el navegador hace GET
+    roles = board.list_roles()
+    return render_template("manejo_usuarios/formAgregar.html", roles=roles)
 
-            auth.create_user(
-                nombre=nombre,
-                email=email,
-                password=password,
-                apellido=apellido,
-                activo=True,
-                esAdmin=False,
-                roles = [board.get_rol_by_id(int(rol_id)) for rol_id in roles_ids]
-            )
-            # Redirigir al index dentro del blueprint
-            return redirect(url_for("usuarios.index"))
-    else:
-        roles = board.list_roles()
-        return render_template("manejo_usuarios/formAgregar.html", roles=roles)
+@login_required
+@check("user_new")
+@bp.post("/agregar_usuario")
+def agregar_usuario_post():
+    # Esto se ejecuta solo cuando se hace POST
+    if auth.comprobar_email(request.form["email"]):
+        flash("El email ya existe. Por favor, elija otro.", "error")
+        return redirect(url_for("usuarios.agregar_usuario_get"))
+
+    nombre = request.form["nombre"]
+    apellido = request.form["apellido"]
+    email = request.form["email"]
+    password = request.form["password"]
+
+    if not nombre or not apellido or not email or not password:
+        flash('Todos los campos son obligatorios','error')
+        return redirect(url_for("usuarios.agregar_usuario_get"))
+
+    roles_ids = request.form.getlist("roles")
+    auth.create_user(
+        nombre=nombre,
+        email=email,
+        password=password,
+        apellido=apellido,
+        activo=True,
+        esAdmin=False,
+        roles=[board.get_rol_by_id(int(rol_id)) for rol_id in roles_ids]
+    )
+
+    return redirect(url_for("usuarios.index"))
+
 
 @bp.route("/modificar/<int:usuario_id>", methods=["GET", "POST"])
 @login_required
@@ -179,9 +220,11 @@ def modificar(usuario_id):
         nombre = request.form["nombre"]
         apellido = request.form["apellido"]
         email = request.form["email"]
+
         if not nombre or not apellido or not email:
             flash('Todos los campos son obligatorios','error')
             return redirect(url_for("usuarios.agregar_usuario"))
+        
         user.nombre = nombre
         user.apellido = apellido
         user.email = email
