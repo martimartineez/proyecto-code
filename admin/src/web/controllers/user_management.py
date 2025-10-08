@@ -199,6 +199,7 @@ def modificar_mi_perfil_get():
 def modificar_mi_perfil_post():
     
     user = auth.get_user_by_id(session['user_id'])
+    session['username'] = user.nombre
     return funcion_modificar(user,request.form)
 
 
@@ -224,7 +225,6 @@ def funcion_modificar(user,form):
     roles_ids = form.getlist("rol")
     user.roles = [board.get_rol_by_id(int(rol_id)) for rol_id in roles_ids]
 
-    session['username'] = user.nombre
     auth.db.session.commit()
 
     return redirect(url_for("usuarios.index"))
