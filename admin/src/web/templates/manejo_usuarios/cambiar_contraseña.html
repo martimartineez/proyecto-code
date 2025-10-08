@@ -15,9 +15,9 @@
 {% endwith %}
 
 <div class="stylish-center-btn">
-    <button type="button" onclick="history.back()" class="stylish-btn">Volver</button>
+    <button type="button" onclick="history.back()" class="button-22">Volver</button>
 
-    <a href="{{ url_for('home') }}"><button class="stylish-btn">Página principal</button></a>
+    <a href="{{ url_for('home') }}"><button class="button-22">Página principal</button></a>
 </div>
 
 <body>
@@ -38,7 +38,7 @@
                 <label for="contraseña_actual">Contraseña actual</label>
                 <input type="password" id="contraseña_actual" name="contraseña_actual" required>
             </div>
-            <button type="submit">Verificar</button>
+            <button type="submit" class="button-22">Verificar</button>
         </form>
 
         {% else %}
@@ -54,7 +54,7 @@
                 <label for="repetir_contraseña">Repetir contraseña</label>
                 <input type="password" id="repetir_contraseña" name="repetir_contraseña" required>
             </div>
-            <button type="submit">Guardar cambios</button>
+            <button type="submit" class="button-22">Guardar cambios</button>
         </form>
         {% endif %}
     </div>
