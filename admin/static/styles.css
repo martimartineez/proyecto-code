@@ -505,12 +505,18 @@ form {
     width: 100%;
 }
 
-/* Estilos para la tabla */
+/* ==================== */
+/* 🧱 ESTILOS BASE */
+/* ==================== */
 table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 15px;
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 th,
@@ -518,21 +524,45 @@ td {
     padding: 12px 15px;
     text-align: left;
     border-bottom: 1px solid #ddd;
+    font-size: 15px;
 }
 
 thead {
-    background-color: #f2f2f2;
+    background-color: #f8f8f8;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #333;
 }
 
-/* Estilos responsive */
-@media screen and (max-width: 768px) {
+/* Botones dentro de las celdas */
+td a button,
+td form button {
+    margin: 3px;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 6px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.2s;
+}
 
-    /* Ocultamos las cabeceras en móviles */
+td a button:hover,
+td form button:hover {
+    background-color: #0056b3;
+}
+
+/* ==================== */
+/* 📱 MÓVILES (<767px) */
+/* ==================== */
+@media screen and (max-width: 767px) {
+
+    /* Ocultar cabeceras */
     thead {
         display: none;
     }
 
-    /* Cada fila se convierte en un "bloque" o "tarjeta" */
     table,
     tbody,
     tr,
@@ -543,49 +573,110 @@ thead {
 
     tr {
         margin-bottom: 15px;
-        border: 1px solid #ccc;
-        border-radius: 8px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        padding: 10px;
         background-color: #fff;
+        padding: 10px;
     }
 
     td {
-        /* Ocultamos el border-bottom para que cada celda se vea como una línea de la "tarjeta" */
         border: none;
-        padding: 8px 10px;
+        padding: 10px 8px;
         position: relative;
         text-align: right;
-        /* Alineamos el valor a la derecha */
+        font-size: 14px;
     }
 
-    /* Agregamos las etiquetas de las columnas (cabeceras) como pseudo-elementos */
     td::before {
         content: attr(data-label);
         float: left;
         font-weight: bold;
-        text-transform: uppercase;
         color: #555;
+        text-transform: uppercase;
     }
 
-    /* Asignamos las etiquetas a cada celda */
-    /* Nota: Esto requiere que modifiques la tabla en el HTML/Jinja */
-    /* Eliminamos el padding para los botones de acción para que se vean mejor */
+    /* Ajuste especial para columna de acciones */
     td:last-child {
         text-align: center;
-        padding-top: 15px;
         border-top: 1px solid #eee;
+        padding-top: 12px;
     }
 
     td:last-child::before {
         content: '';
-        /* Ocultamos la etiqueta para la columna de Acciones */
     }
 
-    /* Aseguramos que los botones se muestren correctamente */
     td a,
     td form {
         display: inline-block;
         margin: 5px;
     }
+
+    button {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+}
+
+/* ==================== */
+/* 💻 TABLETS (768px–1024px) */
+/* ==================== */
+@media screen and (min-width: 768px) and (max-width: 1024px) {
+
+    th,
+    td {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+
+    table {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    td a button,
+    td form button {
+        padding: 6px 8px;
+        font-size: 13px;
+    }
+
+    /* Reducir espacios en tablas grandes */
+    table {
+        table-layout: fixed;
+    }
+
+    th,
+    td {
+        word-wrap: break-word;
+    }
+}
+
+/* ==================== */
+/* 🖥️ ESCRITORIO (>1025px) */
+/* ==================== */
+@media screen and (min-width: 1025px) {
+
+    table {
+        font-size: 15px;
+    }
+
+    th,
+    td {
+        padding: 14px 18px;
+    }
+
+    td a button,
+    td form button {
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+
+    tr:hover {
+        background-color: #f9fafb;
+    }
+}
+
+.tabla-usuarios {
+    width: 100%;
+    overflow-x: auto;
 }
