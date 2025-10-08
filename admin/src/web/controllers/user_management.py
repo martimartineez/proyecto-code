@@ -28,6 +28,8 @@ def index():
     email = request.args.get("email", "").strip()
     activo = request.args.get("activo", "")  # "" | "true" | "false"
     orden = request.args.get("orden", "asc")  # "asc" | "desc"
+    rol_filtro = request.args.get("rol", "")  # <-- Nuevo filtro por rol
+
 
     # 3️⃣ Obtener todos los usuarios
     todos = auth.list_usuarios()  # lista completa de usuarios
@@ -46,6 +48,10 @@ def index():
         todos.sort(key=lambda u: u.fechaCreacion, reverse=True)
     else:
         todos.sort(key=lambda u: u.fechaCreacion)
+
+    # Filtro por rol
+    if rol_filtro:
+        todos = [u for u in todos if any(r.nombre == rol_filtro for r in u.roles)]
 
     # 6️⃣ Paginación
     total = len(todos)
@@ -66,7 +72,8 @@ def index():
         per_page=per_page,
         email=email,
         activo=activo,
-        orden=orden
+        orden=orden,
+        rol_filtro=rol_filtro
     )
 
 
@@ -154,6 +161,7 @@ def agregar_usuario_post():
         roles=[board.get_rol_by_id(int(rol_id)) for rol_id in roles_ids]
     )
 
+    flash('Se agrego un nuevo usuario','success')
     return redirect(url_for("usuarios.index"))
 
 @bp.get("/modificar/<int:usuario_id>")
