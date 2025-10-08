@@ -164,73 +164,77 @@
 
 <!-- LA TABLA DE USUARIOS -->
 
-<table>
-    <thead>
-        <tr>
-            <th>Nombre</th>
-            <th>Email</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for usuario in usuarios %}
-        {% if not usuario.borradoLogico %}
-        <tr>
-            <td>{{ usuario.nombre }}</td>
-            <td>{{ usuario.email }}</td>
-            <td>
-                <!-- BOTON DETALLES -->
-                <form action="{{ url_for('usuarios.ver_detalles', usuario_id=usuario.id) }}" method="get"
-                    style="display:inline;">
-                    <button type="submit" class="button-18" role="button">Ver detalles</button>
-                </form>
-                <!-- BOTON MODIFICAR -->
-                <form action="{{ url_for('usuarios.modificar_get', usuario_id=usuario.id) }}" method="get"
-                    style="display:inline;">
-                    <button type="submit" class="button-18" role="button">Editar</button>
-                </form>
-                <!-- BOTON DESACTIVAR/ACTIVAR -->
-                {% set esAdmin = usuario.roles | selectattr("nombre", "equalto", "Admin") | list | length > 0 %}
+<!-- 🔹 TABLA DE USUARIOS RESPONSIVE -->
+<div class="tabla-usuarios">
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for usuario in usuarios %}
+            {% if not usuario.borradoLogico %}
+            <tr>
+                <td data-label="Nombre">{{ usuario.nombre }}</td>
+                <td data-label="Email">{{ usuario.email }}</td>
+                <td data-label="Acciones">
+                    <!-- BOTON DETALLES -->
+                    <form action="{{ url_for('usuarios.ver_detalles', usuario_id=usuario.id) }}" method="get"
+                        style="display:inline;">
+                        <button type="submit" class="button-18" role="button">Ver detalles</button>
+                    </form>
 
-                {% if not esAdmin %}
-                {% if usuario.activo %}
-                <form action="{{ url_for('usuarios.desactivar', usuario_id=usuario.id) }}" method="post"
-                    style="display:inline;">
-                    <button type="submit" onclick="return confirm('¿Seguro que deseas desactivar este usuario?');"
-                        class="button-18" role="button">
-                        Desactivar
-                    </button>
-                </form>
-                {% else %}
-                <form action="{{ url_for('usuarios.activar', usuario_id=usuario.id) }}" method="post"
-                    style="display:inline;">
-                    <button type="submit" onclick="return confirm('¿Seguro que deseas activar este usuario?');"
-                        class="button-18" role="button">
-                        Activar
-                    </button>
-                </form>
-                {% endif %}
-                {% endif %}
-                <!-- BOTON ELIMINAR -->
-                <form action="{{ url_for('usuarios.eliminar', usuario_id=usuario.id) }}" method="post"
-                    style="display:inline;">
-                    <button type="submit" onclick="return confirm('¿Seguro que deseas eliminar este usuario?');"
-                        class="button-18" role="button">Eliminar</button>
-                </form>
-            </td>
-        </tr>
-        {% endif %}
-        {% endfor %}
-    </tbody>
-</table>
+                    <!-- BOTON MODIFICAR -->
+                    <form action="{{ url_for('usuarios.modificar_get', usuario_id=usuario.id) }}" method="get"
+                        style="display:inline;">
+                        <button type="submit" class="button-18" role="button">Editar</button>
+                    </form>
 
-<!-- 🔹 Paginación avanzada estilo sitios históricos -->
+                    <!-- BOTON ACTIVAR / DESACTIVAR -->
+                    {% set esAdmin = usuario.roles | selectattr("nombre", "equalto", "Admin") | list | length > 0 %}
+                    {% if not esAdmin %}
+                    {% if usuario.activo %}
+                    <form action="{{ url_for('usuarios.desactivar', usuario_id=usuario.id) }}" method="post"
+                        style="display:inline;">
+                        <button type="submit" onclick="return confirm('¿Seguro que deseas desactivar este usuario?');"
+                            class="button-18" role="button">
+                            Desactivar
+                        </button>
+                    </form>
+                    {% else %}
+                    <form action="{{ url_for('usuarios.activar', usuario_id=usuario.id) }}" method="post"
+                        style="display:inline;">
+                        <button type="submit" onclick="return confirm('¿Seguro que deseas activar este usuario?');"
+                            class="button-18" role="button">
+                            Activar
+                        </button>
+                    </form>
+                    {% endif %}
+                    {% endif %}
+
+                    <!-- BOTON ELIMINAR -->
+                    <form action="{{ url_for('usuarios.eliminar', usuario_id=usuario.id) }}" method="post"
+                        style="display:inline;">
+                        <button type="submit" onclick="return confirm('¿Seguro que deseas eliminar este usuario?');"
+                            class="button-18" role="button">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- 🔹 PAGINACIÓN -->
 {% if total > per_page %}
 <nav>
     <ul class="pagination">
         {% set args = request.args.copy() %}
         {% if 'page' in args %}{% set _ = args.pop('page') %}{% endif %}
-
         {% set total_pages = (total // per_page) + (1 if total % per_page else 0) %}
         {% set start_page = page - 4 %}
         {% set end_page = page + 5 %}
