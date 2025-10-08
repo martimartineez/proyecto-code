@@ -19,7 +19,7 @@ def _validar_texto_obligatorio(valor: str | None, campo_etiqueta: str, min_len: 
         
     return None # La validación pasó
 
-# --------------------------------------------------------------------------
+
 
 def validar_tag(form_data: dict) -> dict:
     """Valida los datos de entrada para un Tag (Nombre y unicidad)."""

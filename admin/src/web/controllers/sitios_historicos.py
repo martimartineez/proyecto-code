@@ -129,6 +129,10 @@ def _build_historial_view(historial: dict, ciudades, categorias, usuarios_by_id:
 @login_required
 @check("site_create")
 def agregar_sitio_get():
+    """
+    Renderiza el formulario para agregar un nuevo sitio histórico.
+    Proporciona datos necesarios como provincias, ciudades, categorías y tags.
+    """
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
     hoy = date.today().strftime('%Y-%m-%d')
     provincias = board.listar_provincias()
@@ -149,6 +153,11 @@ def agregar_sitio_get():
 @login_required
 @check("site_create")
 def agregar_sitio_post():
+    """
+    Procesa el formulario para agregar un nuevo sitio histórico.
+    Valida los datos y maneja errores, redirigiendo según corresponda.
+    Maneja tanto errores de validación como excepciones durante la creación.
+    """
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
     errores = validar_sitio_historico(request.form)
 
@@ -167,53 +176,18 @@ def agregar_sitio_post():
         # Redirect on error to avoid resubmission issues
         return redirect(url_for("sitios_historicos.agregar_sitio_get", next=next_url))
 
-# @bp.route("/nuevo", methods=["GET", "POST"])
-# @login_required
-# @check("site_create")
-# def agregar_sitio():
-#     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
-#     hoy = date.today().strftime('%Y-%m-%d')
-#     if request.method == "POST":
-        
-#         # 1. Ejecutar la validación del sitio histórico con los datos del formulario
-#         errores = validar_sitio_historico(request.form)
-        
-#         if errores:
-#             # 2. Si el diccionario NO está vacío (hay errores), mostrar un mensaje Flash
-#             # Concatenamos todos los mensajes de error para mostrarlos al usuario.
-#             full_error_msg = " | ".join(errores.values()) 
-#             flash(f"Hubo errores de validación en el formulario: {full_error_msg}", "error")
-#             # El flujo continúa para recargar el formulario con los datos anteriores.
-#         else:
-#             try:
-#                 # 3. Si la validación es exitosa, procesar y guardar
-#                 board.crear_sitio(request.form)
-#                 flash("Sitio histórico agregado exitosamente.", "success")
-#                 return redirect(url_for("sitios_historicos.busqueda_avanzada"))
-#             except Exception as e:
-#                 # Manejar errores de la capa de negocio/base de datos
-#                 flash(f"Ocurrió un error al intentar agregar el sitio: {e}.", "error")
-#                 # Continúa al render_template con los datos de soporte.
-#                 pass 
 
-#     provincias = board.listar_provincias()
-#     ciudades = board.listar_ciudades()
-#     categorias = board.listar_categorias()
-#     tags = board.listar_tags()
-#     return render_template(
-#         "sitios_historicos/formAgregar.html",
-#         provincias=provincias,
-#         ciudades=ciudades,
-#         categorias=categorias,
-#         tags=tags,
-#         next_url=next_url,
-#         today=hoy,
-#     )
 
 @bp.get("/<int:sitio_id>/editar")
 @login_required
 @check("site_update")
 def editar_sitio_get(sitio_id):
+    """
+    Renderiza el formulario para editar un sitio histórico existente.
+    Carga los datos actuales del sitio y proporciona datos necesarios como provincias, ciudades, categorías, tags y historial.
+    Maneja filtros para el historial y prepara la vista del historial.
+    Maneja el caso donde el sitio no existe.
+    """
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
     hoy = date.today().strftime('%Y-%m-%d')
     sitio = board.obtener_sitio(sitio_id)
@@ -272,6 +246,12 @@ def editar_sitio_get(sitio_id):
 @login_required
 @check("site_update")
 def editar_sitio_post(sitio_id):
+    """
+    Procesa el formulario para editar un sitio histórico existente.
+    Valida los datos y maneja errores, redirigiendo según corresponda.
+    Maneja tanto errores de validación como excepciones durante la edición.
+    Maneja el caso donde el sitio no existe.
+    """
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
     errores = validar_sitio_historico(request.form)
     
@@ -288,90 +268,17 @@ def editar_sitio_post(sitio_id):
         flash(f"Ocurrió un error al intentar editar el sitio: {e}.", "error")
         return redirect(url_for("sitios_historicos.editar_sitio_get", sitio_id=sitio_id, next=next_url))
 
-# @bp.route("/<int:sitio_id>/editar", methods=["GET", "POST"])
-# @login_required
-# @check("site_update")
-# def editar_sitio(sitio_id):
-#     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
-#     hoy = date.today().strftime('%Y-%m-%d')
-
-#     if request.method == "POST":
-        
-#         # 1. Llamar a la función y recibir el diccionario de errores
-#         errores = validar_sitio_historico(request.form)
-        
-#         if errores:
-#             # 2. Si el diccionario NO está vacío (hay errores), mostrar un mensaje Flash
-#             full_error_msg = " | ".join(errores.values()) 
-#             flash(f"Hubo errores de validación en el formulario: {full_error_msg}", "error")
-#             # El flujo continúa a cargar los datos para el render_template.
-#         else:
-#             try:
-#                 # 3. Procesar edición del sitio
-#                 board.editar_sitio(sitio_id, request.form)
-#                 flash("Sitio histórico editado exitosamente.", "success")
-#                 return redirect(url_for("sitios_historicos.busqueda_avanzada"))
-#             except Exception as e:
-#                 flash(f"Ocurrió un error al intentar editar el sitio: {e}.", "error")
-#                 # El flujo continuará a cargar los datos para el render_template.
-#                 pass 
-#     sitio = board.obtener_sitio(sitio_id)
-#     # Filtros de historial
-#     usuario_id = request.args.get("usuario_id", type=int)
-#     accion = request.args.get("accion")
-#     desde = request.args.get("desde")
-#     hasta = request.args.get("hasta")
-#     page = request.args.get("page", default=1, type=int)
-#     historial = board.listar_historial_sitio(
-#         id_sitio=sitio_id,
-#         usuario_id=usuario_id,
-#         accion=accion,
-#         desde=desde,
-#         hasta=hasta,
-#         page=page,
-#         per_page=25,
-#     )
-#     provincias = board.listar_provincias()
-#     ciudades = board.listar_ciudades()
-#     categorias = board.listar_categorias()
-#     # construir mapa de usuarios mencionados en historial
-#     user_ids = {e.idUsuario for e in historial["items"]}
-#     usuarios = []
-#     if user_ids:
-#         usuarios = db.session.query(Usuario).filter(Usuario.id.in_(user_ids)).all()
-#     usuarios_by_id = {u.id: u for u in usuarios}
-#     usuarios_historial = [
-#         {"id": u.id, "label": f"{u.nombre} {u.apellido} <{u.email}>"}
-#         for u in usuarios
-#     ]
-#     historial_view = _build_historial_view(historial, ciudades, categorias, usuarios_by_id)
-#     tags = board.listar_tags()
-#     return render_template(
-#         "sitios_historicos/formEditar.html",
-#         sitio=sitio,
-#         provincias=provincias,
-#         ciudades=ciudades,
-#         categorias=categorias,
-#         historial=historial,
-#         historial_view=historial_view,
-#         usuarios_historial=usuarios_historial,
-#         filtros={
-#             "usuario_id": usuario_id,
-#             "accion": accion,
-#             "desde": desde,
-#             "hasta": hasta,
-#             "page": page,
-#         },
-#         tags=tags,
-#         next_url=next_url,
-#         today=hoy,
-#     )
-
 
 @bp.post("/<int:sitio_id>/eliminar")
 @login_required
 @check("site_destroy")
 def eliminar_sitio(sitio_id):
+    """
+    Elimina un sitio histórico existente.
+    Maneja excepciones durante la eliminación y proporciona retroalimentación al usuario.
+    Maneja el caso donde el sitio no existe.
+    Redirige a la página de búsqueda avanzada después de la operación.
+    """
     try:
         # 💡 Capturamos el valor devuelto (el nombre del sitio o False)
         nombre_sitio = board.eliminar_sitio(sitio_id) 
@@ -392,6 +299,11 @@ def eliminar_sitio(sitio_id):
 @login_required
 @check("site_show")
 def ver_sitio(sitio_id):
+    """
+    Muestra los detalles de un sitio histórico específico junto con su historial de cambios.
+    Maneja filtros para el historial y prepara la vista del historial.
+    Maneja el caso donde el sitio no existe.
+    """
     permiso= check_permission("site_destroy")
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
     sitio = board.obtener_sitio(sitio_id)
@@ -444,6 +356,12 @@ def ver_sitio(sitio_id):
 @login_required
 @check("site_index")
 def busqueda_avanzada():
+    """
+    Muestra la página de búsqueda avanzada de sitios históricos con múltiples filtros.
+    Permite filtrar por provincia, ciudad, categoría, estado de conservación, fechas, visibilidad y tags.
+    Soporta paginación y ordenamiento de resultados.
+    Proporciona un enlace para exportar los resultados filtrados a CSV.
+    """
     permiso= check_permission("site_destroy")
     provincias = board.listar_provincias()
     ciudades = board.listar_ciudades()

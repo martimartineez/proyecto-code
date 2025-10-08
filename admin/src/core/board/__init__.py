@@ -11,6 +11,9 @@ from src.core.auth.usuario import Usuario
 import re
 
 def _parse_float(value):
+    """
+    Intenta convertir un valor a float. Retorna None si no es posible.
+    """
     try:
         return float(value) if value not in (None, "") else None
     except Exception:
@@ -18,6 +21,9 @@ def _parse_float(value):
 
 
 def _parse_int(value):
+    """
+    Intenta convertir un valor a int. Retorna None si no es posible.
+    """
     try:
         return int(value) if value not in (None, "") else None
     except Exception:
@@ -25,6 +31,9 @@ def _parse_int(value):
 
 
 def _parse_date(value):
+    """
+    Intenta convertir un valor a date (YYYY-MM-DD). Retorna None si no es posible.
+    """
     try:
         return datetime.strptime(value, "%Y-%m-%d").date() if value else None
     except Exception:
@@ -59,6 +68,9 @@ def _generate_slug(text: str) -> str:
     return text
 
 def listar_sitios(page=1, per_page=25):
+    """
+    Lista los sitios historicos con paginacion.
+    """
     return (
         db.session.query(SitioHistorico)
         .order_by(SitioHistorico.id)
@@ -69,13 +81,22 @@ def listar_sitios(page=1, per_page=25):
     )
 
 def contar_sitios():
+    """
+    Cuenta los sitios historicos activos (baja=False).
+    """
     return db.session.query(SitioHistorico).filter_by(baja=False).count()
 
 def listar_provincias():
+    """
+    Lista todas las provincias ordenadas por nombre.
+    """
     return db.session.query(Provincia).order_by(Provincia.nombre).all()
 
 
 def listar_ciudades(id_provincia: int | None = None):
+    """
+    Lista todas las ciudades, o las de una provincia específica si se proporciona id_provincia.
+    """
     q = db.session.query(Ciudad)
     if id_provincia is not None:
         q = q.filter(Ciudad.idProvincia == id_provincia)
@@ -83,10 +104,16 @@ def listar_ciudades(id_provincia: int | None = None):
 
 
 def listar_categorias():
+    """
+    Lista todas las categorias de sitios ordenadas por nombre.
+    """
     return db.session.query(CategoriaSitio).order_by(CategoriaSitio.nombre).all()
 
 
 def crear_sitio_seed(form):
+    """
+    creacion de sitio historico, usado solo para pruebas de los desarrolladores.
+    """
     nuevo = SitioHistorico(
         nombre=form.get("nombre"),
         descBreve=form.get("descripcion"),
@@ -125,6 +152,11 @@ def registrar_evento_historial(
     return evento
 
 def crear_sitio(form, id_usuario: int | None = None):
+    """
+    Creacion de sitio historico, usado en el blueprint de sitios.
+    A partir de los datos del formulario.
+    Reflejando los cambios en el historial.
+    """
     nuevo = SitioHistorico(
         nombre=form.get("nombre"),
         descBreve=form.get("descripcion"),
@@ -174,10 +206,18 @@ def crear_sitio(form, id_usuario: int | None = None):
 
 
 def obtener_sitio(sitio_id: int):
+    """
+    Obtiene un sitio historico por su ID.
+    """
     return db.session.get(SitioHistorico, sitio_id)
 
 
 def editar_sitio(sitio_id: int, form, id_usuario: int | None = None):
+    """
+    Edicion de sitio historico, usado en el blueprint de sitios.
+    A partir de los datos del formulario.
+    Reflejando los cambios en el historial.
+    """
     sitio = obtener_sitio(sitio_id)
     if not sitio:
         return False
@@ -266,6 +306,10 @@ def editar_sitio(sitio_id: int, form, id_usuario: int | None = None):
 
 
 def eliminar_sitio(sitio_id: int, id_usuario: int | None = None):
+    """
+    Realiza la eliminacion logica de un sitio historico (establece 'baja' en True).
+    Reflejando los cambios en el historial.
+    """
     sitio = obtener_sitio(sitio_id)
     if not sitio:
         return False
@@ -334,6 +378,9 @@ def listar_historial_sitio(
         "pages": (total + per_page - 1) // per_page if per_page else 1,
     }
 def listar_tags(page=1, per_page=25, q=None, sort=None, order="asc"):
+    """
+    Lista los tags con paginacion, busqueda y ordenamiento.
+    """
     query = db.session.query(Tag)
 
     #Filtro excluir Tags con baja=True
@@ -371,6 +418,9 @@ def listar_tags(page=1, per_page=25, q=None, sort=None, order="asc"):
 
 
 def contar_tags(q=None):
+    """
+    Cuenta los tags activos (baja=False), con filtro de búsqueda opcional.
+    """
     query = db.session.query(Tag)
 
     #Filtro excluir Tags con baja=True
@@ -383,14 +433,19 @@ def contar_tags(q=None):
 
 
 def obtener_tag(tag_id: int):
+    """
+    Obtiene un tag por su ID.
+    """
     return db.session.get(Tag, tag_id)
 
-# En src/core/board/__init__.py
-# NOTA IMPORTANTE: Asegúrate de que la importación de IntegrityError sea de SQLAlchemy,
-# no de sqlite3, como hicimos en la corrección anterior:
-# from sqlalchemy.exc import IntegrityError 
 
 def crear_tag(form):
+    """
+    Creacion de tag, usado en el blueprint de tags.
+    A partir de los datos del formulario.
+    Maneja duplicados y reactivacion de tags dados de baja.
+    Retorna: el Tag creado/reeactivado, "DUPLICATE_ERROR" (si ya existe activo), None (error inesperado).
+    """
     nombre_tag = form.get("nombre")
     if not nombre_tag:
         return None
@@ -438,6 +493,12 @@ def crear_tag(form):
         return None
 
 def editar_tag(tag_id: int, form):
+    """
+    Edicion de tag, usado en el blueprint de tags.
+    A partir de los datos del formulario.
+    Maneja duplicados.
+    Retorna: True (éxito), "DUPLICATE_ERROR" (si ya existe otro tag con el nuevo nombre), False (Tag no encontrado o error inesperado).
+    """
     tag = obtener_tag(tag_id)
     if not tag:
         return False
