@@ -202,15 +202,15 @@ def ver_detalles(usuario_id):
     roles = auth.listar_roles_usuario(usuario)
     return render_template("manejo_usuarios/detalles_usuario.html", usuario=usuario, roles=roles)
 
-@bp.get("/miperfil")#preguntarle a los chicos esto
+@bp.get("/miperfil")
 @login_required
 @check("user_show")
 def ver_perfil():
-    #if request.method == 'POST':
+
     usuario = auth.get_user_by_id(session['user_id'])
     roles = auth.listar_roles_usuario(usuario)
+
     return render_template("manejo_usuarios/mi_perfil.html", usuario=usuario, roles=roles)
-    #return redirect(url_for("usuarios.index"))
 
 
 
