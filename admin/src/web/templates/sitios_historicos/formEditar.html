@@ -4,22 +4,33 @@
 
 {% block content %}
 
-<!-- Leaflet CSS y JS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
 <style>
+  /* 1. ESTILO DEL MAPA */
   #map { height: 400px; width: 100%; margin-bottom: 10px; border: 1px solid #ccc; }
+  /* 2. ESTILO PARA LOS MENSAJES DE ERROR */
+  .error-message {
+    color: red;
+    font-size: 0.9em;
+    margin-top: -10px; 
+    margin-bottom: 10px;
+    display: none; /* Inicialmente oculto */
+  }
 </style>
 
 <h2>Editar Sitio Histórico</h2>
 
-<a href="/">
-    <button type="button">Volver a inicio</button>
-</a>
-<a href="{{ next_url }}">
-  <button type="button">Volver atras</button>
-</a>
+<div>
+  <a href="{{ next_url }}">
+    <button type="button" class="button-22" role="button">Volver</button>
+  </a>
+  <a href="/">
+      <button type="button" class="button-22" role="button">Página principal</button>
+  </a>
+</div>
+
 {%with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}
 {% for category, message in messages %}
@@ -28,181 +39,189 @@
 {% endif %}
 {% endwith %}
 
-<form method="post" action="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id) }}">
-    <label>Nombre:</label>
-    <input type="text" name="nombre" value="{{ sitio.nombre }}" required><br>
+<form method="post" action="{{ url_for('sitios_historicos.editar_sitio_post', sitio_id=sitio.id) }}" id="editarSitioForm">
+    <div class="form-group" >
+      <label>Nombre :</label>
+      <div class="error-message" id="error-nombre">⚠️ El nombre debe tener entre 3 y 100 caracteres.</div>
+      <input class="form-control" type="text" name="nombre" id="nombreInput" value="{{ sitio.nombre }}" maxlength="100" c>
+    </div>
 
-    <label>Descripción:</label>
-    <input type="text" name="descripcion" value="{{ sitio.descBreve }}" required><br>
+    <div class="form-group" >
+      <label>Descripción breve:</label>
+      <div class="error-message" id="error-descripcion">⚠️ La descripción debe tener entre 5 y 255 caracteres.</div>
+      <input class="form-control" type="text" name="descripcion" id="descripcionInput" value="{{ sitio.descBreve }}" maxlength="255">
+    </div>
 
-    <label>Descripción Completa:</label>
-    <input type="text" name="descripcion_completa" value="{{ sitio.descCompleta }}" required><br>
-
-    {# Provincia y Ciudad como selects dependientes #}
-    <label>Provincia:</label>
-    <select id="provinciaSelect" name="provincia" required>
-        <option value="">Seleccione provincia</option>
-        {% set selectedProv = sitio.ciudad.provincia.id if sitio.ciudad and sitio.ciudad.provincia else '' %}
-        {% for p in provincias %}
-        <option value="{{ p.id }}" {% if selectedProv == p.id %}selected{% endif %}>{{ p.nombre }}</option>
-        {% endfor %}
-    </select><br>
-
-    <label>Ciudad:</label>
-    <select id="ciudadSelect" name="ciudad" required>
-        <option value="">Seleccione ciudad</option>
-        {% for c in ciudades %}
-        <option value="{{ c.id }}" data-provincia="{{ c.idProvincia }}" {% if sitio.idCiudad == c.id %}selected{% endif %}>{{ c.nombre }}</option>
-        {% endfor %}
-    </select><br>
-
-    <label>Estado Conservación:</label>
-    <select name="estado_conservacion" required>
-        <option value="">Seleccione estado</option>
-        <option value="Bueno" {% if sitio.estadoConservacion == 'Bueno' %}selected{% endif %}>Bueno</option>
-        <option value="Regular" {% if sitio.estadoConservacion == 'Regular' %}selected{% endif %}>Regular</option>
-        <option value="Malo" {% if sitio.estadoConservacion == 'Malo' %}selected{% endif %}>Malo</option>
-    </select><br>
-
-    <label>Fecha Inauguracion:</label>
-    <input type="date" name="fecha_inauguracion" required  
-       value="{{ sitio.anioInauguracion.strftime('%Y-%m-%d') if sitio.anioInauguracion else '' }}"
-        max="{{ today }}"><br>
-
-    <label>Categoría:</label>
-    <select name="categoria" required>
-        <option value="">Seleccione categoría</option>
-        {% for c in categorias %}
-        <option value="{{ c.id }}" {% if sitio.idCategoria == c.id %}selected{% endif %}>{{ c.nombre }}</option>
-        {% endfor %}
-    </select><br>
-
-    <label>Fecha Registro:</label>
-    <input type="date" name="fecha_registro" required
-       value="{{ sitio.fechaRegistro.strftime('%Y-%m-%d') if sitio.fechaRegistro else '' }}"
-        max="{{ today }}"><br>
-
-    <label>Visible a los usuarios:</label>
-    <input type="hidden" name="visible" value="False">
-    <input type="checkbox" name="visible" value="True" {% if sitio.visible %}checked{% endif %}><br>
-
-    <label>Tags:</label><br>
-    {% set sitio_tags = sitio.tags|map(attribute='id')|list %}
-    <div style="border: 1px solid #ccc; padding: 10px; max-height: 150px; overflow-y: auto;">
-        {% for tag in tags %}
-            <input type="checkbox" id="tag_{{ tag.id }}" name="tags" value="{{ tag.id }}"
-                {% if tag.id in sitio_tags %}checked{% endif %}>
-            <label for="tag_{{ tag.id }}">{{ tag.nombre }}</label><br>
-        {% endfor %}
-        {% if not tags %}
-          <p>No hay tags disponibles.</p>
-        {% endif %}
+    <div class="form-group" >
+      <label>Descripción completa :</label>
+      <div class="error-message" id="error-descripcion_completa">⚠️ La descripción completa debe tener entre 10 y 5000 caracteres.</div>
+      <textarea  class="form-control" type="text" name="descripcion_completa" id="descripcionCompletaInput" maxlength="5000">{{ sitio.descCompleta }}</textarea>
     </div>
     <br>
+
+    <div class="form-group" >
+      <label>Provincia:</label>
+      <div class="error-message" id="error-provincia">⚠️ Por favor, seleccione la provincia.</div>
+      <select id="provinciaSelect" name="provincia" class="form-control" >
+          <option value="">Seleccione provincia</option>
+          {% set selectedProv = sitio.ciudad.provincia.id if sitio.ciudad and sitio.ciudad.provincia else '' %}
+          {% for p in provincias %}
+          <option value="{{ p.id }}" {% if selectedProv == p.id %}selected{% endif %}>{{ p.nombre }}</option>
+          {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group" >
+      <label>Ciudad:</label>
+      <div class="error-message" id="error-ciudad">⚠️ Por favor, seleccione la ciudad.</div>
+      <select id="ciudadSelect" name="ciudad" class="form-control" >
+          <option value="">Seleccione ciudad</option>
+          {% for c in ciudades %}
+          <option value="{{ c.id }}" data-provincia="{{ c.idProvincia }}" {% if sitio.idCiudad == c.id %}selected{% endif %}>{{ c.nombre }}</option>
+          {% endfor %}
+      </select>
+    </div>
+    <br>
+
+    <div class="form-group" >
+      <label>Estado Conservación:</label>
+      <div class="error-message" id="error-estado_conservacion">⚠️ Por favor, seleccione el estado de conservación.</div>
+      <select name="estado_conservacion" id="estadoConservacionSelect" class="form-control" >
+          <option value="">Seleccione estado</option>
+          {% set estados = ['Bueno', 'Regular', 'Malo'] %}
+          {% for estado in estados %}
+          <option value="{{ estado }}" {% if sitio.estadoConservacion == estado %}selected{% endif %}>{{ estado }}</option>
+          {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group" >
+      <label>Categoría:</label>
+      <div class="error-message" id="error-categoria">⚠️ Por favor, seleccione la categoría.</div>
+      <select name="categoria" id="categoriaSelect" class="form-control" >
+          <option value="">Seleccione categoría</option>
+          {% for c in categorias %}
+          <option value="{{ c.id }}" {% if sitio.idCategoria == c.id %}selected{% endif %}>{{ c.nombre }}</option>
+          {% endfor %}
+      </select>
+    </div>
+    <br>
+
+    <div class="form-group" >
+      <label>Fecha Inauguracion:</label>
+      <div class="error-message" id="error-fecha_inauguracion">⚠️ Por favor, ingrese la fecha de inauguración.</div>
+      <input type="date" name="fecha_inauguracion" id="fechaInauguracionInput" class="form-control" 
+        value="{{ sitio.anioInauguracion.strftime('%Y-%m-%d') if sitio.anioInauguracion else '' }}"
+          max="{{ today }}">
+    </div>
+
+
+    <div class="form-group" >
+      <label>Fecha Registro:</label>
+      <div class="error-message" id="error-fecha_registro">⚠️ Por favor, ingrese la fecha de registro.</div>
+      <input type="date" name="fecha_registro" id="fechaRegistroInput" class="form-control" 
+        value="{{ sitio.fechaRegistro.strftime('%Y-%m-%d') if sitio.fechaRegistro else '' }}"
+          max="{{ today }}"><br>
+    </div>
+
+    <div class="form-group" >
+      <label>Visible a los usuarios:</label>
+      <input type="hidden" name="visible" value="False">
+      <input type="checkbox" name="visible" value="True" {% if sitio.visible %}checked{% endif %}><br>
+    </div>
+
+    <div class="form-group" >
+      <label>Tags:</label><br>
+      <div style="border: 1px solid #ccc; padding: 10px; max-height: 150px; overflow-y: auto;">
+          {% set sitio_tag_ids = sitio.tags|map(attribute='id')|list %}
+          {% for tag in tags %}
+              <input type="checkbox" id="tag_{{ tag.id }}" name="tags" value="{{ tag.id }}" {% if tag.id in sitio_tag_ids %}checked{% endif %}>
+              <label for="tag_{{ tag.id }}">{{ tag.nombre }}</label><br>
+          {% endfor %}
+          {% if not tags %}
+            <p>No hay tags disponibles.</p>
+          {% endif %}
+      </div>
+      <br>
+    </div>
 
     <input type="hidden" name="latitud" id="latitud" value="{{ sitio.latitud }}">
     <input type="hidden" name="longitud" id="longitud" value="{{ sitio.longitud }}">
 
     <p id="coordenadas_seleccionadas" style="margin-top: -5px; font-size: 0.9em; color: #555;">
-    ⚠️ Haga clic en el mapa para seleccionar la ubicación (Obligatorio).
-    </p>  
+        {% if sitio.latitud and sitio.longitud %}
+        ✅ Coordenadas seleccionadas: {{ sitio.latitud }}, {{ sitio.longitud }}
+        {% else %}
+        ⚠️ Haga clic en el mapa para seleccionar la ubicación (Obligatorio).
+        {% endif %}
+    </p> 
 
     <div style="max-width: 600px; margin: 10px auto;">
-        <label>Ubicación (seleccione en el mapa):</label>
+        <label>Ubicación (seleccione en el mapa para modificar):</label>
         <div id="map"></div>
     </div>
 
-    <button type="submit">Guardar cambios</button>
+    <button type="submit" class="button-22" role="button">Guardar Cambios</button>
 </form>
 
 <hr>
 <h2>Historial de cambios</h2>
 
-<form method="get" action="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id) }}" style="margin-bottom:10px;">
-  <label>Usuario:</label>
-  <select name="usuario_id" style="min-width:240px;">
-    <option value="">Todos</option>
-    {% if usuarios_historial %}
-      {% for u in usuarios_historial %}
-        <option value="{{ u.id }}" {% if filtros.usuario_id == u.id %}selected{% endif %}>{{ u.label }}</option>
+<form method="get" action="{{ url_for('sitios_historicos.editar_sitio_get', sitio_id=sitio.id) }}" style="margin-bottom:10px;">
+  <div class="form-group" >
+    <label>Usuario:</label>
+    <select name="usuario_id" style="min-width:240px;" class="form-control">
+      <option value="">Todos</option>
+      {% if usuarios_historial %}
+        {% for u in usuarios_historial %}
+          <option value="{{ u.id }}" {% if filtros.usuario_id == u.id %}selected{% endif %}>{{ u.label }}</option>
+        {% endfor %}
+      {% endif %}
+    </select>
+  </div>
+
+  <div class="form-group" >
+    <label>Acción:</label>
+    <select name="accion" class="form-control">
+      <option value="">Todas</option>
+      {% for a in ['CREATED', 'UPDATED', 'DELETED', 'STATE_CHANGED', 'TAGS_CHANGED', 'IMAGES_CHANGED'] %}
+      {% set a_label =
+        'Creado' if a=='CREATED' else
+        'Actualizado' if a=='UPDATED' else
+        'Eliminado' if a=='DELETED' else
+        'Cambio de estado' if a=='STATE_CHANGED' else
+        'Cambio de etiquetas' if a=='TAGS_CHANGED' else
+        'Imágenes actualizadas' if a=='IMAGES_CHANGED' else a %}
+      <option value="{{ a }}" {% if filtros.accion == a %}selected{% endif %}>{{ a_label }}</option>
       {% endfor %}
-    {% endif %}
-  </select>
+    </select>
+  </div>
 
-  <label>Acción:</label>
-  <select name="accion">
-    <option value="">Todas</option>
-    {% for a in ['CREATED', 'UPDATED', 'DELETED', 'STATE_CHANGED', 'TAGS_CHANGED', 'IMAGES_CHANGED'] %}
-    {% set a_label =
-      'Creado' if a=='CREATED' else
-      'Actualizado' if a=='UPDATED' else
-      'Eliminado' if a=='DELETED' else
-      'Cambio de estado' if a=='STATE_CHANGED' else
-      'Cambio de etiquetas' if a=='TAGS_CHANGED' else
-      'Imágenes actualizadas' if a=='IMAGES_CHANGED' else a %}
-    <option value="{{ a }}" {% if filtros.accion == a %}selected{% endif %}>{{ a_label }}</option>
-    {% endfor %}
-  </select>
+  <div class="form-group" >
+    <label>Desde:</label>
+    <input class="form-control" type="date" name="desde" value="{{ filtros.desde or '' }}">
+  </div>
 
-  <label>Desde:</label>
-  <input type="date" name="desde" value="{{ filtros.desde or '' }}">
-
-  <label>Hasta:</label>
-  <input type="date" name="hasta" value="{{ filtros.hasta or '' }}">
-
-  <button type="submit">Filtrar</button>
+  <div class="form-group" >
+    <label>Hasta:</label>
+    <input class="form-control" type="date" name="hasta" value="{{ filtros.hasta or '' }}">
+    
+  </div>
+  <button type="submit" class="button-18" role="button">Filtrar</button>
 </form>
 
 {% include 'sitios_historicos/_tabla_historial.html' %}
 
-{% set page = historial.page %}
-{% set pages = historial.pages %}
-<div style="margin-top:10px;">
-  {% if page > 1 %}
-    <a href="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id, usuario_id=filtros.usuario_id, accion=filtros.accion, desde=filtros.desde, hasta=filtros.hasta, page=page-1) }}">&laquo; Anterior</a>
-  {% endif %}
-  <span style="margin:0 8px;">Página {{ page }} de {{ pages }}</span>
-  {% if page < pages %}
-    <a href="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id, usuario_id=filtros.usuario_id, accion=filtros.accion, desde=filtros.desde, hasta=filtros.hasta, page=page+1) }}">Siguiente &raquo;</a>
-  {% endif %}
-</div>
-
 <script>
-  // Obtener coordenadas desde los inputs del formulario (evitar Jinja en JS)
-  var latInput = document.getElementById('latitud');
-  var lngInput = document.getElementById('longitud');
-  var latStr = latInput && latInput.value ? latInput.value : '';
-  var lngStr = lngInput && lngInput.value ? lngInput.value : '';
-  var hasCoords = latStr !== '' && lngStr !== '';
-  var existingLat = hasCoords ? parseFloat(latStr) : -34.921;
-  var existingLng = hasCoords ? parseFloat(lngStr) : -57.954;
-
-   // LÓGICA DE FEEDBACK VISUAL
-  var coordsDisplay = document.getElementById('coordenadas_seleccionadas');
-  if (coordsDisplay) {
-      if (hasCoords) {
-          coordsDisplay.innerHTML = `✅ Coordenadas seleccionadas: ${existingLat}, ${existingLng}`;
-          coordsDisplay.style.color = '#555';
-      } else {
-          // Si por alguna razón el sitio no tiene coordenadas (aunque el backend lo previene), se avisa.
-          coordsDisplay.innerHTML = '⚠️ Haga clic en el mapa para seleccionar la ubicación (Obligatorio).';
-          coordsDisplay.style.color = 'red';
-      }
-  }
-
-  // Inicializa el mapa centrado en las coordenadas existentes o La Plata por defecto
-  var map = L.map('map').setView([existingLat, existingLng], 13);
-
-  // Capa OpenStreetMap
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-  }).addTo(map);
+  // Inicializa el mapa centrado en las coordenadas del sitio
+  var latitudInicial = parseFloat(document.getElementById('latitud').value);
+  var longitudInicial = parseFloat(document.getElementById('longitud').value);
+  var map = L.map('map').setView([latitudInicial, longitudInicial], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
   var marker;
-
-  // Si hay coordenadas existentes, mostrar marcador
-  if (hasCoords) {
-    marker = L.marker([existingLat, existingLng]).addTo(map);
+  if (latitudInicial && longitudInicial) {
+    marker = L.marker([latitudInicial, longitudInicial]).addTo(map);
   }
 
   // Captura clic del usuario
@@ -210,26 +229,136 @@
       var lat = e.latlng.lat.toFixed(6);
       var lng = e.latlng.lng.toFixed(6);
 
-      // Coloca o mueve el marcador
       if (marker) {
           marker.setLatLng(e.latlng);
       } else {
           marker = L.marker(e.latlng).addTo(map);
       }
 
-      latInput.value = lat;
-      lngInput.value = lng;
+      document.getElementById('latitud').value = lat;
+      document.getElementById('longitud').value = lng;
+      document.getElementById('coordenadas_seleccionadas').innerHTML = `✅ Coordenadas seleccionadas: ${lat}, ${lng}`;
       
-      // ACTUALIZAR FEEDBACK
-      if (coordsDisplay) {
-          coordsDisplay.innerHTML = `✅ Coordenadas seleccionadas: ${lat}, ${lng}`;
-          coordsDisplay.style.color = '#555';
-      }
+      // Asegura que al seleccionar se restablezca el color (de la validación)
+      document.getElementById('coordenadas_seleccionadas').style.color = '#555';
   });
+
+
+  // LÓGICA DE VALIDACIÓN CENTRALIZADA
+  (function() {
+    const form = document.getElementById('editarSitioForm');
+    
+    // Lista de TODOS los campos obligatorios a validar.
+    const requiredFields = [
+        { name: 'nombre', errorId: 'error-nombre', minLength: 3, maxLength: 100, errorMsg: '⚠️ El nombre debe tener entre 3 y 100 caracteres.' },
+        { name: 'descripcion', errorId: 'error-descripcion', minLength: 5, maxLength: 255, errorMsg: '⚠️ La descripción debe tener entre 5 y 255 caracteres.' },
+        { name: 'descripcion_completa', errorId: 'error-descripcion_completa', minLength: 10, maxLength: 5000, errorMsg: '⚠️ La descripción completa debe tener entre 10 y 5000 caracteres.' },
+        { name: 'provincia', errorId: 'error-provincia', errorMsg: '⚠️ Por favor, seleccione la provincia.' },
+        { name: 'ciudad', errorId: 'error-ciudad', errorMsg: '⚠️ Por favor, seleccione la ciudad.' },
+        { name: 'estado_conservacion', errorId: 'error-estado_conservacion', errorMsg: '⚠️ Por favor, seleccione el estado de conservación.' },
+        { name: 'fecha_inauguracion', errorId: 'error-fecha_inauguracion', errorMsg: '⚠️ Por favor, ingrese la fecha de inauguración.' },
+        { name: 'categoria', errorId: 'error-categoria', errorMsg: '⚠️ Por favor, seleccione la categoría.' },
+        { name: 'fecha_registro', errorId: 'error-fecha_registro', errorMsg: '⚠️ Por favor, ingrese la fecha de registro.' },
+    ];
+    
+    // Función de validación principal
+    function validateForm(event) {
+        let formIsValid = true;
+        let firstInvalidField = null;
+        
+        // 1. Ocultar todos los mensajes de error al inicio
+        document.querySelectorAll('.error-message').forEach(el => el.style.display = 'none');
+
+        // 2. Validar campos de texto y select
+        requiredFields.forEach(field => {
+            const input = form.elements[field.name];
+            const errorElement = document.getElementById(field.errorId);
+            const value = input ? input.value.trim() : "";
+            
+            let isInvalid = false;
+            
+            // a) Verificar si está vacío
+            if (value === "") {
+                isInvalid = true;
+            } 
+            // b) Verificar longitud mínima
+            else if (field.minLength && value.length < field.minLength) {
+                isInvalid = true;
+            }
+            // c) Verificar longitud máxima
+            else if (field.maxLength && value.length > field.maxLength) {
+                isInvalid = true;
+            }
+            
+            if (isInvalid) {
+                formIsValid = false;
+                if (errorElement) {
+                    errorElement.style.display = 'block';
+                    if (!firstInvalidField) {
+                        firstInvalidField = input; // Guardamos el primer campo inválido
+                    }
+                }
+            }
+        });
+        
+        // 3. Validar coordenadas
+        const latInput = document.getElementById('latitud');
+        const lngInput = document.getElementById('longitud');
+        const coordsDisplay = document.getElementById('coordenadas_seleccionadas');
+        
+        if (latInput.value.trim() === "" || lngInput.value.trim() === "") {
+            formIsValid = false;
+            
+            const errorMsg = "⚠️ La ubicación es obligatoria. Por favor, haga clic en el mapa.";
+            
+            if (coordsDisplay) {
+                coordsDisplay.style.color = 'red';
+                coordsDisplay.textContent = errorMsg;
+            }
+        }
+        
+        // 4. Detener el envío y enfocar el primer campo con error
+        if (!formIsValid) {
+            event.preventDefault(); 
+            if (firstInvalidField) {
+                firstInvalidField.focus(); 
+            }
+        }
+    }
+    
+    // Asignar el listener al formulario
+    form.addEventListener('submit', validateForm);
+    
+    // Restaurar mensajes (ocultar el error al empezar a escribir/seleccionar)
+    requiredFields.forEach(field => {
+        const input = form.elements[field.name];
+        const errorElement = document.getElementById(field.errorId);
+        
+        if (input && errorElement) {
+            const eventType = (input.tagName === 'SELECT' || input.type === 'date') ? 'change' : 'input';
+
+            input.addEventListener(eventType, function() {
+                if (field.minLength) {
+                    const currentLength = this.value.trim().length;
+                    // Si cumple el mínimo y no excede el máximo, se oculta el error
+                    if (currentLength >= field.minLength && currentLength <= field.maxLength) {
+                        errorElement.style.display = 'none'; 
+                    }
+                } else {
+                    // Para selects/dates, ocultar si tiene cualquier valor
+                    if (this.value.trim() !== "") {
+                        errorElement.style.display = 'none';
+                    }
+                }
+            });
+        }
+    });
+
+  })();
 </script>
 
 <script>
-  // Filtrar ciudades por provincia (edición)
+  // Filtrado de ciudades por provincia (EDICIÓN) - Modificado para ocultar errores
   (function() {
     var provSel = document.getElementById('provinciaSelect');
     var ciudadSel = document.getElementById('ciudadSelect');
@@ -241,6 +370,12 @@
     function actualizarCiudades() {
       var provId = provSel.value;
       var selectedCiudad = ciudadSel.value; // recordar selección actual
+
+      // Ocultar error de provincia al seleccionar
+      var errorProv = document.getElementById('error-provincia');
+      if (errorProv && provId) {
+          errorProv.style.display = 'none';
+      }
 
       // Resetear opciones dejando placeholder
       ciudadSel.innerHTML = '';
@@ -260,7 +395,6 @@
       // Restaurar selección si sigue siendo válida
       if (selectedCiudad) {
         ciudadSel.value = selectedCiudad;
-        // Si no existe en la nueva lista, queda placeholder
         if (ciudadSel.value !== selectedCiudad) {
           ciudadSel.value = '';
         }
@@ -272,6 +406,14 @@
 
     // Refiltrar al cambiar la provincia
     provSel.addEventListener('change', actualizarCiudades);
+    
+    // Agregar listener para ocultar error de ciudad al seleccionar
+    ciudadSel.addEventListener('change', function() {
+        var errorCiudad = document.getElementById('error-ciudad');
+        if (errorCiudad && this.value) {
+            errorCiudad.style.display = 'none';
+        }
+    });
   })();
 </script>
 

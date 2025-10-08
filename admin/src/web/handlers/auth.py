@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import session, redirect, url_for, flash
+from flask import session, redirect, url_for, flash, abort
 from src.core import auth
 
 def is_autenticated(session):
@@ -20,3 +20,14 @@ def check_permission(permission):
     permissions = auth.permissions(user)
     
     return user is not None and permission in permissions
+
+
+def check(permission):
+    def decorator(f):
+        @wraps(f)
+        def decorated_funtion(*args, **kwargs):
+            if not check_permission(permission):
+                return abort(403)
+            return f(*args, **kwargs)
+        return decorated_funtion
+    return decorator

@@ -405,7 +405,7 @@ def run():
     print("Creating roles...")
     rol_admin = board.create_rol(nombre="Admin")
     rol_editor = board.create_rol(nombre="Editor")
-    rol_user = board.create_rol(nombre="Usuario")
+    #rol_user = board.create_rol(nombre="Usuario")
     print("Created roles! 👍🏻")
 
     print('Creando permisos..')
@@ -426,6 +426,9 @@ def run():
         "tag_update",
         "tag_destroy",
         "record_show",
+        "profile_show",
+        "profile_update",
+        "change_password",
     ],
     'admin': [
         "user_index",
@@ -453,6 +456,9 @@ def run():
         "tag_update",
         "tag_destroy",
         "record_show",
+        "profile_show",
+        "profile_update",
+        "change_password",
     ]
 }
     auth.crearPermisos(PERMISSIONS)
@@ -466,7 +472,7 @@ def run():
         password="secreto",
         email="a@gmail.com",
         activo=True,
-        esAdmin=True,
+        esAdmin=False,
         roles=[rol_admin, rol_editor]
     )
     user2 = auth.create_user(
@@ -475,7 +481,7 @@ def run():
         password="secreto",
         email="b@gmail.com",
         activo=True,
-        esAdmin=True,
+        esAdmin=False,
         roles=[rol_admin, rol_editor]
     )
     user3 = auth.create_user(
@@ -484,7 +490,7 @@ def run():
         password="secreto",
         email="c@gmail.com",
         activo=True,
-        esAdmin=True,
+        esAdmin=False,
         roles=[rol_admin, rol_editor]
     )
 

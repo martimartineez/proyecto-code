@@ -14,9 +14,21 @@
 {% endif %}
 {% endwith %}
 
+<div class="stylish-center-btn">
+    <button type="button" onclick="history.back()" class="button-22">Volver</button>
+
+    <a href="{{ url_for('home') }}"><button class="button-22">Página principal</button></a>
+</div>
+
 <body>
     <div class="form-box">
         <h2>Cambiar Contraseña</h2>
+
+        {% for rol in usuario.roles %}
+        {% if rol.nombre == "Admin" %}
+        {% set esAdmin = true %}
+        {% endif %}
+        {% endfor %}
 
         {% if not verified %}
         <!-- Paso 1: verificar contraseña actual -->
@@ -26,7 +38,7 @@
                 <label for="contraseña_actual">Contraseña actual</label>
                 <input type="password" id="contraseña_actual" name="contraseña_actual" required>
             </div>
-            <button type="submit">Verificar</button>
+            <button type="submit" class="button-22">Verificar</button>
         </form>
 
         {% else %}
@@ -42,7 +54,7 @@
                 <label for="repetir_contraseña">Repetir contraseña</label>
                 <input type="password" id="repetir_contraseña" name="repetir_contraseña" required>
             </div>
-            <button type="submit">Guardar cambios</button>
+            <button type="submit" class="button-22">Guardar cambios</button>
         </form>
         {% endif %}
     </div>

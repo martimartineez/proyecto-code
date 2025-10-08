@@ -1,0 +1,135 @@
+{% extends "layout.html" %}
+
+{% block title %}Manejo usuarios{% endblock %}
+
+{%block head %}
+{{ super() }}
+<title>Botón con formulario toggle</title>
+<style>
+    /* El formulario empieza oculto */
+    #miFormulario {
+        display: none;
+        margin-top: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        width: 250px;
+    }
+
+    label {
+        display: block;
+        margin: 5px 0 3px;
+    }
+
+    input {
+        width: 100%;
+        padding: 5px;
+        margin-bottom: 10px;
+    }
+
+    button {
+        padding: 8px 12px;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{%block header %}
+{% include 'header.html'%}
+{% endblock %}
+
+{% block content %}
+
+<div class="user-card">
+    <h2>👤 Mi perfil</h2>
+    <div class="user-info">
+        <p><strong>Nombre:</strong> {{ usuario.nombre }}</p>
+        <p><strong>Apellido:</strong> {{ usuario.apellido }}</p>
+        <p><strong>Email:</strong> {{ usuario.email }}</p>
+        <p><strong>Activo:</strong>
+            {% if usuario.activo%}
+            {{ "Si" }}
+            {% else %}
+            {{ "No" }}
+            {% endif %}<br>
+        </p>
+        <p>
+            <strong>Es Admin:</strong>
+            {% if usuario.esAdmin%}
+            {{ "Si" }}
+            {% else %}
+            {{ "No" }}
+            {% endif %}<br>
+        </p>
+        <p>
+            <strong>Rol:</strong>
+            {% for rol in roles %}
+            {{rol}}
+            |
+            {% endfor %}
+            <br>
+        </p>
+        <p><strong>Fecha de creación:</strong> {{ usuario.fechaCreacion }}<br></p>
+    </div>
+
+    <!-- <form class="modificar-usuario-form" action="{{ url_for('usuarios.cambiar_contraseña', usuario_id=usuario.id) }}"
+        method="get">
+        <label for="">Contraseña</label>
+        <button type="submit">Cambiar contraseña</button>
+    </form> -->
+
+    <div class="center-btn">
+        <a href="{{ url_for('usuarios.modificar_mi_perfil_get') }}" method="get">
+            <button class="button-18" role="button">Modificar</button></a>
+    </div>
+
+    <button class="button-22" role="button" type="button" onclick="history.back()">Volver</button>
+</div>
+
+<style>
+    .user-card {
+        max-width: 400px;
+        margin: 40px auto;
+        padding: 25px;
+        border-radius: 15px;
+        background: #f9fafc;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        text-align: left;
+        font-family: 'Segoe UI', sans-serif;
+        color: #333;
+    }
+
+    .user-card h2 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #2b6cb0;
+    }
+
+    .user-info p {
+        font-size: 16px;
+        margin: 8px 0;
+    }
+
+    .user-info strong {
+        color: #1a202c;
+    }
+
+    .back-btn {
+        display: block;
+        width: 100%;
+        margin-top: 25px;
+        padding: 10px;
+        background-color: #2b6cb0;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.2s ease-in-out;
+    }
+
+    .back-btn:hover {
+        background-color: #2c5282;
+    }
+</style>
+{% endblock %}

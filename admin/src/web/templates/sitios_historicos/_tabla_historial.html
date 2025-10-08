@@ -1,38 +1,4 @@
 {# Parcial reusable: tabla de historial de cambios #}
-<style>
-  /* Estilos locales SOLO para la tabla de historial */
-  .historial-wrap { max-width: 1600px; margin: 0 auto; padding: 0 16px; }
-  .historial-card { border:1px solid #e5e7eb; border-radius:8px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,0.04); overflow:auto; }
-  .historial-table { width:100%; border-collapse:collapse; min-width:640px; line-height:1.2; }
-  .historial-table thead th { background:#f8f9fb; color:#374151; font-weight:600; font-size:0.9rem; padding:6px 8px; text-align:left; border-bottom:1px solid #e5e7eb; }
-  .historial-table tbody td { padding:6px 8px; border-bottom:1px solid #f1f3f5; vertical-align:top; text-align:left; }
-  .historial-table tbody tr:nth-child(even) { background:#fcfdff; }
-  .historial-table tbody tr:hover { background:#f5faff; }
-  .historial-badge { display:inline-block; padding:1px 6px; border-radius:999px; font-size:0.7rem; font-weight:600; color:#fff; }
-  .badge-created { background:#16a34a; }
-  .badge-updated { background:#2563eb; }
-  .badge-deleted { background:#dc2626; }
-  .badge-state { background:#ca8a04; }
-  .badge-tags { background:#0891b2; }
-  .badge-images { background:#6b7280; }
-  .historial-cambios { margin:0; padding-left:16px; font-size:0.85rem; }
-  .historial-cambios li { margin:0 0 2px 0; }
-  .historial-fecha { white-space:nowrap; color:#111827; }
-  .historial-empty { text-align:center; color:#6b7280; padding:12px; }
-
-  /* Responsive tweaks */
-  @media (max-width: 768px) {
-    .historial-table { min-width: 560px; }
-    .historial-table thead th { font-size: 0.85rem; padding: 5px 6px; }
-    .historial-table tbody td { padding: 5px 6px; }
-    .historial-badge { font-size: 0.65rem; padding: 1px 5px; }
-  }
-  @media (max-width: 480px) {
-    .historial-wrap { padding: 0 10px; }
-    .historial-table { min-width: 480px; line-height: 1.15; }
-    .historial-cambios { font-size: 0.8rem; padding-left: 14px; }
-  }
-</style>
 <div class="historial-wrap">
   <div class="historial-card">
   <table class="historial-table">
@@ -85,3 +51,49 @@
   </table>
   </div>
 </div>
+
+{# Paginación del historial (server-side) #}
+{% set page = historial.page %}
+{% set pages = historial.pages %}
+<nav class="historial-wrap" aria-label="Paginación historial" style="margin-top:10px;">
+  <div style="display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;">
+    {% if page > 1 %}
+      <a href="{{ url_for(request.endpoint, sitio_id=request.view_args.get('sitio_id'), usuario_id=filtros.usuario_id, accion=filtros.accion, desde=filtros.desde, hasta=filtros.hasta, page=page-1) }}">&laquo; Anterior</a>
+    {% else %}
+      <span style="opacity:.4;">&laquo; Anterior</span>
+    {% endif %}
+    {# Numeración compacta con elipsis #}
+    {% set start = 1 if page - 2 < 1 else page - 2 %}
+    {% set end = pages if page + 2 > pages else page + 2 %}
+
+    {# Siempre mostrar la primera página si no está en la ventana #}
+    {% if start > 1 %}
+      <a href="{{ url_for(request.endpoint, sitio_id=request.view_args.get('sitio_id'), usuario_id=filtros.usuario_id, accion=filtros.accion, desde=filtros.desde, hasta=filtros.hasta, page=1) }}">1</a>
+    {% endif %}
+    {% if start > 2 %}
+      <span style="opacity:.6;">…</span>
+    {% endif %}
+
+    {# Ventana central #}
+    {% for p in range(start, end + 1) %}
+      {% if p == page %}
+        <strong>{{ p }}</strong>
+      {% else %}
+        <a href="{{ url_for(request.endpoint, sitio_id=request.view_args.get('sitio_id'), usuario_id=filtros.usuario_id, accion=filtros.accion, desde=filtros.desde, hasta=filtros.hasta, page=p) }}">{{ p }}</a>
+      {% endif %}
+    {% endfor %}
+
+    {# Siempre mostrar la última página si no está en la ventana #}
+    {% if end < pages - 1 %}
+      <span style="opacity:.6;">…</span>
+    {% endif %}
+    {% if end < pages %}
+      <a href="{{ url_for(request.endpoint, sitio_id=request.view_args.get('sitio_id'), usuario_id=filtros.usuario_id, accion=filtros.accion, desde=filtros.desde, hasta=filtros.hasta, page=pages) }}">{{ pages }}</a>
+    {% endif %}
+    {% if page < pages %}
+      <a href="{{ url_for(request.endpoint, sitio_id=request.view_args.get('sitio_id'), usuario_id=filtros.usuario_id, accion=filtros.accion, desde=filtros.desde, hasta=filtros.hasta, page=page+1) }}">Siguiente &raquo;</a>
+    {% else %}
+      <span style="opacity:.4;">Siguiente &raquo;</span>
+    {% endif %}
+  </div>
+</nav>

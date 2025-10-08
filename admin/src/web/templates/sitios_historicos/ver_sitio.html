@@ -4,15 +4,22 @@
 
 {% block content %}
 <h1>Sitio Histórico</h1>
-<a href="/">
-    <button type="button">Volver a inicio</button>
-</a>
-<a href="{{ next_url }}">
-  <button type="button">Volver atras</button>
-</a>
-<a href="{{ url_for('sitios_historicos.agregar_sitio', next=request.path) }}">
-  <button type="button">Agregar sitio</button>
-</a>
+<div>
+  <a href="{{ next_url }}">
+    <button type="button" class="button-22" role="button">Volver</button>
+  </a>
+  <a href="/">
+      <button type="button" class="button-22" role="button">Página principal</button>
+  </a>
+</div>
+
+<div>
+  <a href="{{ url_for('sitios_historicos.agregar_sitio_get', next=request.path) }}">
+    <button type="button" class="button-18" role="button">Agregar sitio</button>
+  </a>
+</div>  
+<br> 
+
 {%with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}
 {% for category, message in messages %}
@@ -36,7 +43,6 @@
             <th>Categoría</th>
             <th>Fecha Registro</th>
             <th>Visible</th>
-            <th>Acciones</th>
         </tr>
     </thead>
     <tbody>
@@ -53,19 +59,20 @@
             <td>{{ sitio.categoria.nombre if sitio.categoria else 'N/A' }}</td>
             <td>{{ sitio.fechaRegistro.strftime('%Y-%m-%d') if sitio.fechaRegistro else 'N/A' }}</td>
             <td>{{ 'Sí' if sitio.visible else 'No' }}</td>
-             <td>
-                <a href="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id, next=request.path) }}">
-                     <button type="button">Editar</button>
-                </a>
-                {% if permiso %}
-                  <form action="{{ url_for('sitios_historicos.eliminar_sitio', sitio_id=sitio.id)}}" method="post" style="display:inline;">
-                      <button type="submit" onclick="return confirm('¿Estás seguro de que quieres eliminar el sitio historico: {{ sitio.nombre }}?');">Eliminar</button>
-                  </form>
-                {% endif %}
-            </td>
         </tr>
 </table>
 
+<div>
+  <a href="{{ url_for('sitios_historicos.editar_sitio_get', sitio_id=sitio.id, next=request.path) }}">
+    <button type="button" class="button-18" role="button">Editar</button>
+  </a>
+{% if permiso %}
+  <form action="{{ url_for('sitios_historicos.eliminar_sitio', sitio_id=sitio.id)}}" method="post" style="display:inline-block;">
+    <button type="submit" onclick="return confirm('¿Estás seguro de que quieres eliminar el sitio historico: {{ sitio.nombre }}?');"
+    class="button-18" role="button">Eliminar</button>
+  </form>
+{% endif %}
+</div>
 <style>
   .tag-badge {
     display: inline-block;
@@ -151,50 +158,47 @@
 <h2>Historial de cambios</h2>
 
 <form method="get" action="{{ url_for('sitios_historicos.ver_sitio', sitio_id=sitio.id) }}" style="margin-bottom:10px;">
-  <label>Usuario:</label>
-  <select name="usuario_id" style="min-width:240px;">
-    <option value="">Todos</option>
-    {% if usuarios_historial %}
-      {% for u in usuarios_historial %}
-        <option value="{{ u.id }}" {% if filtros.usuario_id == u.id %}selected{% endif %}>{{ u.label }}</option>
+  <div class="form-group" >
+    <label>Usuario:</label>
+    <select name="usuario_id" style="min-width:240px;">
+      <option value="">Todos</option>
+      {% if usuarios_historial %}
+        {% for u in usuarios_historial %}
+          <option value="{{ u.id }}" {% if filtros.usuario_id == u.id %}selected{% endif %}>{{ u.label }}</option>
+        {% endfor %}
+      {% endif %}
+    </select>
+  </div>
+
+  <div class="form-group" >
+    <label>Acción:</label>
+    <select name="accion">
+      <option value="">Todas</option>
+      {% for a in ['CREATED', 'UPDATED', 'DELETED', 'STATE_CHANGED', 'TAGS_CHANGED', 'IMAGES_CHANGED'] %}
+      {% set a_label =
+        'Creado' if a=='CREATED' else
+        'Actualizado' if a=='UPDATED' else
+        'Eliminado' if a=='DELETED' else
+        'Cambio de estado' if a=='STATE_CHANGED' else
+        'Cambio de etiquetas' if a=='TAGS_CHANGED' else
+        'Imágenes actualizadas' if a=='IMAGES_CHANGED' else a %}
+      <option value="{{ a }}" {% if filtros.accion == a %}selected{% endif %}>{{ a_label }}</option>
       {% endfor %}
-    {% endif %}
-  </select>
+    </select>
+  </div>
 
-  <label>Acción:</label>
-  <select name="accion">
-    <option value="">Todas</option>
-    {% for a in ['CREATED', 'UPDATED', 'DELETED', 'STATE_CHANGED', 'TAGS_CHANGED', 'IMAGES_CHANGED'] %}
-    {% set a_label =
-      'Creado' if a=='CREATED' else
-      'Actualizado' if a=='UPDATED' else
-      'Eliminado' if a=='DELETED' else
-      'Cambio de estado' if a=='STATE_CHANGED' else
-      'Cambio de etiquetas' if a=='TAGS_CHANGED' else
-      'Imágenes actualizadas' if a=='IMAGES_CHANGED' else a %}
-    <option value="{{ a }}" {% if filtros.accion == a %}selected{% endif %}>{{ a_label }}</option>
-    {% endfor %}
-  </select>
+  <div class="form-group" >
+    <label>Desde:</label>
+    <input type="date" name="desde" value="{{ filtros.desde or '' }}">
+  </div>
 
-  <label>Desde:</label>
-  <input type="date" name="desde" value="{{ filtros.desde or '' }}">
-
-  <label>Hasta:</label>
-  <input type="date" name="hasta" value="{{ filtros.hasta or '' }}">
-
-  <button type="submit">Filtrar</button>
+  <div class="form-group" >
+    <label>Hasta:</label>
+    <input type="date" name="hasta" value="{{ filtros.hasta or '' }}">
+  </div>
+  
+  <button type="submit" class="button-22" role="button">Filtrar</button>
 </form>
 
 {% include 'sitios_historicos/_tabla_historial.html' %}
-
-{% set page = historial.page %}
-{% set pages = historial.pages %}
-<div style="margin-top:10px;">
-  {% if page > 1 %}
-  {% endif %}
-  <span style="margin:0 8px;">Página {{ page }} de {{ pages }}</span>
-  {% if page < pages %}
-    <a href="{{ url_for('sitios_historicos.ver_sitio', sitio_id=sitio.id, usuario_id=filtros.usuario_id, accion=filtros.accion, desde=filtros.desde, hasta=filtros.hasta, page=page+1) }}">Siguiente &raquo;</a>
-  {% endif %}
-</div>
 {% endblock %}
