@@ -426,6 +426,9 @@ def run():
         "tag_update",
         "tag_destroy",
         "record_show",
+        "profile_show",
+        "profile_update",
+        "change_password",
     ],
     'admin': [
         "user_index",
@@ -453,6 +456,9 @@ def run():
         "tag_update",
         "tag_destroy",
         "record_show",
+        "profile_show",
+        "profile_update",
+        "change_password",
     ]
 }
     auth.crearPermisos(PERMISSIONS)

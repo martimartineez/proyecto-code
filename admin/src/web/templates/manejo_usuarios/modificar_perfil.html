@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+
+{% block title %}Manejo usuarios{% endblock %}
+
+{% block content %}
+<h1>Usuario</h1>
+
+<div>
+    <button type="button" onclick="history.back()" class="button-22" role="button">Volver</button>
+    <a href="{{ url_for('home') }}">
+        <button class="button-22" role="button">Página principal</button>
+    </a>
+</div>
+
+<!-- Formulario para modificar usuario -->
+<form class="modificar-usuario-form" action="{{ url_for('usuarios.modificar_post', usuario_id=usuario.id) }}"
+    method="post">
+    <div class="form-group">
+        <div style="flex: 1;">
+            <label for="nombre">Nombre:</label>
+            <input type="text" id="nombre" name="nombre" value="{{ usuario.nombre }}" required
+                pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+">
+        </div>
+        <div style="flex: 1;">
+            <label for="apellido">Apellido:</label>
+            <input type="text" id="apellido" name="apellido" value="{{ usuario.apellido }}" required
+                pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+">
+        </div>
+    </div>
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" value="{{ usuario.email }}" required>
+
+    {% if "Admin" in rolesUsuario %}
+    <label>Rol:</label>
+    <div style="display: flex; gap: 20px; margin-bottom: 10px;">
+        {% for rol in roles %}
+        {% if rol.nombre != "SystemAdmin" %}
+        <div>
+            <input type="checkbox" id="rol_{{ rol.id }}" name="rol" value="{{ rol.id }}" {% if rol.nombre in
+                rolesUsuario %}checked{% endif %}>
+            <label for="rol_{{ rol.id }}">{{ rol.nombre }}</label>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <button type="submit" style="margin-top: 15px;">Guardar cambios</button>
+</form>
+
+<form class="modificar-usuario-form" action="{{ url_for('usuarios.cambiar_contraseña', usuario_id=usuario.id) }}"
+    method="get">
+    <label for="">Contraseña</label>
+    <button type="submit">Cambiar contraseña</button>
+</form>
+
+</div>
+{% endblock %}

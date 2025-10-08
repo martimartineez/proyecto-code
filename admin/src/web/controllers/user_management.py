@@ -146,42 +146,6 @@ def agregar_usuario_post():
 
     return redirect(url_for("usuarios.index"))
 
-
-@bp.post("/modificar/<int:usuario_id>")
-@login_required
-@check("user_update")
-def modificar_post(usuario_id):
-    
-    user = auth.get_user_by_id(usuario_id)
-
-    nombre = request.form["nombre"]
-    apellido = request.form["apellido"]
-    email = request.form["email"]
-
-    if not nombre or not apellido or not email:
-        flash('Todos los campos son obligatorios','error')
-        return redirect(url_for("usuarios.agregar_usuario"))
-    
-    user.nombre = nombre
-    user.apellido = apellido
-    user.email = email
-    
-    roles_ids = request.form.getlist("rol")
-    user.roles = [board.get_rol_by_id(int(rol_id)) for rol_id in roles_ids]
-    roles_ids = list(map(int, roles_ids))    
-    if board.get_id_rol_admin() in(roles_ids):
-        admin = True
-    else:
-        admin = False
-    user.esAdmin = admin
-
-    # Guardar los cambios en la base de datos
-    session['username'] = user.nombre
-    auth.db.session.commit()
-
-    return redirect(url_for("usuarios.index"))
-
-
 @bp.get("/modificar/<int:usuario_id>")
 @login_required
 @check("user_update")
@@ -191,6 +155,59 @@ def modificar_get(usuario_id):
     rolesUsuario = auth.listar_roles_usuario(user)
     roles = board.list_roles()
     return render_template("manejo_usuarios/modificar_usuario.html", usuario=user, roles=roles, rolesUsuario=rolesUsuario) 
+
+
+@bp.post("/modificar/<int:usuario_id>")
+@login_required
+@check("user_update")
+def modificar_post(usuario_id):
+    
+    user = auth.get_user_by_id(usuario_id)
+    return funcion_modificar(user,request.form)
+
+
+@bp.get("/modificar_mi_perfil")
+@login_required
+@check("profile_update")
+def modificar_mi_perfil_get():
+
+    user = auth.get_user_by_id(session['user_id'])
+    rolesUsuario = auth.listar_roles_usuario(user)
+    roles = board.list_roles()
+    return render_template("manejo_usuarios/modificar_perfil.html", usuario=user, roles=roles, rolesUsuario=rolesUsuario) 
+
+
+@bp.post("/modificar_mi_perfil")
+@login_required
+@check("profile_update")
+def modificar_mi_perfil_post():
+    
+    user = auth.get_user_by_id(session['user_id'])
+    return funcion_modificar(user,request.form)
+
+
+
+def funcion_modificar(user,form):
+
+    nombre = form["nombre"]
+    apellido = form["apellido"]
+    email = form["email"]
+
+    if not nombre or not apellido or not email:
+        flash('Todos los campos son obligatorios','error')
+        return redirect(url_for("usuarios.index"))
+    
+    user.nombre = nombre
+    user.apellido = apellido
+    user.email = email
+
+    roles_ids = form.getlist("rol")
+    user.roles = [board.get_rol_by_id(int(rol_id)) for rol_id in roles_ids]
+
+    session['username'] = user.nombre
+    auth.db.session.commit()
+
+    return redirect(url_for("usuarios.index"))
 
 
 @bp.get("/detalles/<int:usuario_id>")
@@ -204,7 +221,7 @@ def ver_detalles(usuario_id):
 
 @bp.get("/miperfil")
 @login_required
-@check("user_show")
+@check("profile_show")
 def ver_perfil():
 
     usuario = auth.get_user_by_id(session['user_id'])
@@ -218,7 +235,7 @@ def ver_perfil():
 
 @bp.route("/cambiar_contraseña/<int:usuario_id>", methods=["GET", "POST"])
 @login_required
-@check("user_update")
+@check("change_password")
 def cambiar_contraseña(usuario_id):
     
     user = auth.get_user_by_id(usuario_id)
@@ -254,7 +271,7 @@ def cambiar_contraseña(usuario_id):
         auth.update_password(usuario_id, nueva)
 
         flash("Contraseña cambiada correctamente.", "success")
-        return redirect(url_for("usuarios.index"))
+        return redirect(url_for("home"))
 
     
     return render_template("manejo_usuarios/cambiar_contraseña.html", verified=False, usuario=user)

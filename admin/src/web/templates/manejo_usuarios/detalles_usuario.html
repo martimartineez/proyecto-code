@@ -6,7 +6,6 @@
 {{ super() }}
 <title>Botón con formulario toggle</title>
 <style>
-    /* El formulario empieza oculto */
     #miFormulario {
         display: none;
         margin-top: 20px;
@@ -43,9 +42,6 @@
 <div class="stylish-center-btn">
     <button type="button" onclick="history.back()" class="button-22" role="button">Volver</button>
 
-    <a href="{{ url_for('usuarios.modificar_get', usuario_id=usuario.id) }}" method="get">
-        <button class="button-22">Modificar</button></a>
-
     <a href="{{ url_for('home') }}"><button class="button-22" role="button">Página principal</button></a>
 </div>
 
@@ -77,7 +73,7 @@
             <strong>Fecha de creación:</strong> {{ usuario.fechaCreacion }}<br>
         </td>
     </table>
-    <a href="{{ url_for('usuarios.modificar', usuario_id=usuario.id) }}" method="get">
+    <a href="{{ url_for('usuarios.modificar_get', usuario_id=usuario.id) }}" method="get">
         <button class="button-18" role="button">Editar</button>
     </a>
 
