@@ -22,13 +22,14 @@
 
 <h2>Editar Sitio Histórico</h2>
 
-<a href="/">
-    <button type="button">Volver a inicio</button>
-</a>
-<a href="{{ next_url }}">
-  <button type="button">Volver atras</button>
-</a>
-
+<div>
+  <a href="{{ next_url }}">
+    <button type="button" class="button-22" role="button">Volver</button>
+  </a>
+  <a href="/">
+      <button type="button" class="button-22" role="button">Página principal</button>
+  </a>
+</div>
 
 {%with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}
@@ -39,85 +40,110 @@
 {% endwith %}
 
 <form method="post" action="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id) }}" id="editarSitioForm">
-    <label>Nombre :</label>
-    <div class="error-message" id="error-nombre">⚠️ El nombre debe tener entre 3 y 100 caracteres.</div>
-    <input type="text" name="nombre" id="nombreInput" value="{{ sitio.nombre }}" maxlength="100"><br>
+    <div class="form-group" >
+      <label>Nombre :</label>
+      <div class="error-message" id="error-nombre">⚠️ El nombre debe tener entre 3 y 100 caracteres.</div>
+      <input class="form-control" type="text" name="nombre" id="nombreInput" value="{{ sitio.nombre }}" maxlength="100" c>
+    </div>
 
-    <label>Descripción breve:</label>
-    <div class="error-message" id="error-descripcion">⚠️ La descripción debe tener entre 5 y 255 caracteres.</div>
-    <input type="text" name="descripcion" id="descripcionInput" value="{{ sitio.descBreve }}" maxlength="255"><br>
+    <div class="form-group" >
+      <label>Descripción breve:</label>
+      <div class="error-message" id="error-descripcion">⚠️ La descripción debe tener entre 5 y 255 caracteres.</div>
+      <input class="form-control" type="text" name="descripcion" id="descripcionInput" value="{{ sitio.descBreve }}" maxlength="255">
+    </div>
 
-    <label>Descripción completa :</label>
-    <div class="error-message" id="error-descripcion_completa">⚠️ La descripción completa debe tener entre 10 y 5000 caracteres.</div>
-    <input type="text" name="descripcion_completa" id="descripcionCompletaInput" value="{{ sitio.descCompleta }}" maxlength="5000"><br>
-
-    <label>Provincia:</label>
-    <div class="error-message" id="error-provincia">⚠️ Por favor, seleccione la provincia.</div>
-    <select id="provinciaSelect" name="provincia">
-        <option value="">Seleccione provincia</option>
-        {% set selectedProv = sitio.ciudad.provincia.id if sitio.ciudad and sitio.ciudad.provincia else '' %}
-        {% for p in provincias %}
-        <option value="{{ p.id }}" {% if selectedProv == p.id %}selected{% endif %}>{{ p.nombre }}</option>
-        {% endfor %}
-    </select><br>
-
-    <label>Ciudad:</label>
-    <div class="error-message" id="error-ciudad">⚠️ Por favor, seleccione la ciudad.</div>
-    <select id="ciudadSelect" name="ciudad">
-        <option value="">Seleccione ciudad</option>
-        {% for c in ciudades %}
-        <option value="{{ c.id }}" data-provincia="{{ c.idProvincia }}" {% if sitio.idCiudad == c.id %}selected{% endif %}>{{ c.nombre }}</option>
-        {% endfor %}
-    </select><br>
-
-    <label>Estado Conservación:</label>
-    <div class="error-message" id="error-estado_conservacion">⚠️ Por favor, seleccione el estado de conservación.</div>
-    <select name="estado_conservacion" id="estadoConservacionSelect">
-        <option value="">Seleccione estado</option>
-        {% set estados = ['Bueno', 'Regular', 'Malo'] %}
-        {% for estado in estados %}
-        <option value="{{ estado }}" {% if sitio.estadoConservacion == estado %}selected{% endif %}>{{ estado }}</option>
-        {% endfor %}
-    </select><br>
-
-    <label>Fecha Inauguracion:</label>
-    <div class="error-message" id="error-fecha_inauguracion">⚠️ Por favor, ingrese la fecha de inauguración.</div>
-    <input type="date" name="fecha_inauguracion" id="fechaInauguracionInput"
-      value="{{ sitio.anioInauguracion.strftime('%Y-%m-%d') if sitio.anioInauguracion else '' }}"
-        max="{{ today }}"><br>
-
-    <label>Categoría:</label>
-    <div class="error-message" id="error-categoria">⚠️ Por favor, seleccione la categoría.</div>
-    <select name="categoria" id="categoriaSelect">
-        <option value="">Seleccione categoría</option>
-        {% for c in categorias %}
-        <option value="{{ c.id }}" {% if sitio.idCategoria == c.id %}selected{% endif %}>{{ c.nombre }}</option>
-        {% endfor %}
-    </select><br>
-
-    <label>Fecha Registro:</label>
-    <div class="error-message" id="error-fecha_registro">⚠️ Por favor, ingrese la fecha de registro.</div>
-    <input type="date" name="fecha_registro" id="fechaRegistroInput"
-      value="{{ sitio.fechaRegistro.strftime('%Y-%m-%d') if sitio.fechaRegistro else '' }}"
-        max="{{ today }}"><br>
-    
-
-    <label>Visible a los usuarios:</label>
-    <input type="hidden" name="visible" value="False">
-    <input type="checkbox" name="visible" value="True" {% if sitio.visible %}checked{% endif %}><br>
-
-    <label>Tags:</label><br>
-    <div style="border: 1px solid #ccc; padding: 10px; max-height: 150px; overflow-y: auto;">
-        {% set sitio_tag_ids = sitio.tags|map(attribute='id')|list %}
-        {% for tag in tags %}
-            <input type="checkbox" id="tag_{{ tag.id }}" name="tags" value="{{ tag.id }}" {% if tag.id in sitio_tag_ids %}checked{% endif %}>
-            <label for="tag_{{ tag.id }}">{{ tag.nombre }}</label><br>
-        {% endfor %}
-        {% if not tags %}
-          <p>No hay tags disponibles.</p>
-        {% endif %}
+    <div class="form-group" >
+      <label>Descripción completa :</label>
+      <div class="error-message" id="error-descripcion_completa">⚠️ La descripción completa debe tener entre 10 y 5000 caracteres.</div>
+      <textarea  class="form-control" type="text" name="descripcion_completa" id="descripcionCompletaInput" maxlength="5000">{{ sitio.descCompleta }}</textarea>
     </div>
     <br>
+
+    <div class="form-group" >
+      <label>Provincia:</label>
+      <div class="error-message" id="error-provincia">⚠️ Por favor, seleccione la provincia.</div>
+      <select id="provinciaSelect" name="provincia" class="form-control" >
+          <option value="">Seleccione provincia</option>
+          {% set selectedProv = sitio.ciudad.provincia.id if sitio.ciudad and sitio.ciudad.provincia else '' %}
+          {% for p in provincias %}
+          <option value="{{ p.id }}" {% if selectedProv == p.id %}selected{% endif %}>{{ p.nombre }}</option>
+          {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group" >
+      <label>Ciudad:</label>
+      <div class="error-message" id="error-ciudad">⚠️ Por favor, seleccione la ciudad.</div>
+      <select id="ciudadSelect" name="ciudad" class="form-control" >
+          <option value="">Seleccione ciudad</option>
+          {% for c in ciudades %}
+          <option value="{{ c.id }}" data-provincia="{{ c.idProvincia }}" {% if sitio.idCiudad == c.id %}selected{% endif %}>{{ c.nombre }}</option>
+          {% endfor %}
+      </select>
+    </div>
+    <br>
+
+    <div class="form-group" >
+      <label>Estado Conservación:</label>
+      <div class="error-message" id="error-estado_conservacion">⚠️ Por favor, seleccione el estado de conservación.</div>
+      <select name="estado_conservacion" id="estadoConservacionSelect" class="form-control" >
+          <option value="">Seleccione estado</option>
+          {% set estados = ['Bueno', 'Regular', 'Malo'] %}
+          {% for estado in estados %}
+          <option value="{{ estado }}" {% if sitio.estadoConservacion == estado %}selected{% endif %}>{{ estado }}</option>
+          {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group" >
+      <label>Categoría:</label>
+      <div class="error-message" id="error-categoria">⚠️ Por favor, seleccione la categoría.</div>
+      <select name="categoria" id="categoriaSelect" class="form-control" >
+          <option value="">Seleccione categoría</option>
+          {% for c in categorias %}
+          <option value="{{ c.id }}" {% if sitio.idCategoria == c.id %}selected{% endif %}>{{ c.nombre }}</option>
+          {% endfor %}
+      </select>
+    </div>
+    <br>
+
+    <div class="form-group" >
+      <label>Fecha Inauguracion:</label>
+      <div class="error-message" id="error-fecha_inauguracion">⚠️ Por favor, ingrese la fecha de inauguración.</div>
+      <input type="date" name="fecha_inauguracion" id="fechaInauguracionInput" class="form-control" 
+        value="{{ sitio.anioInauguracion.strftime('%Y-%m-%d') if sitio.anioInauguracion else '' }}"
+          max="{{ today }}">
+    </div>
+
+
+    <div class="form-group" >
+      <label>Fecha Registro:</label>
+      <div class="error-message" id="error-fecha_registro">⚠️ Por favor, ingrese la fecha de registro.</div>
+      <input type="date" name="fecha_registro" id="fechaRegistroInput" class="form-control" 
+        value="{{ sitio.fechaRegistro.strftime('%Y-%m-%d') if sitio.fechaRegistro else '' }}"
+          max="{{ today }}"><br>
+    </div>
+
+    <div class="form-group" >
+      <label>Visible a los usuarios:</label>
+      <input type="hidden" name="visible" value="False">
+      <input type="checkbox" name="visible" value="True" {% if sitio.visible %}checked{% endif %}><br>
+    </div>
+
+    <div class="form-group" >
+      <label>Tags:</label><br>
+      <div style="border: 1px solid #ccc; padding: 10px; max-height: 150px; overflow-y: auto;">
+          {% set sitio_tag_ids = sitio.tags|map(attribute='id')|list %}
+          {% for tag in tags %}
+              <input type="checkbox" id="tag_{{ tag.id }}" name="tags" value="{{ tag.id }}" {% if tag.id in sitio_tag_ids %}checked{% endif %}>
+              <label for="tag_{{ tag.id }}">{{ tag.nombre }}</label><br>
+          {% endfor %}
+          {% if not tags %}
+            <p>No hay tags disponibles.</p>
+          {% endif %}
+      </div>
+      <br>
+    </div>
 
     <input type="hidden" name="latitud" id="latitud" value="{{ sitio.latitud }}">
     <input type="hidden" name="longitud" id="longitud" value="{{ sitio.longitud }}">
@@ -135,45 +161,53 @@
         <div id="map"></div>
     </div>
 
-    <button type="submit">Guardar Cambios</button>
+    <button type="submit" class="button-22" role="button">Guardar Cambios</button>
 </form>
 
 <hr>
 <h2>Historial de cambios</h2>
 
 <form method="get" action="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id) }}" style="margin-bottom:10px;">
-  <label>Usuario:</label>
-  <select name="usuario_id" style="min-width:240px;">
-    <option value="">Todos</option>
-    {% if usuarios_historial %}
-      {% for u in usuarios_historial %}
-        <option value="{{ u.id }}" {% if filtros.usuario_id == u.id %}selected{% endif %}>{{ u.label }}</option>
+  <div class="form-group" >
+    <label>Usuario:</label>
+    <select name="usuario_id" style="min-width:240px;" class="form-control">
+      <option value="">Todos</option>
+      {% if usuarios_historial %}
+        {% for u in usuarios_historial %}
+          <option value="{{ u.id }}" {% if filtros.usuario_id == u.id %}selected{% endif %}>{{ u.label }}</option>
+        {% endfor %}
+      {% endif %}
+    </select>
+  </div>
+
+  <div class="form-group" >
+    <label>Acción:</label>
+    <select name="accion" class="form-control">
+      <option value="">Todas</option>
+      {% for a in ['CREATED', 'UPDATED', 'DELETED', 'STATE_CHANGED', 'TAGS_CHANGED', 'IMAGES_CHANGED'] %}
+      {% set a_label =
+        'Creado' if a=='CREATED' else
+        'Actualizado' if a=='UPDATED' else
+        'Eliminado' if a=='DELETED' else
+        'Cambio de estado' if a=='STATE_CHANGED' else
+        'Cambio de etiquetas' if a=='TAGS_CHANGED' else
+        'Imágenes actualizadas' if a=='IMAGES_CHANGED' else a %}
+      <option value="{{ a }}" {% if filtros.accion == a %}selected{% endif %}>{{ a_label }}</option>
       {% endfor %}
-    {% endif %}
-  </select>
+    </select>
+  </div>
 
-  <label>Acción:</label>
-  <select name="accion">
-    <option value="">Todas</option>
-    {% for a in ['CREATED', 'UPDATED', 'DELETED', 'STATE_CHANGED', 'TAGS_CHANGED', 'IMAGES_CHANGED'] %}
-    {% set a_label =
-      'Creado' if a=='CREATED' else
-      'Actualizado' if a=='UPDATED' else
-      'Eliminado' if a=='DELETED' else
-      'Cambio de estado' if a=='STATE_CHANGED' else
-      'Cambio de etiquetas' if a=='TAGS_CHANGED' else
-      'Imágenes actualizadas' if a=='IMAGES_CHANGED' else a %}
-    <option value="{{ a }}" {% if filtros.accion == a %}selected{% endif %}>{{ a_label }}</option>
-    {% endfor %}
-  </select>
+  <div class="form-group" >
+    <label>Desde:</label>
+    <input class="form-control" type="date" name="desde" value="{{ filtros.desde or '' }}">
+  </div>
 
-  <label>Desde:</label>
-  <input type="date" name="desde" value="{{ filtros.desde or '' }}">
-
-  <label>Hasta:</label>
-  <input type="date" name="hasta" value="{{ filtros.hasta or '' }}">
-
-  <button type="submit">Filtrar</button>
+  <div class="form-group" >
+    <label>Hasta:</label>
+    <input class="form-control" type="date" name="hasta" value="{{ filtros.hasta or '' }}">
+    
+  </div>
+  <button type="submit" class="button-18" role="button">Filtrar</button>
 </form>
 
 {% include 'sitios_historicos/_tabla_historial.html' %}

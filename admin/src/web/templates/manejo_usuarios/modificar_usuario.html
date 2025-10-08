@@ -5,17 +5,16 @@
 {% block content %}
 <h1>Usuario</h1>
 
-<div class="stylish-center-btn">
-    <button type="button" onclick="history.back()" class="stylish-btn">Volver</button>
-
+<div>
+    <button type="button" onclick="history.back()" class="button-22" role="button">Volver</button>
     <a href="{{ url_for('home') }}">
-        <button class="stylish-btn">Volver al inicio</button>
+        <button class="button-22" role="button">Página principal</button>
     </a>
 </div>
 
 <!-- Formulario para modificar usuario -->
 <form class="modificar-usuario-form" action="{{ url_for('usuarios.modificar', usuario_id=usuario.id) }}" method="post">
-    <div class="modificar-usuario-flex">
+    <div class="form-group">
         <div style="flex: 1;">
             <label for="nombre">Nombre:</label>
             <input type="text" id="nombre" name="nombre" value="{{ usuario.nombre }}" required

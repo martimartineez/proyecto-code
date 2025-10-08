@@ -13,12 +13,12 @@
                 <li class="nav-item">
                     <a class="nav-link text-white" href="/sitioshistoricos">Sitios Historicos</a>
                 </li>
-                <li class="nav-item">
+           <!-- <li class="nav-item">
                     <a class="nav-link text-white" href="/propuestas">Validacion de Propuestas</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-white" href="/reseñas">Reseñas</a>
-                </li>
+                </li>-->
                 <li class="nav-item">
                     <a class="nav-link text-white" href="/manejo_usuarios/">Usuarios</a>
                 </li>
@@ -45,7 +45,7 @@
                     </label>
                     <div id="user-content">
                         <p class="username"> {{ session["username"] }}</p>
-                        <a href="/settings">Configuracion</a>
+                        <a href="{{ url_for('usuarios.ver_perfil') }}">Configuracion</a>
                         <a href="/auth/logout">Cerrar Sesion</a>
                     </div>
                     {% else %}

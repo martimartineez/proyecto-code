@@ -77,28 +77,24 @@
 
 <!-- BOTONES  -->
 
-<div class="stylish-center-btn">
-    <a href="{{ url_for('usuarios.agregar_usuario_post') }}">
-        <button id="agregarUsuarioBtn" class="stylish-btn">Agregar usuario</button>
+<div>
+    <a href="{{ url_for('home') }}">
+        <button class="button-22" role="button">Página principal</button>
     </a>
+</div>
 
+<div>
+    <a href="{{ url_for('usuarios.agregar_usuario_post') }}">
+        <button id="agregarUsuarioBtn" class="button-18" role="button">Agregar usuario</button>
+    </a>
+     <button type="button" id="toggleBusquedaBtn" class="button-18" role="button">Búsqueda Avanzada</button>
+</div>
     <!-- <a href="{{ url_for('usuarios.ver_perfil') }}" method="POST">
         <button class="stylish-btn">perfil</button>
     </a> -->
 
-    <a href="{{ url_for('home') }}">
-        <button class="stylish-btn">Volver al inicio</button>
-    </a>
-</div>
-
-
 <!-- FORM DE BUSQUEDA AVANZADA -->
 
-
-<!-- Botón toggle para mostrar/ocultar -->
-<div class="stylish-center-btn">
-    <button type="button" id="toggleBusquedaBtn" class="stylish-btn">Búsqueda Avanzada</button>
-</div>
 
 <!-- Formulario de búsqueda avanzada (oculto por defecto) -->
 <div class="form-box" id="busquedaAvanzadaForm" style="display:none;">
@@ -122,7 +118,7 @@
                 <option value="desc" {% if orden=="desc" %}selected{% endif %}>Descendente</option>
             </select>
         </div>
-        <button type="submit">Buscar</button>
+        <button type="submit" class="button-18" role="button">Buscar</button>
     </form>
 </div>
 
@@ -161,11 +157,11 @@
             <td>
                 <form action="{{ url_for('usuarios.ver_detalles', usuario_id=usuario.id) }}" method="post"
                     style="display:inline;">
-                    <button type="submit">Ver detalles</button>
+                    <button type="submit" class="button-18" role="button">Ver detalles</button>
                 </form>
                 <form action="{{ url_for('usuarios.modificar', usuario_id=usuario.id) }}" method="get"
                     style="display:inline;">
-                    <button type="submit">Modificar</button>
+                    <button type="submit" class="button-18" role="button">Editar</button>
                 </form>
                 {% set esAdmin = usuario.roles | selectattr("nombre", "equalto", "Admin") | list | length > 0 %}
 
@@ -173,14 +169,14 @@
                 {% if usuario.activo %}
                 <form action="{{ url_for('usuarios.desactivar', usuario_id=usuario.id) }}" method="post"
                     style="display:inline;">
-                    <button type="submit" onclick="return confirm('¿Seguro que deseas desactivar este usuario?');">
+                    <button type="submit" onclick="return confirm('¿Seguro que deseas desactivar este usuario?');" class="button-18" role="button">
                         Desactivar
                     </button>
                 </form>
                 {% else %}
                 <form action="{{ url_for('usuarios.activar', usuario_id=usuario.id) }}" method="post"
                     style="display:inline;">
-                    <button type="submit" onclick="return confirm('¿Seguro que deseas activar este usuario?');">
+                    <button type="submit" onclick="return confirm('¿Seguro que deseas activar este usuario?');" class="button-18" role="button">
                         Activar
                     </button>
                 </form>
@@ -190,7 +186,7 @@
                 <form action="{{ url_for('usuarios.eliminar', usuario_id=usuario.id) }}" method="post"
                     style="display:inline;">
                     <button type="submit"
-                        onclick="return confirm('¿Seguro que deseas eliminar este usuario?');">Eliminar</button>
+                        onclick="return confirm('¿Seguro que deseas eliminar este usuario?');" class="button-18" role="button">Eliminar</button>
                 </form>
             </td>
         </tr>
@@ -240,35 +236,5 @@
     </ul>
 </nav>
 {% endif %}
-
-
-
-<style>
-    .pagination li {
-        display: inline-block;
-        margin: 2px;
-    }
-
-    .pagination li a button {
-        background-color: #f8f9fa;
-        border: 1px solid #ccc;
-        padding: 5px 10px;
-        cursor: pointer;
-        border-radius: 4px;
-    }
-
-    .pagination li.active a button {
-        background-color: #007bff;
-        /* Azul */
-        color: white;
-        border-color: #007bff;
-        font-weight: bold;
-    }
-
-    .pagination li a button:hover {
-        background-color: #e2e6ea;
-    }
-</style>
-
 
 {% endblock %}
