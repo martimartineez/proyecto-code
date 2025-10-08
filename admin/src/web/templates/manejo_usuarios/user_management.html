@@ -77,28 +77,24 @@
 
 <!-- BOTONES  -->
 
-<div class="stylish-center-btn">
-    <a href="{{ url_for('usuarios.agregar_usuario_post') }}">
-        <button id="agregarUsuarioBtn" class="button-22" role="button">Agregar usuario</button>
+<div>
+    <a href="{{ url_for('home') }}">
+        <button class="button-22" role="button">Página principal</button>
     </a>
+</div>
 
+<div>
+    <a href="{{ url_for('usuarios.agregar_usuario_post') }}">
+        <button id="agregarUsuarioBtn" class="button-18" role="button">Agregar usuario</button>
+    </a>
+     <button type="button" id="toggleBusquedaBtn" class="button-18" role="button">Búsqueda Avanzada</button>
+</div>
     <!-- <a href="{{ url_for('usuarios.ver_perfil') }}" method="POST">
         <button class="stylish-btn">perfil</button>
     </a> -->
 
-    <a href="{{ url_for('home') }}">
-        <button class="button-22" role="button">Volver al inicio</button>
-    </a>
-</div>
-
-
 <!-- FORM DE BUSQUEDA AVANZADA -->
 
-
-<!-- Botón toggle para mostrar/ocultar -->
-<div class="stylish-center-btn">
-    <button type="button" id="toggleBusquedaBtn" class="button-22" role="button">Búsqueda Avanzada</button>
-</div>
 
 <!-- Formulario de búsqueda avanzada (oculto por defecto) -->
 <div class="form-box" id="busquedaAvanzadaForm" style="display:none;">
@@ -122,7 +118,7 @@
                 <option value="desc" {% if orden=="desc" %}selected{% endif %}>Descendente</option>
             </select>
         </div>
-        <button type="submit">Buscar</button>
+        <button type="submit" class="button-18" role="button">Buscar</button>
     </form>
 </div>
 
@@ -165,7 +161,7 @@
                 </form>
                 <form action="{{ url_for('usuarios.modificar', usuario_id=usuario.id) }}" method="get"
                     style="display:inline;">
-                    <button type="submit" class="button-18" role="button">Modificar</button>
+                    <button type="submit" class="button-18" role="button">Editar</button>
                 </form>
                 {% set esAdmin = usuario.roles | selectattr("nombre", "equalto", "Admin") | list | length > 0 %}
 

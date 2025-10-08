@@ -12,26 +12,37 @@
 {% endif %}
 {% endwith %}
 
-<div class="stylish-center-btn">
-    <button type="button" onclick="history.back()" class="stylish-btn">Volver</button>
-
-    <a href="{{ url_for('home') }}"><button class="stylish-btn">Página principal</button></a>
-</div>
 
 <h1>Agregar un usuario</h1>
 
+<div class="stylish-center-btn">
+    <button type="button" onclick="history.back()" class="button-22" role="button">Volver</button>
+
+    <a href="{{ url_for('home') }}"><button class="button-22" role="button">Página principal</button></a>
+</div>
+
 <form method="post">
-    <label>Nombre:</label>
-    <input type="text" name="nombre" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+"><br>
+    <div class="row">
+        <div class ="col">
+            <label>Nombre:</label>
+            <input type="text" name="nombre"  class="form-control" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+">
+        </div>
+        <div class ="col">
+            <label>Apellido:</label>
+            <input type="text" name="apellido"  class="form-control" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+">
+        </div>
+    </div>
 
-    <label>Apellido:</label>
-    <input type="text" name="apellido" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+"><br>
+    <div class ="form-group">
+        <label>Email:</label>
+        <input type="email" name="email" required class="form-control"><br>
+    </div>
 
-    <label>Password:</label>
-    <input type="password" name="password" required><br>
+    <div class ="form-group">
+        <label>Password:</label>
+        <input type="password" name="password" required class="form-control"><br>
+    </div>
 
-    <label>Email:</label>
-    <input type="email" name="email" required><br>
 
     <label>Rol:</label>
     <div>
@@ -45,7 +56,7 @@
     </div>
 
 
-    <input type="submit" value="Agregar Usuario">
+    <input type="submit" value="Agregar Usuario" class="button-18" role="button">
 </form>
 
 {% endblock %}

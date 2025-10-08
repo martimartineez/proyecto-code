@@ -158,6 +158,9 @@ footer {
     z-index: 1000;
 }
 
+input{
+    margin: 10px 0px;
+}
 
 
 /* Estilos básicos para tablas */
@@ -167,6 +170,7 @@ table {
     width: 80%;
     margin: 20px 0;
     font-size: 18px;
+    justify-self: center;
 }
 
 th,
@@ -374,11 +378,27 @@ tr:hover {
 }
 
 form {
-    display: flex;
-    flex-direction: column;
     align-items: center;
     padding: 2%;
 }
+
+.filtros {
+  display: none;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  background: #f8f8f8;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+.filtros div {
+  display: flex;
+  flex-direction: column;
+  margin-right: 10px;
+}
+
 
 @media (max-width: 600px) {
 

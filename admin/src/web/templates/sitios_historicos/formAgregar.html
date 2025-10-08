@@ -24,10 +24,10 @@
 
 <div>
     <a href="{{ next_url }}">
-        <button type="button" class="button-22" role="button">Volver atras</button>
+        <button type="button" class="button-22" role="button">Volver</button>
     </a>
     <a href="/">
-        <button type="button" class="button-22" role="button">Volver a inicio</button>
+        <button type="button" class="button-22" role="button">Página principal</button>
     </a>
 </div>
 {%with messages = get_flashed_messages(with_categories=true) %}
@@ -43,13 +43,13 @@
     <div class ="form-group">
         <label>Nombre :</label>
         <div class="error-message" id="error-nombre">⚠️ El nombre debe tener entre 3 y 100 caracteres.</div>
-        <input type="text" name="nombre" id="nombreInput" maxlength="100"><br>
+        <input class="form-control" type="text" name="nombre" id="nombreInput" maxlength="100">
     </div>
 
     <div class ="form-group">
         <label>Descripción breve :</label>
         <div class="error-message" id="error-descripcion">⚠️ La descripción debe tener entre 10 y 255 caracteres.</div>
-        <input type="text" name="descripcion" id="descripcionInput" maxlength="255"><br>
+        <input class="form-control" type="text" name="descripcion" id="descripcionInput" maxlength="255">
     </div>
 
     <div class ="form-group">
@@ -66,7 +66,7 @@
             {% for p in provincias %}
             <option value="{{ p.id }}">{{ p.nombre }}</option>
             {% endfor %}
-        </select><br>
+        </select>
     </div>
 
     <div class ="form-group">
@@ -88,7 +88,7 @@
             <option value="Bueno">Bueno</option>
             <option value="Regular">Regular</option>
             <option value="Malo">Malo</option>
-        </select><br>
+        </select>
     </div>
 
         <div class ="form-group">
@@ -107,7 +107,7 @@
         <div class="error-message" id="error-fecha_inauguracion">⚠️ Por favor, ingrese la fecha de inauguración.</div>
         <input type="date" name="fecha_inauguracion" id="fechaInauguracionInput" class="form-control"
         value=""
-            max="{{ today }}"><br>
+            max="{{ today }}">
     </div>
 
     <div class ="form-group">

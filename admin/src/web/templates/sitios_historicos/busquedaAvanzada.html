@@ -5,17 +5,19 @@
 {% block content %}
 <h1>Sitios Históricos</h1>
 <a href="/">
-    <button type="button" type="button" class="button-22">Volver a inicio</button>
+    <button type="button" type="button" class="button-22">Página principal</button>
 </a>
-<a href="{{ url_for('sitios_historicos.agregar_sitio') }}">
-    <button type="button" type="button" class="button-18" role="button">Agregar sitio histórico</button>
-</a>
-<button id="btnFiltros" type= "button" class="button-18" role="button">Mostrar filtros avanzados</button>
-{% if permisocsv %}
-  <a href="{{ url_for('sitios_historicos.exportar_csv', **request_args) }}" type="button" class="button-22">
+<div>
+  <a href="{{ url_for('sitios_historicos.agregar_sitio') }}">
+      <button type="button" type="button" class="button-18" role="button">Agregar sitio histórico</button>
+  </a>
+  {% if permisocsv %}
+  <a href="{{ url_for('sitios_historicos.exportar_csv', **request_args) }}" type="button" class="button-18">
     Exportar CSV
   </a>
-{% endif %}
+  {% endif %}
+</div>
+<button id="btnFiltros" type= "button" class="button-18" role="button">Mostrar filtros avanzados</button>
 
 {%with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}
@@ -30,7 +32,7 @@
 
     <div>
       <label>Provincia:</label>
-      <select id="provinciaSelect" name="provincia">
+      <select id="provinciaSelect" name="provincia" class="form-control">
         <option value="">Seleccione provincia</option>
         {% for p in provincias %}
           <option value="{{ p.id }}" {% if request_args.get('provincia') == p.id|string %}selected{% endif %}>
@@ -42,7 +44,7 @@
 
     <div>
       <label>Ciudad:</label>
-      <select id="ciudadSelect" name="ciudad" disabled>
+      <select id="ciudadSelect" name="ciudad" disabled class="form-control">
         <option value="">Seleccione ciudad</option>
         {% for c in ciudades %}
           <option value="{{ c.id }}" data-provincia="{{ c.idProvincia }}"
@@ -55,7 +57,7 @@
 
     <div>
       <label>Categoría:</label>
-      <select name="categoria">
+      <select name="categoria" class="form-control">
         <option value="">Seleccione categoría</option>
         {% for c in categorias %}
           <option value="{{ c.id }}" {% if request_args.get('categoria') == c.id|string %}selected{% endif %}>
@@ -67,7 +69,7 @@
 
     <div>
       <label>Estado:</label>
-      <select name="estado_conservacion">
+      <select name="estado_conservacion" class="form-control">
         <option value="">Seleccione estado</option>
         <option value="Bueno" {% if request_args.get('estado_conservacion') == 'Bueno' %}selected{% endif %}>Bueno</option>
         <option value="Regular" {% if request_args.get('estado_conservacion') == 'Regular' %}selected{% endif %}>Regular</option>
@@ -90,17 +92,17 @@
 
     <div>
       <label>Desde:</label>
-      <input type="date" name="fecha_desde" value="{{ request_args.get('fecha_desde','') }}" max="{{ date.today().isoformat() }}">
+      <input class="form-control" type="date" name="fecha_desde" value="{{ request_args.get('fecha_desde','') }}" max="{{ date.today().isoformat() }}">
     </div>
 
     <div>
       <label>Hasta:</label>
-      <input type="date" name="fecha_hasta" value="{{ request_args.get('fecha_hasta','') }}" max="{{ date.today().isoformat() }}">
+      <input class="form-control" type="date" name="fecha_hasta" value="{{ request_args.get('fecha_hasta','') }}" max="{{ date.today().isoformat() }}">
     </div>
 
     <div>
       <label>Visibilidad:</label>
-      <select name="visibilidad">
+      <select name="visibilidad" class="form-control">
         <option value="" {% if request_args.get('visibilidad') == '' %}selected{% endif %}>Todos</option>
         <option value="1" {% if request_args.get('visibilidad') == '1' %}selected{% endif %}>Sí</option>
         <option value="0" {% if request_args.get('visibilidad') == '0' %}selected{% endif %}>No</option>
@@ -109,12 +111,12 @@
 
     <div>
       <label>Buscar:</label>
-      <input type="text" name="buscar" value="{{ request_args.get('buscar','') }}" placeholder="Nombre o descripción">
+      <input class="form-control" type="text" name="buscar" value="{{ request_args.get('buscar','') }}" placeholder="Nombre o descripción">
     </div>
 
     <div>
       <label>Ordenar por:</label>
-      <select name="sort_by" id="sort_by">
+      <select name="sort_by" id="sort_by" class="form-control">
         <option value="fecha_registro" {% if request_args.get('sort_by') == 'fecha_registro' %}selected{% endif %}>Fecha</option>
         <option value="nombre" {% if request_args.get('sort_by') == 'nombre' %}selected{% endif %}>Nombre</option>
         <option value="ciudad" {% if request_args.get('sort_by') == 'ciudad' %}selected{% endif %}>Ciudad</option>
@@ -123,7 +125,7 @@
 
     <div>
       <label>Orden:</label>
-      <select name="order" id="order">
+      <select name="order" id="order" class="form-control">
         <option value="asc" {% if request_args.get('order') == 'asc' %}selected{% endif %}>Ascendente</option>
         <option value="desc" {% if request_args.get('order') == 'desc' %}selected{% endif %}>Descendente</option>
       </select>
@@ -162,6 +164,9 @@
             <td>{{ sitio.fechaRegistro.strftime('%Y-%m-%d') if sitio.fechaRegistro else 'N/A' }}</td>
             <td>{{ 'Sí' if sitio.visible else 'No' }}</td>
             <td>
+                <a href="{{ url_for('sitios_historicos.ver_sitio', sitio_id=sitio.id) }}">
+                  <button type="button" class="button-18" role="button">Ver detalle</button>
+                </a>
                 <a href="{{ url_for('sitios_historicos.editar_sitio', sitio_id=sitio.id) }}">
                      <button type="button" class="button-18" role="button">Editar</button>
                 </a>
@@ -172,9 +177,6 @@
                         </button>
                     </form>
                 {% endif %}
-                <a href="{{ url_for('sitios_historicos.ver_sitio', sitio_id=sitio.id) }}">
-                <button type="button" class="button-18" role="button">Ver detalle</button>
-                </a>
             </td>
         </tr>
         {% endfor %}
