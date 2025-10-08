@@ -459,6 +459,10 @@ def busqueda_avanzada():
 @login_required
 @check("site_export")
 def exportar_csv():
+    """
+    Exporta los resultados filtrados de la búsqueda avanzada de sitios históricos a un archivo CSV.
+    Aplica los mismos filtros que la búsqueda avanzada y genera un archivo CSV descargable.
+    """
     provincia_id = request.args.get("provincia")
     ciudad_id = request.args.get("ciudad")
     categoria_id = request.args.get("categoria")
