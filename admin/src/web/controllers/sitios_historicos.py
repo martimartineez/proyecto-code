@@ -168,7 +168,7 @@ def agregar_sitio_post():
         return redirect(url_for("sitios_historicos.agregar_sitio_get", next=next_url))
     
     try:
-        nombre_sitio = board.crear_sitio(request.form)
+        nombre_sitio = board.crear_sitio(request.form, id_usuario=_current_user_id())
         if nombre_sitio:
             # Usamos el nombre devuelto en el mensaje flash
             flash(f"El sitio histórico '{nombre_sitio.nombre}' ha sido agregado exitosamente.", "success")
@@ -263,7 +263,7 @@ def editar_sitio_post(sitio_id):
         return redirect(url_for("sitios_historicos.editar_sitio_get", sitio_id=sitio_id, next=next_url))
         
     try:
-        nombre_sitio = board.editar_sitio(sitio_id, request.form)
+        nombre_sitio = board.editar_sitio(sitio_id, request.form, id_usuario=_current_user_id())
         if nombre_sitio:
             # Usamos el nombre devuelto en el mensaje flash
             flash(f"El sitio histórico '{nombre_sitio.nombre}' ha sido editado exitosamente.", "success")
@@ -288,7 +288,7 @@ def eliminar_sitio(sitio_id):
     """
     try:
         # 💡 Capturamos el valor devuelto (el nombre del sitio o False)
-        nombre_sitio = board.eliminar_sitio(sitio_id) 
+        nombre_sitio = board.eliminar_sitio(sitio_id, id_usuario=_current_user_id()) 
         
         if nombre_sitio:
             # Usamos el nombre devuelto en el mensaje flash
