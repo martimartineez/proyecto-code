@@ -52,7 +52,7 @@
 
           <!-- Footer (sin botón) -->
           <div class="card-footer d-flex justify-content-center align-items-center small text-muted">
-            <span>Última modif.: {{ f.ultimaModificacion.strftime('%Y-%m-%d %H:%M:%S') if f.ultimaModificacion else '-' }} · Usuario: {{ f.usuarioEmail or (f.idUsuarioModificacion or '-') }}</span>
+            <span>Última modif.: {{ f.ultimaModificacionFmt }} · Usuario: {{ f.usuarioEmail or (f.idUsuarioModificacion or '-') }}</span>
           </div>
         </form>
       </div>
