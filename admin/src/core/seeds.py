@@ -34,28 +34,15 @@ def run():
     except Exception as exc:
         print(f"Error en seed_categorias: {exc}")
 
-    # Crear rol y usuario "System" si no existen
-    admin_role = db.session.query(Rol).filter(Rol.nombre == "SystemAdmin").first()
-    if not admin_role:
-        admin_role = Rol(nombre="SystemAdmin")
-        db.session.add(admin_role)
-        db.session.flush()
 
-    system_user = db.session.query(Usuario).filter(Usuario.email == "system@example.com").first()
-    if not system_user:
-        # Usar create_user para garantizar hasheo del password
-        system_user = auth.create_user(
-            nombre="System",
-            apellido="User",
-            password="changeme",
-            email="system@example.com",
-            activo=True,
-            esAdmin=True,
-        )
-
-    # Asociar rol SystemAdmin al usuario si no lo tiene ya
-    if admin_role not in system_user.roles:
-        system_user.roles.append(admin_role)
+    system_user = auth.create_user(
+        nombre="System",
+        apellido="User",
+        password="changeme",
+        email="system@example.com",
+        activo=True,
+        esAdmin=True,
+    )
 
     db.session.commit()
 

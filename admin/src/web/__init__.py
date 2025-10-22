@@ -12,7 +12,7 @@ from src.web.controllers.tags import bp as tags_bp
 from src.core import seeds
 from src.web.controllers.auth import bp as auth_bp
 from src.core.bcrypt import bcrypt
-from src.web.handlers.auth import is_autenticated
+from src.web.handlers.auth import is_autenticated, is_system_admin
 from src.core import auth as core_auth
 from src.core.board import feature_flags as ff_service
 from src.core.board.feature_flags import get_flag
@@ -59,34 +59,6 @@ def create_app(env="development", static_folder="../../static"):
     #register session handler and helpers
     app.jinja_env.globals['is_autenticated'] = is_autenticated
 
-    # Local helpers for admin and system admin checks
-    def is_admin() -> bool:
-        from flask import session as _session
-        uid = _session.get('user_id')
-        if not uid:
-            return False
-        u = core_auth.get_user_by_id(uid)
-        return bool(u and getattr(u, 'esAdmin', False))
-
-    def is_system_admin() -> bool:
-        from flask import session as _session
-        uid = _session.get('user_id')
-        if not uid:
-            return False
-        u = core_auth.get_user_by_id(uid)
-        if not u:
-            return False
-        # System Admin if has role named 'SystemAdmin' or explicit esAdmin True and role named Admin/SystemAdmin
-        try:
-            roles = getattr(u, 'roles', []) or []
-            has_role = any(getattr(r, 'nombre', None) in {'SystemAdmin'} for r in roles)
-        except Exception:
-            has_role = False
-        return bool(has_role)
-
-    app.jinja_env.globals['is_admin'] = is_admin
-    app.jinja_env.globals['is_system_admin'] = is_system_admin
-
     # Simple helpers to use flags in templates
     def get_flag_value(nombre: str) -> bool:
         f = get_flag(nombre)
@@ -98,6 +70,8 @@ def create_app(env="development", static_folder="../../static"):
 
     app.jinja_env.globals['get_flag_value'] = get_flag_value
     app.jinja_env.globals['get_flag_message'] = get_flag_message
+    # Exponer helper "system admin" (booleano esAdmin) a Jinja
+    app.jinja_env.globals['is_system_admin'] = is_system_admin
 
     @app.before_request
     def enforce_admin_maintenance():
@@ -107,7 +81,7 @@ def create_app(env="development", static_folder="../../static"):
         # Always allow auth routes
         if request.blueprint == 'auth':
             return None
-        # Permitir Feature Flags solo a System Admins (para poder desactivar mantenimiento)
+        # Permitir Feature Flags solo a administradores (esAdmin=True)
         if request.blueprint == 'feature_flags':
             if is_system_admin():
                 return None
@@ -123,7 +97,7 @@ def create_app(env="development", static_folder="../../static"):
 
         flag = get_flag('admin_maintenance_mode')
         if flag and flag.valor:
-            # Solo System Admin puede navegar el panel durante mantenimiento
+            # Solo administradores (esAdmin=True) pueden navegar el panel durante mantenimiento
             if not is_system_admin():
                 msg = flag.mensaje or 'Sistema en mantenimiento.'
                 flash(msg, 'error')

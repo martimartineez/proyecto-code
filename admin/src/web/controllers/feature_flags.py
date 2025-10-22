@@ -1,6 +1,6 @@
 from __future__ import annotations
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
-from src.web.handlers.auth import login_required
+from src.web.handlers.auth import login_required, is_system_admin
 from src.core.board import feature_flags as ff_service
 from src.core import auth as core_auth
 from zoneinfo import ZoneInfo
@@ -52,6 +52,10 @@ def index():
 @bp.post("/update")
 @login_required
 def update():
+    # Solo administradores (esAdmin=True) pueden modificar flags
+    if not is_system_admin():
+        flash("No tienes permiso para modificar flags", "error")
+        return redirect(url_for("feature_flags.index"))
     nombre = request.form.get("nombre")
     if not nombre:
         flash("Flag inválido", "error")
