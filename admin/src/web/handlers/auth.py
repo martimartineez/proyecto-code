@@ -16,6 +16,12 @@ def login_required(f):
     return decorated_function
 
 def check_permission(permission):
+    # Los administradores del sistema (esAdmin=True) pasan cualquier verificación
+    try:
+        if is_system_admin():
+            return True
+    except Exception:
+        pass
     user_email = session.get("user")
     user = auth.find_user(user_email)
     permissions = auth.permissions(user)
