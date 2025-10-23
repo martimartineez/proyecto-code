@@ -330,7 +330,6 @@ def ver_sitio(sitio_id):
     Maneja filtros para el historial y prepara la vista del historial.
     Maneja el caso donde el sitio no existe.
     """
-    permiso= check_permission("site_destroy")
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
     sitio = board.obtener_sitio(sitio_id)
     # Filtros de historial
@@ -375,7 +374,6 @@ def ver_sitio(sitio_id):
             "page": page,
         },
         next_url=next_url,
-        permiso=permiso,
     )
 
 @bp.route("/", methods=["GET"])
@@ -388,7 +386,6 @@ def busqueda_avanzada():
     Soporta paginación y ordenamiento de resultados.
     Proporciona un enlace para exportar los resultados filtrados a CSV.
     """
-    permiso= check_permission("site_destroy")
     provincias = board.listar_provincias()
     ciudades = board.listar_ciudades()
     categorias = board.listar_categorias()
@@ -455,7 +452,6 @@ def busqueda_avanzada():
     total_pages = (total_results + per_page - 1) // per_page
     sitios = query.offset((page - 1) * per_page).limit(per_page).all()
 
-    permisocsv= check_permission("site_destroy")
 
     return render_template(
         "sitios_historicos/busquedaAvanzada.html",
@@ -468,8 +464,6 @@ def busqueda_avanzada():
         total_results=total_results,
         request_args=request.args,
         tags=tags,
-        permiso=permiso,
-        permisocsv=permisocsv,
         date=date
     )
 

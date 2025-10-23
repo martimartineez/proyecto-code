@@ -98,7 +98,7 @@
 
 <div>
     <a href="{{ url_for('usuarios.agregar_usuario_post') }}">
-        <button id="agregarUsuarioBtn" class="button-18" role="button">Agregar usuario</button>
+        <button id="agregarUsuarioBtn" class="button-18" role="button" style="background-color: green;">Agregar usuario</button>
     </a>
     <button type="button" id="toggleBusquedaBtn" class="button-18" role="button">Búsqueda Avanzada</button>
     <a href="{{ url_for('usuarios.index') }}">
@@ -187,9 +187,15 @@
                 <!-- BOTON MODIFICAR -->
                 <form action="{{ url_for('usuarios.modificar_get', usuario_id=usuario.id) }}" method="get"
                     style="display:inline;">
-                    <button type="submit" class="button-18" role="button">Editar</button>
+                    <button type="submit" class="button-18" role="button" style="background-color: green">Editar</button>
                 </form>
-                <!-- BOTON DESACTIVAR/ACTIVAR -->
+                <!-- BOTON ELIMINAR -->
+                <form action="{{ url_for('usuarios.eliminar', usuario_id=usuario.id) }}" method="post"
+                    style="display:inline;">
+                    <button type="submit" onclick="return confirm('¿Seguro que deseas eliminar este usuario?');"
+                        class="button-18" role="button" style="background-color: rgb(204, 45, 45)">Eliminar</button>
+                </form>
+                         <!-- BOTON DESACTIVAR/ACTIVAR -->
                 {% set esAdmin = usuario.roles | selectattr("nombre", "equalto", "Admin") | list | length > 0 %}
 
                 {% if not esAdmin %}
@@ -197,7 +203,7 @@
                 <form action="{{ url_for('usuarios.desactivar', usuario_id=usuario.id) }}" method="post"
                     style="display:inline;">
                     <button type="submit" onclick="return confirm('¿Seguro que deseas desactivar este usuario?');"
-                        class="button-18" role="button">
+                        class="button-18" role="button" style="background-color: rgb(148, 67, 67)">
                         Desactivar
                     </button>
                 </form>
@@ -205,18 +211,12 @@
                 <form action="{{ url_for('usuarios.activar', usuario_id=usuario.id) }}" method="post"
                     style="display:inline;">
                     <button type="submit" onclick="return confirm('¿Seguro que deseas activar este usuario?');"
-                        class="button-18" role="button">
+                        class="button-18" role="button" style="background-color: green">
                         Activar
                     </button>
                 </form>
                 {% endif %}
                 {% endif %}
-                <!-- BOTON ELIMINAR -->
-                <form action="{{ url_for('usuarios.eliminar', usuario_id=usuario.id) }}" method="post"
-                    style="display:inline;">
-                    <button type="submit" onclick="return confirm('¿Seguro que deseas eliminar este usuario?');"
-                        class="button-18" role="button">Eliminar</button>
-                </form>
             </td>
         </tr>
         {% endif %}
