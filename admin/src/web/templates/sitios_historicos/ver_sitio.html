@@ -311,14 +311,11 @@
     <label>Acción:</label>
     <select name="accion">
       <option value="">Todas</option>
-      {% for a in ['CREATED', 'UPDATED', 'DELETED', 'STATE_CHANGED', 'TAGS_CHANGED', 'IMAGES_CHANGED'] %}
+      {% for a in ['CREATED', 'UPDATED', 'TAGS_CHANGED'] %}
       {% set a_label =
       'Creado' if a=='CREATED' else
       'Actualizado' if a=='UPDATED' else
-      'Eliminado' if a=='DELETED' else
-      'Cambio de estado' if a=='STATE_CHANGED' else
-      'Cambio de etiquetas' if a=='TAGS_CHANGED' else
-      'Imágenes actualizadas' if a=='IMAGES_CHANGED' else a %}
+      'Cambio de etiquetas' if a=='TAGS_CHANGED' else a %}
       <option value="{{ a }}" {% if filtros.accion==a %}selected{% endif %}>{{ a_label }}</option>
       {% endfor %}
     </select>

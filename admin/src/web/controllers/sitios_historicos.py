@@ -1,13 +1,14 @@
 from src.core import board
-from src.core.board.validaciones import validar_sitio_historico
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from src.core.auth import Usuario
 from src.core.board import SitioHistorico
 from src.core.database import db
 from src.core.board.ciudad import Ciudad
-from datetime import datetime, date
+from datetime import datetime, timezone, date
+from zoneinfo import ZoneInfo
 from sqlalchemy import or_
 from src.core.board.tag import Tag
+from src.core.board.validaciones import validar_sitio_historico
 from src.web.handlers.auth import login_required, check_permission, check
 from sqlalchemy import func
 import io, csv
@@ -79,6 +80,21 @@ def _fmt_value(campo: str, valor, ciudades_by_id: dict[int, str], categorias_by_
     return str(valor)
 
 
+APP_TZ = ZoneInfo("America/Argentina/Buenos_Aires")
+
+
+def _to_local(dt: datetime | None) -> datetime | None:
+    if not dt:
+        return None
+    # Si viene naive, asumir UTC
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    try:
+        return dt.astimezone(APP_TZ)
+    except Exception:
+        return dt
+
+
 def _build_historial_view(historial: dict, ciudades, categorias, usuarios_by_id: dict[int, Usuario] | dict[int, str] | None = None):
     ciudades_by_id = {c.id: c.nombre for c in ciudades}
     categorias_by_id = {c.id: c.nombre for c in categorias}
@@ -109,12 +125,15 @@ def _build_historial_view(historial: dict, ciudades, categorias, usuarios_by_id:
         except Exception:
             usuario_label = None
 
+        fecha_local = _to_local(e.fechaAccion)
+        fecha_str = fecha_local.strftime('%Y-%m-%d %H:%M') if fecha_local else ""
         items_view.append({
-            "fecha": e.fechaAccion,
+            "fecha": fecha_local,
             "usuario_id": e.idUsuario,
             "usuario": usuario_label or f"#{e.idUsuario}",
             "accion": e.accion,
             "cambios": cambios,
+            "fecha_str": fecha_str,
         })
     return {
         "items": items_view,
