@@ -117,7 +117,7 @@
 
 <div>
   <a href="{{ url_for('sitios_historicos.agregar_sitio_get', next=request.path) }}">
-    <button type="button" class="button-18" role="button">Agregar sitio</button>
+    <button type="button" class="button-18" role="button" style="background-color: green">Agregar sitio</button>
   </a>
 </div>
 <br>
@@ -198,14 +198,14 @@
 
 <div>
   <a href="{{ url_for('sitios_historicos.editar_sitio_get', sitio_id=sitio.id, next=request.path) }}">
-    <button type="button" class="button-18" role="button">Editar</button>
+    <button type="button" class="button-18" role="button" style="background-color: green">Editar</button>
   </a>
-  {% if permiso %}
+  {% if check_permission("site_destroy") %}
   <form action="{{ url_for('sitios_historicos.eliminar_sitio', sitio_id=sitio.id)}}" method="post"
     style="display:inline-block;">
     <button type="submit"
       onclick="return confirm('¿Estás seguro de que quieres eliminar el sitio historico: {{ sitio.nombre }}?');"
-      class="button-18" role="button">Eliminar</button>
+      class="button-18" role="button" style="background-color: rgb(204, 45, 45)">Eliminar</button>
   </form>
   {% endif %}
 </div>
