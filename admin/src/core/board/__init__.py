@@ -295,10 +295,12 @@ def editar_sitio(sitio_id: int, form, id_usuario: int | None = None):
         "tags": [t.nombre for t in getattr(sitio, "tags", [])],
     }
     try:
+        # Determinar acción específica: si cambiaron los tags => TAGS_CHANGED, si no => UPDATED
+        accion_evento = "TAGS_CHANGED" if prev.get("tags") != nuevos.get("tags") else "UPDATED"
         registrar_evento_historial(
             id_sitio=sitio.id,
             id_usuario=id_usuario,
-            accion="UPDATED",
+            accion=accion_evento,
             valores_anteriores=prev,
             valores_nuevos=nuevos,
         )
@@ -324,10 +326,11 @@ def eliminar_sitio(sitio_id: int, id_usuario: int | None = None):
     if id_usuario is None:
         id_usuario = 1  # TODO: reemplazar por usuario autenticado
     try:
+        # Unificamos en UPDATED para no exponer acciones 'STATE_CHANGED' o 'DELETED' en el filtro
         registrar_evento_historial(
             id_sitio=sitio.id,
             id_usuario=id_usuario,
-            accion="DELETED" if not prev_baja and sitio.baja else "STATE_CHANGED",
+            accion="UPDATED",
             valores_anteriores={"baja": prev_baja},
             valores_nuevos={"baja": sitio.baja},
         )
