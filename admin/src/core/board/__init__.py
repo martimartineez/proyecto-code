@@ -10,6 +10,17 @@ from src.core.board.tag import Tag  # noqa: F401
 from src.core.auth.usuario import Usuario
 import re
 
+#definicion de excepciones personalizadas
+class EntityNotFoundError(Exception):
+    """Excepción para indicar que una entidad requerida no fue encontrada."""
+    pass
+
+class TagVinculadoError(Exception):
+    """Excepción para indicar que un Tag no puede ser eliminado por estar asociado a sitios activos."""
+    def __init__(self, sitios_vinculados, message="El Tag está asociado a sitios activos."):
+        self.sitios_vinculados = sitios_vinculados
+        super().__init__(message)
+
 def _parse_float(value):
     """
     Intenta convertir un valor a float. Retorna None si no es posible.
@@ -220,7 +231,7 @@ def editar_sitio(sitio_id: int, form, id_usuario: int | None = None):
     """
     sitio = obtener_sitio(sitio_id)
     if not sitio:
-        return False
+        raise EntityNotFoundError(f"Sitio Histórico no encontrado.")
     
 
     # snapshot de valores anteriores relevantes
@@ -316,7 +327,7 @@ def eliminar_sitio(sitio_id: int, id_usuario: int | None = None):
     """
     sitio = obtener_sitio(sitio_id)
     if not sitio:
-        return False
+        raise EntityNotFoundError(f"Sitio Histórico no encontrado.")
     
 
     prev_baja = sitio.baja
@@ -443,92 +454,77 @@ def obtener_tag(tag_id: int):
     return db.session.get(Tag, tag_id)
 
 
-def crear_tag(form):
+def obtener_tag_existente_por_nombre(nombre_tag: str):
     """
-    Creacion de tag, usado en el blueprint de tags.
-    A partir de los datos del formulario.
-    Maneja duplicados y reactivacion de tags dados de baja.
-    Retorna: el Tag creado/reeactivado, "DUPLICATE_ERROR" (si ya existe activo), None (error inesperado).
+    Busca un tag existente (activo o dado de baja) por nombre.
+    Retorna el Tag o None.
     """
-    nombre_tag = form.get("nombre")
     if not nombre_tag:
         return None
     
-    # 1. Verificar si ya existe un Tag con este nombre (activo o borrado lógicamente).
-    existing_tag = db.session.query(Tag).filter(
-        Tag.nombre == nombre_tag
-    ).first()
-    
+    return db.session.query(Tag).filter(Tag.nombre == nombre_tag).first()
+
+
+def procesar_o_crear_tag(nombre_tag: str):
+    """
+    1. Revisa duplicados/tags dados de baja.
+    2. Reactiva si es baja=True.
+    3. Si no existe, lo crea.
+    Retorna: Tag si es creado/reactivado.
+    Lanza: IntegrityError si el nombre existe y está activo.
+    """
+    existing_tag = obtener_tag_existente_por_nombre(nombre_tag)
+
     if existing_tag:
         if existing_tag.baja:
-            # El Tag existe, pero está dado de BAJA. Lo RE-ACTIVAMOS.
+            # Re-activar y retornar el tag existente
             existing_tag.baja = False
-            # Opcional: Re-generar el slug por si la lógica de slug cambia
             existing_tag.slug = _generate_slug(nombre_tag) 
-            try:
-                db.session.commit()
-                return existing_tag
-            except IntegrityError:
-                # Esto es un fallback, si por alguna razón el re-commit falla
-                db.session.rollback()
-                return "DUPLICATE_ERROR"
-            except Exception:
-                db.session.rollback()
-                return None
+            db.session.commit()
+            return existing_tag
         else:
-            # El Tag existe y está ACTIVO. Es un duplicado.
-            return "DUPLICATE_ERROR" 
+            # El tag existe y está activo -> Lanzar excepción de duplicidad
+            raise IntegrityError("Tag ya existe", params={}, orig=None)
 
-    # GENERACIÓN DEL SLUG (solo si es un Tag completamente nuevo)
+    # El tag no existe, se crea
     slug_tag = _generate_slug(nombre_tag)
-    
+    return crear_tag(nombre_tag=nombre_tag, slug_tag=slug_tag)
+
+
+def crear_tag(nombre_tag: str, slug_tag: str):
+    """
+    Creación simple de tag. Asume que la validación de duplicados ya se hizo.
+    Se utiliza solo si el tag NO existe.
+    Retorna: el Tag creado/modificado.
+    """
     nuevo_tag = Tag(nombre=nombre_tag, slug=slug_tag) 
     db.session.add(nuevo_tag)
-    try:
-        db.session.commit()
-        return nuevo_tag
-    except IntegrityError:
-        # Fallback si el nombre/slug es un duplicado que no se encontró en la consulta previa
-        db.session.rollback()
-        return "DUPLICATE_ERROR"
-    except Exception:
-        # Otros errores de base de datos
-        db.session.rollback()
-        return None
+    db.session.commit()
+    return nuevo_tag
 
-def editar_tag(tag_id: int, form):
+
+def editar_tag(tag_id: int, nombre_nuevo: str):
     """
-    Edicion de tag, usado en el blueprint de tags.
-    A partir de los datos del formulario.
-    Maneja duplicados.
-    Retorna: True (éxito), "DUPLICATE_ERROR" (si ya existe otro tag con el nuevo nombre), False (Tag no encontrado o error inesperado).
+    Edita un tag existente.
+    
+    Lanza: 
+        - IntegrityError si el nombre_nuevo ya existe en la DB (UNIQUE constraint).
+        - Exception si el commit falla por otra razón (se propaga).
+    
+    Retorna: El objeto Tag editado.
     """
     tag = obtener_tag(tag_id)
     if not tag:
-        return False
+        raise EntityNotFoundError(f"Tag no encontrado.")
     
-    nuevo_nombre = form.get("nombre")
-    if not nuevo_nombre:
-        return False # o manejar error de nombre vacío
+    # Asignar nuevos valores.
+    tag.nombre = nombre_nuevo
+    tag.slug = _generate_slug(nombre_nuevo)
+    
+    # Intentar el commit. Si el nombre ya existe, la DB lanza IntegrityError.
+    db.session.commit()
+    return tag
 
-    # 1. Actualizar el Tag con el nuevo nombre y slug
-    # Esto es crucial: Si el nombre NO CAMBIA, no hay problema de unicidad.
-    # Si el nombre CAMBIA y ya existe en otro Tag, el IntegrityError se lanzará en el commit.
-    tag.nombre = nuevo_nombre
-    tag.slug = _generate_slug(nuevo_nombre) # Asumo que actualizas el slug también
-    
-    try:
-        db.session.commit()
-        return True # Éxito
-    except IntegrityError:
-        # ⚠️ ERROR ESPECÍFICO DE DUPLICIDAD (el nuevo nombre o slug ya existe en OTRO tag)
-        db.session.rollback()
-        # Retornamos la cadena específica para que el blueprint lo sepa
-        return "DUPLICATE_ERROR" 
-    except Exception:
-        # Otros errores de base de datos
-        db.session.rollback()
-        return None
 
 
 def eliminar_tag(tag_id: int):
@@ -538,35 +534,30 @@ def eliminar_tag(tag_id: int):
     """
     tag = obtener_tag(tag_id)
     if not tag:
-        return False
+        return True  # Si no existe, consideramos que ya está "eliminado"
     
-    
-    # Verificar SOLO asociaciones con sitios ACTIVOS
-    
-    from src.core.board.sitio_historico import SitioHistorico 
-    
-    # 1. VERIFICACIÓN DE VINCULACIÓN: Buscar solo Sitios Históricos ACTIVOS (baja=False).
-    # Utilizamos un JOIN para obtener los nombres de los Sitios Históricos vinculados.
+    # 1. VERIFICAR VÍNCULOS CON SITIOS ACTIVOS
     sitios_vinculados = db.session.query(SitioHistorico.nombre).join(
         Tag.sitios
     ).filter(
         Tag.id == tag_id,
-        SitioHistorico.baja == False  # <--- ¡ESTE ES EL FILTRO CLAVE!
+        SitioHistorico.baja == False  # Solo sitios activos
     ).all()
 
     if sitios_vinculados:
-        # El Tag está asociado a sitios ACTIVOS. Retornamos la lista de nombres.
+        # Lanzar excepción con la lista de nombres
         nombres = [s[0] for s in sitios_vinculados]
-        return nombres # Retorna la lista de nombres, e.g., ['Sitio A', 'Sitio B']
+        raise TagVinculadoError(nombres, "El Tag no puede ser eliminado. Está asociado a sitios activos.")
 
-    # 2. PROCEDER CON LA ELIMINACIÓN LÓGICA (si no hay vinculación ACTIVA)
+    # 2. PROCEDER CON LA ELIMINACIÓN LÓGICA
     try:
         tag.baja = True
         db.session.commit()
         return True
     except Exception:
         db.session.rollback()
-        return False
+        # Lanza cualquier otro error de DB
+        raise
 
 def create_rol(nombre: str):
     from src.core.board.rol import Rol
