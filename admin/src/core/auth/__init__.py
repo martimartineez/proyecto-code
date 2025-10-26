@@ -2,6 +2,8 @@ from src.core.database import db
 from src.core.auth.usuario import Usuario
 from src.core.board.rol import Rol
 from src.core.bcrypt import bcrypt
+from src.core import board
+
 
 
 
@@ -16,16 +18,7 @@ def crearPermisos(permisos):
     for permiso in permisos["editor"]:
         editor.permisos.append(Permiso(nombre=permiso))
     db.session.commit()
-
-    # Otorgar TODOS los permisos existentes al rol SystemAdmin
-    system_admin = db.session.query(Rol).filter(Rol.nombre == "SystemAdmin").first()
-    if system_admin:
-        all_perms = db.session.query(Permiso).all()
-        existing = set(p.nombre for p in system_admin.permisos)
-        for p in all_perms:
-            if p.nombre not in existing:
-                system_admin.permisos.append(p)
-        db.session.commit()
+    
     return True
 
 def permissions(user):
@@ -109,4 +102,5 @@ def baja_logica_usuario(user: Usuario):
 def comprobar_bloqueado(user):
     estado = user.activo
     return estado
+
 

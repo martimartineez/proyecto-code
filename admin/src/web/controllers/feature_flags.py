@@ -1,8 +1,9 @@
 from __future__ import annotations
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
-from src.web.handlers.auth import login_required
+from src.web.handlers.auth import login_required, is_system_admin
 from src.core.board import feature_flags as ff_service
 from src.core import auth as core_auth
+from zoneinfo import ZoneInfo
 
 NOMBRE_A_ETIQUETA = {
     "admin_maintenance_mode": "Mantenimiento del sistema de administración",
@@ -18,11 +19,21 @@ def index():
     flags = ff_service.list_flags()
     # Enrich flags with modifier user email if available
     enriched = []
+    tz = ZoneInfo("America/Argentina/Buenos_Aires")
     for f in flags:
         user_email = None
         if getattr(f, 'idUsuarioModificacion', None):
             u = core_auth.get_user_by_id(f.idUsuarioModificacion)
             user_email = u.email if u else None
+        # Convertir timestamp (UTC -> local) y formatear para mostrar
+        ultima_local = None
+        ultima_fmt = "-"
+        if getattr(f, 'ultimaModificacion', None):
+            try:
+                ultima_local = f.ultimaModificacion.astimezone(tz)
+                ultima_fmt = ultima_local.strftime('%Y-%m-%d %H:%M:%S')
+            except Exception:
+                ultima_fmt = f.ultimaModificacion.strftime('%Y-%m-%d %H:%M:%S')
         enriched.append({
             'nombre': f.nombre,
             'etiqueta': NOMBRE_A_ETIQUETA.get(f.nombre, f.nombre),
@@ -30,6 +41,8 @@ def index():
             'valor': f.valor,
             'mensaje': f.mensaje,
             'ultimaModificacion': f.ultimaModificacion,
+            'ultimaModificacionLocal': ultima_local,
+            'ultimaModificacionFmt': ultima_fmt,
             'idUsuarioModificacion': f.idUsuarioModificacion,
             'usuarioEmail': user_email,
         })
@@ -39,6 +52,10 @@ def index():
 @bp.post("/update")
 @login_required
 def update():
+    # Solo administradores (esAdmin=True) pueden modificar flags
+    if not is_system_admin():
+        flash("No tienes permiso para modificar flags", "error")
+        return redirect(url_for("feature_flags.index"))
     nombre = request.form.get("nombre")
     if not nombre:
         flash("Flag inválido", "error")

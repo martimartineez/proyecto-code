@@ -24,9 +24,13 @@ body {
 }
 
 main {
+    display: flex;
+    flex-direction: column;
     flex-grow: 1;
     justify-items: center;
+    align-items: center;
     padding: 10px;
+    gap: 10px;
 }
 
 header {
@@ -34,6 +38,14 @@ header {
     z-index: 1002;
     background-color: var(--pri-color);
     color: white;
+}
+
+a {
+    text-decoration: none;
+}
+
+div {
+    margin: 5px;
 }
 
 .nav-item {
@@ -146,6 +158,9 @@ footer {
     z-index: 1000;
 }
 
+input {
+    margin: 10px 0px;
+}
 
 
 /* Estilos básicos para tablas */
@@ -155,6 +170,7 @@ table {
     width: 80%;
     margin: 20px 0;
     font-size: 18px;
+    justify-self: center;
 }
 
 th,
@@ -183,7 +199,9 @@ tr:hover {
         width: 100% !important;
         font-size: 14px !important;
     }
-    th, td {
+
+    th,
+    td {
         padding: 6px 4px !important;
     }
 }
@@ -362,11 +380,27 @@ tr:hover {
 }
 
 form {
-    display: flex;
-    flex-direction: column;
     align-items: center;
     padding: 2%;
 }
+
+.filtros {
+    display: none;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    background: #f8f8f8;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.filtros div {
+    display: flex;
+    flex-direction: column;
+    margin-right: 10px;
+}
+
 
 @media (max-width: 600px) {
 
@@ -383,35 +417,266 @@ form {
     }
 }
 
-/* Estilos locales SOLO para la tabla de historial (extraídos del parcial) */
-.historial-wrap { max-width: 1600px; margin: 0 auto; padding: 0 16px; }
-.historial-card { border:1px solid #e5e7eb; border-radius:8px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,0.04); overflow:auto; }
-.historial-table { width:100%; border-collapse:collapse; min-width:640px; line-height:1.2; }
-.historial-table thead th { background:#f8f9fb; color:#374151; font-weight:600; font-size:0.9rem; padding:6px 8px; text-align:left; border-bottom:1px solid #e5e7eb; }
-.historial-table tbody td { padding:6px 8px; border-bottom:1px solid #f1f3f5; vertical-align:top; text-align:left; }
-.historial-table tbody tr:nth-child(even) { background:#fcfdff; }
-.historial-table tbody tr:hover { background:#f5faff; }
-.historial-badge { display:inline-block; padding:1px 6px; border-radius:999px; font-size:0.7rem; font-weight:600; color:#fff; }
-.badge-created { background:#16a34a; }
-.badge-updated { background:#2563eb; }
-.badge-deleted { background:#dc2626; }
-.badge-state { background:#ca8a04; }
-.badge-tags { background:#0891b2; }
-.badge-images { background:#6b7280; }
-.historial-cambios { margin:0; padding-left:16px; font-size:0.85rem; }
-.historial-cambios li { margin:0 0 2px 0; }
-.historial-fecha { white-space:nowrap; color:#111827; }
-.historial-empty { text-align:center; color:#6b7280; padding:12px; }
- 
-/* Responsive tweaks para historial */
-@media (max-width: 768px) {
-   .historial-table { min-width: 560px; }
-   .historial-table thead th { font-size: 0.85rem; padding: 5px 6px; }
-   .historial-table tbody td { padding: 5px 6px; }
-   .historial-badge { font-size: 0.65rem; padding: 1px 5px; }
+/*////////////////////// Botones ////////////////////////////*/
+
+/* botones de menu */
+.button-22 {
+    align-items: center;
+    appearance: button;
+    background-color: var(--sec-color);
+    border-radius: 8px;
+    border-style: none;
+    box-shadow: rgba(255, 255, 255, 0.26) 0 1px 2px inset;
+    box-sizing: border-box;
+    color: #fff;
+    cursor: pointer;
+    font-family: "RM Neue", sans-serif;
+    font-size: 100%;
+    line-height: 1.15;
+    margin: 0;
+    padding: 10px 21px;
+    text-align: center;
+    text-transform: none;
+    transition: color .13s ease-in-out, background .13s ease-in-out, opacity .13s ease-in-out, box-shadow .13s ease-in-out;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
 }
-@media (max-width: 480px) {
-   .historial-wrap { padding: 0 10px; }
-   .historial-table { min-width: 480px; line-height: 1.15; }
-   .historial-cambios { font-size: 0.8rem; padding-left: 14px; }
+
+.button-22:active {
+    background-color: #006AE8;
+}
+
+.button-22:hover {
+    background-color: #75aff5;
+}
+
+#main-button {
+    background-color: var(--pri-color);
+}
+
+#main-button:hover {
+    background-color: var(--sec-color);
+}
+
+/* botones de tabla */
+.button-18 {
+    align-items: center;
+    background-color: var(--sec-color);
+    border: 0;
+    border-radius: 100px;
+    box-sizing: border-box;
+    color: #ffffff;
+    cursor: pointer;
+    display: inline-flex;
+    font-family: -apple-system, system-ui, system-ui, "Segoe UI", Roboto, "Helvetica Neue", "Fira Sans", Ubuntu, Oxygen, "Oxygen Sans", Cantarell, "Droid Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Lucida Grande", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    justify-content: center;
+    line-height: 20px;
+    max-width: 480px;
+    min-height: 40px;
+    min-width: 0px;
+    overflow: hidden;
+    padding: 0px;
+    padding-left: 20px;
+    padding-right: 20px;
+    text-align: center;
+    touch-action: manipulation;
+    transition: background-color 0.167s cubic-bezier(0.4, 0, 0.2, 1) 0s, box-shadow 0.167s cubic-bezier(0.4, 0, 0.2, 1) 0s, color 0.167s cubic-bezier(0.4, 0, 0.2, 1) 0s;
+    user-select: none;
+    -webkit-user-select: none;
+    vertical-align: middle;
+}
+
+.button-18:hover,
+.button-18:focus {
+    background-color: #77acf1;
+    color: #ffffff;
+}
+
+.button-18:disabled {
+    cursor: not-allowed;
+    background: rgba(0, 0, 0, .08);
+    color: rgba(0, 0, 0, .3);
+}
+
+.width-100 {
+    width: 100%;
+}
+
+/* ==================== */
+/* 🧱 ESTILOS BASE */
+/* ==================== */
+table {
+    width: 80%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+th,
+td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    font-size: 15px;
+}
+
+thead {
+    background-color: #f8f8f8;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #333;
+}
+
+/* Botones dentro de las celdas */
+td a button,
+td form button {
+    margin: 3px;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 6px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.2s;
+}
+
+td a button:hover,
+td form button:hover {
+    background-color: #0056b3;
+}
+
+/* ==================== */
+/* 📱 MÓVILES (<767px) */
+/* ==================== */
+@media screen and (max-width: 767px) {
+
+    /* Ocultar cabeceras */
+    thead {
+        display: none;
+    }
+
+    table,
+    tbody,
+    tr,
+    td {
+        display: block;
+        width: 100%;
+    }
+
+    tr {
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        background-color: #fff;
+        padding: 10px;
+    }
+
+    td {
+        border: none;
+        padding: 10px 8px;
+        position: relative;
+        text-align: right;
+        font-size: 14px;
+    }
+
+    td::before {
+        content: attr(data-label);
+        float: left;
+        font-weight: bold;
+        color: #555;
+        text-transform: uppercase;
+    }
+
+    /* Ajuste especial para columna de acciones */
+    td:last-child {
+        text-align: center;
+        border-top: 1px solid #eee;
+        padding-top: 12px;
+    }
+
+    td:last-child::before {
+        content: '';
+    }
+
+    td a,
+    td form {
+        display: inline-block;
+        margin: 5px;
+    }
+
+    button {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+}
+
+/* ==================== */
+/* 💻 TABLETS (768px–1024px) */
+/* ==================== */
+@media screen and (min-width: 768px) and (max-width: 1024px) {
+
+    th,
+    td {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+
+    table {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    td a button,
+    td form button {
+        padding: 6px 8px;
+        font-size: 13px;
+    }
+
+    /* Reducir espacios en tablas grandes */
+    table {
+        table-layout: fixed;
+    }
+
+    th,
+    td {
+        word-wrap: break-word;
+    }
+}
+
+/* ==================== */
+/* 🖥️ ESCRITORIO (>1025px) */
+/* ==================== */
+@media screen and (min-width: 1025px) {
+
+    table {
+        font-size: 15px;
+    }
+
+    th,
+    td {
+        padding: 14px 18px;
+    }
+
+    td a button,
+    td form button {
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+
+    tr:hover {
+        background-color: #f9fafb;
+    }
+}
+
+.tabla-usuarios {
+    width: 100%;
+    overflow-x: auto;
 }

@@ -9,28 +9,34 @@
         </a>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
-                {% if is_autenticated(session) %}
+            {% if is_autenticated(session) %}
+                {% if check_permission("site_index") %}
                 <li class="nav-item">
                     <a class="nav-link text-white" href="/sitioshistoricos">Sitios Historicos</a>
                 </li>
-                <li class="nav-item">
+                {% endif %}
+                <!-- <li class="nav-item">
                     <a class="nav-link text-white" href="/propuestas">Validacion de Propuestas</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-white" href="/reseñas">Reseñas</a>
-                </li>
+                </li>-->
+                {% if check_permission("user_index") %}
                 <li class="nav-item">
                     <a class="nav-link text-white" href="/manejo_usuarios/">Usuarios</a>
                 </li>
+                {% endif %}
+                {% if check_permission("tag_index") %}
                 <li class="nav-item">
                     <a class="nav-link text-white" href="/tags">Tags</a>
                 </li>
+                {% endif %}
                 {% if is_system_admin() %}
-                    <li class="nav-item">
+                <li class="nav-item">
                     <a class="nav-link text-white" href="/feature_flags/">Funciones del sistema</a>
-                    </li>
+                </li>
                 {% endif %}
-                {% endif %}
+            {% endif %}
             </ul>
             <!-- Icono de usuario y menú -->
             <ul class="navbar-nav ms-auto">
@@ -45,7 +51,7 @@
                     </label>
                     <div id="user-content">
                         <p class="username"> {{ session["username"] }}</p>
-                        <a href="/settings">Configuracion</a>
+                        <a href="{{ url_for('usuarios.ver_perfil') }}">Mi perfil</a>
                         <a href="/auth/logout">Cerrar Sesion</a>
                     </div>
                     {% else %}
@@ -57,4 +63,4 @@
             </ul>
         </div>
     </div>
-</nav>  
+</nav>
