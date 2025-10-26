@@ -1,4 +1,5 @@
 from src.core import board
+from src.core.board import EntityNotFoundError
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from src.core.auth import Usuario
 from src.core.board import SitioHistorico
@@ -216,6 +217,9 @@ def editar_sitio_get(sitio_id):
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
     hoy = date.today().strftime('%Y-%m-%d')
     sitio = board.obtener_sitio(sitio_id)
+    if not sitio:
+        flash("Sitio histórico no encontrado.", "error")
+        return redirect(url_for("sitios_historicos.busqueda_avanzada"))
         # Filtros de historial
     usuario_id = request.args.get("usuario_id", type=int)
     accion = request.args.get("accion")
@@ -290,9 +294,12 @@ def editar_sitio_post(sitio_id):
         if nombre_sitio:
             # Usamos el nombre devuelto en el mensaje flash
             flash(f"El sitio histórico '{nombre_sitio.nombre}' ha sido editado exitosamente.", "success")
-        elif nombre_sitio is False:
-             # Esto ocurre si obtener_sitio(sitio_id) no encontró el sitio (no deberia pasar)
-            flash("Error: El sitio histórico no fue encontrado para su edicion.", "error")
+
+        return redirect(url_for("sitios_historicos.busqueda_avanzada"))
+
+    except EntityNotFoundError:
+        # Captura la excepción de "no encontrado"
+        flash("Error: El sitio histórico no fue encontrado para su edición.", "error")
         return redirect(url_for("sitios_historicos.busqueda_avanzada"))
     except Exception as e:
         flash(f"Ocurrió un error al intentar editar el sitio: {e}.", "error")
@@ -316,10 +323,11 @@ def eliminar_sitio(sitio_id):
         if nombre_sitio:
             # Usamos el nombre devuelto en el mensaje flash
             flash(f"El sitio histórico '{nombre_sitio.nombre}' ha sido eliminado exitosamente.", "success")
-        elif nombre_sitio is False:
-             # Esto ocurre si obtener_sitio(sitio_id) no encontró el sitio (no deberia pasar)
-            flash("Error: El sitio histórico no fue encontrado para su eliminación.", "error")
-            
+
+    except EntityNotFoundError:
+        # Captura la excepción de "no encontrado"
+        flash("Error: El sitio histórico que intentaste eliminar no fue encontrado.", "error")
+
     except Exception as e:
         flash(f"Ocurrió un error al intentar eliminar el sitio: {e}.", "error")
     
@@ -336,6 +344,9 @@ def ver_sitio(sitio_id):
     """
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
     sitio = board.obtener_sitio(sitio_id)
+    if not sitio:
+        flash("Sitio histórico no encontrado.", "error")
+        return redirect(url_for("sitios_historicos.busqueda_avanzada"))
     # Filtros de historial
     usuario_id = request.args.get("usuario_id", type=int)
     accion = request.args.get("accion")
