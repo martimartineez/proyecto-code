@@ -1,4 +1,5 @@
 from src.core import board
+from src.core.board import TagVinculadoError, EntityNotFoundError
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from src.web.handlers.auth import login_required, check
 from core.board.validaciones import validar_tag
@@ -168,7 +169,7 @@ def eliminar_tag(tag_id):
         # ÉXITO: La eliminación fue exitosa o el tag no existía (retornó True)
         flash("Tag eliminado exitosamente.", "success")
         
-    except board.TagVinculadoError as e:
+    except TagVinculadoError as e:
         # FALLO (Vinculado): Se atrapa la excepción y se lee el atributo
         sitios_nombres = ", ".join(e.sitios_vinculados)
         flash(f"ERROR: El Tag no puede ser eliminado. Está asociado a los siguientes Sitios Históricos: {sitios_nombres}.", "error")

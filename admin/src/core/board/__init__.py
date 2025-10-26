@@ -10,6 +10,17 @@ from src.core.board.tag import Tag  # noqa: F401
 from src.core.auth.usuario import Usuario
 import re
 
+#definicion de excepciones personalizadas
+class EntityNotFoundError(Exception):
+    """Excepción para indicar que una entidad requerida no fue encontrada."""
+    pass
+
+class TagVinculadoError(Exception):
+    """Excepción para indicar que un Tag no puede ser eliminado por estar asociado a sitios activos."""
+    def __init__(self, sitios_vinculados, message="El Tag está asociado a sitios activos."):
+        self.sitios_vinculados = sitios_vinculados
+        super().__init__(message)
+
 def _parse_float(value):
     """
     Intenta convertir un valor a float. Retorna None si no es posible.
@@ -220,7 +231,7 @@ def editar_sitio(sitio_id: int, form, id_usuario: int | None = None):
     """
     sitio = obtener_sitio(sitio_id)
     if not sitio:
-        return False
+        raise EntityNotFoundError(f"Sitio Histórico no encontrado.")
     
 
     # snapshot de valores anteriores relevantes
@@ -316,7 +327,7 @@ def eliminar_sitio(sitio_id: int, id_usuario: int | None = None):
     """
     sitio = obtener_sitio(sitio_id)
     if not sitio:
-        return False
+        raise EntityNotFoundError(f"Sitio Histórico no encontrado.")
     
 
     prev_baja = sitio.baja
@@ -504,7 +515,7 @@ def editar_tag(tag_id: int, nombre_nuevo: str):
     """
     tag = obtener_tag(tag_id)
     if not tag:
-        return None 
+        raise EntityNotFoundError(f"Tag no encontrado.")
     
     # Asignar nuevos valores.
     tag.nombre = nombre_nuevo
@@ -514,46 +525,7 @@ def editar_tag(tag_id: int, nombre_nuevo: str):
     db.session.commit()
     return tag
 
-def editar_tag(tag_id: int, form):
-    """
-    Edicion de tag, usado en el blueprint de tags.
-    A partir de los datos del formulario.
-    Maneja duplicados.
-    Retorna: True (éxito), "DUPLICATE_ERROR" (si ya existe otro tag con el nuevo nombre), False (Tag no encontrado o error inesperado).
-    """
-    tag = obtener_tag(tag_id)
-    if not tag:
-        return False
-    
-    nuevo_nombre = form.get("nombre")
-    if not nuevo_nombre:
-        return False # o manejar error de nombre vacío
 
-    # 1. Actualizar el Tag con el nuevo nombre y slug
-    # Si el nombre NO CAMBIA, no hay problema de unicidad.
-    # Si el nombre CAMBIA y ya existe en otro Tag, el IntegrityError se lanzará en el commit.
-    tag.nombre = nuevo_nombre
-    tag.slug = _generate_slug(nuevo_nombre) 
-    
-    try:
-        db.session.commit()
-        return True # Éxito
-    except IntegrityError:
-        # ⚠️ ERROR ESPECÍFICO DE DUPLICIDAD (el nuevo nombre o slug ya existe en OTRO tag)
-        db.session.rollback()
-        # Retornamos la cadena específica para que el blueprint lo sepa
-        return "DUPLICATE_ERROR" 
-    except Exception:
-        # Otros errores de base de datos
-        db.session.rollback()
-        return None
-
-
-# clase para manejar el error de tag vinculado a sitios
-class TagVinculadoError(Exception):
-    def __init__(self, sitios_vinculados, message="El tag está asociado a sitios activos."):
-        self.sitios_vinculados = sitios_vinculados
-        super().__init__(message)
 
 def eliminar_tag(tag_id: int):
     """
