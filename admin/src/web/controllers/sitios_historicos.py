@@ -14,8 +14,7 @@ from src.web.handlers.auth import login_required, check_permission, check
 from sqlalchemy import func
 import io, csv
 from flask import Response
-from datetime import date 
-from datetime import timezone, timedelta
+from datetime import date, timezone, timedelta
 
 
 
