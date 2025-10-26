@@ -5,7 +5,7 @@ from src.core.board import SitioHistorico
 from src.core.database import db
 from src.core.board.ciudad import Ciudad
 from datetime import datetime, timezone, date
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from sqlalchemy import or_
 from src.core.board.tag import Tag
 from src.core.board.validaciones import validar_sitio_historico
@@ -14,6 +14,7 @@ from sqlalchemy import func
 import io, csv
 from flask import Response
 from datetime import date 
+from datetime import timezone, timedelta
 
 
 
@@ -80,7 +81,10 @@ def _fmt_value(campo: str, valor, ciudades_by_id: dict[int, str], categorias_by_
     return str(valor)
 
 
-APP_TZ = ZoneInfo("America/Argentina/Buenos_Aires")
+try:
+    APP_TZ = ZoneInfo("America/Argentina/Buenos_Aires")
+except ZoneInfoNotFoundError:
+    APP_TZ = timezone(timedelta(hours=-3))  # UTC-3 como reemplazo
 
 
 def _to_local(dt: datetime | None) -> datetime | None:
