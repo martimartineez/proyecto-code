@@ -14,8 +14,8 @@ from src.web.controllers.auth import bp as auth_bp
 from src.core.bcrypt import bcrypt
 from src.web.handlers.auth import is_autenticated, check_permission, is_system_admin
 from src.core import auth as core_auth
-from src.core.board import feature_flags as ff_service
-from src.core.board.feature_flags import get_flag
+from src.core.entity.services import feature_flags as ff_service
+from src.core.entity.services.feature_flags import get_flag
 from src.web.controllers.feature_flags import bp as feature_flags_bp
 
 session = Session()

@@ -4,7 +4,7 @@ from flask import request, redirect, url_for
 from flask import session, flash, abort
 
 from src.core import auth
-from src.core import board
+from src.core.entity import services
 from src.web.handlers.auth import is_autenticated
 from src.web.handlers.auth import login_required
 from src.web.handlers.auth import check
@@ -60,7 +60,7 @@ def index():
     usuarios = todos[inicio:fin]
 
     # 7️⃣ Roles (si los necesitás para algo en el template)
-    roles = board.list_roles()
+    roles = services.list_roles()
 
     # 8️⃣ Renderizar con los filtros guardados en el template
     return render_template(
@@ -126,7 +126,7 @@ def activar(usuario_id):
 @bp.get("/agregar_usuario")
 def agregar_usuario_get():
     
-    roles = board.list_roles()
+    roles = services.list_roles()
     return render_template("manejo_usuarios/formAgregar.html", roles=roles)
 
 
@@ -160,7 +160,7 @@ def agregar_usuario_post():
         apellido=apellido,
         activo=True,
         esAdmin=False,
-        roles=[board.get_rol_by_id(int(rol_id)) for rol_id in roles_ids]
+        roles=[services.get_rol_by_id(int(rol_id)) for rol_id in roles_ids]
     )
 
     flash(f"Se agrego el usuario: '{nombre}'",'success')
@@ -176,7 +176,7 @@ def modificar_get(usuario_id):
 
     user = auth.get_user_by_id(usuario_id)
     rolesUsuario = auth.listar_roles_usuario(user)
-    roles = board.list_roles()
+    roles = services.list_roles()
     return render_template("manejo_usuarios/modificar_usuario.html", usuario=user, roles=roles, rolesUsuario=rolesUsuario) 
 
 
@@ -233,7 +233,7 @@ def funcion_modificar(user,form):
     user.email = email
 
     roles_ids = form.getlist("rol")
-    user.roles = [board.get_rol_by_id(int(rol_id)) for rol_id in roles_ids]
+    user.roles = [services.get_rol_by_id(int(rol_id)) for rol_id in roles_ids]
 
     auth.db.session.commit()
 

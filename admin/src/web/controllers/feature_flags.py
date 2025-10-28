@@ -1,7 +1,7 @@
 from __future__ import annotations
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from src.web.handlers.auth import login_required, is_system_admin
-from src.core.board import feature_flags as ff_service
+from src.core.entity.services import feature_flags as ff_service
 from src.core import auth as core_auth
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from datetime import date, timezone, timedelta
