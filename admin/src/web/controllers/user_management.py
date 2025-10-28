@@ -82,11 +82,16 @@ def index():
 @check("user_destroy")
 def eliminar(usuario_id):
     
-    user = auth.get_user_by_id(usuario_id)  
+    user = auth.get_user_by_id(usuario_id)
+    # Proteger administradores del sistema: no permitir eliminar
+    es_admin_sistema = getattr(user, 'esAdmin', False)
+    if es_admin_sistema:
+        flash("No se puede eliminar un usuario administrador del sistema.", 'error')
+        return redirect(url_for("usuarios.index"))
 
-    auth.baja_logica_usuario(auth.get_user_by_id(usuario_id))
+    auth.baja_logica_usuario(user)
 
-    flash(f"Se borro el usuario: '{user.nombre}'",'success')
+    flash(f"Se borro el usuario: '{user.nombre}'", 'success')
     return redirect(url_for("usuarios.index"))
 
 
@@ -100,8 +105,9 @@ def desactivar(usuario_id):
 
     user = auth.get_user_by_id(usuario_id)
     rolesUsuario = auth.listar_roles_usuario(user)
+    es_admin_sistema = getattr(user, 'esAdmin', False)
     
-    if not "Admin" in rolesUsuario: 
+    if not "Admin" in rolesUsuario and not es_admin_sistema:  
         user.activo = False
         auth.db.session.commit()
     flash(f"Se desactivo el usuario: '{user.nombre}'",'success')
@@ -175,6 +181,9 @@ def modificar_get(usuario_id):
     """
 
     user = auth.get_user_by_id(usuario_id)
+    if user.esAdmin:
+        flash("No se puede modificar un usuario administrador del sistema.", 'error')
+        return redirect(url_for("usuarios.index"))
     rolesUsuario = auth.listar_roles_usuario(user)
     roles = services.list_roles()
     return render_template("manejo_usuarios/modificar_usuario.html", usuario=user, roles=roles, rolesUsuario=rolesUsuario) 
@@ -186,6 +195,9 @@ def modificar_get(usuario_id):
 def modificar_post(usuario_id):
     
     user = auth.get_user_by_id(usuario_id)
+    if user.esAdmin:
+        flash("No se puede modificar un usuario administrador del sistema.", 'error')
+        return redirect(url_for("usuarios.index"))
     return funcion_modificar(user,request.form)
 
 
