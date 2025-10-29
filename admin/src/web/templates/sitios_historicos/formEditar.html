@@ -43,26 +43,26 @@
     <div class="form-group" >
       <label>Nombre :</label>
       <div class="error-message" id="error-nombre">⚠️ El nombre debe tener entre 3 y 100 caracteres.</div>
-      <input class="form-control" type="text" name="nombre" id="nombreInput" value="{{ sitio.nombre }}" maxlength="100" c>
+      <input class="form-control" type="text" name="nombre" id="nombreInput" value="{{ sitio.nombre }}" maxlength="100" required c>
     </div>
 
     <div class="form-group" >
       <label>Descripción breve:</label>
       <div class="error-message" id="error-descripcion">⚠️ La descripción debe tener entre 5 y 255 caracteres.</div>
-      <input class="form-control" type="text" name="descripcion" id="descripcionInput" value="{{ sitio.descBreve }}" maxlength="255">
+      <input class="form-control" type="text" name="descripcion" id="descripcionInput" value="{{ sitio.descBreve }}" maxlength="255" required>
     </div>
 
     <div class="form-group" >
       <label>Descripción completa :</label>
       <div class="error-message" id="error-descripcion_completa">⚠️ La descripción completa debe tener entre 10 y 5000 caracteres.</div>
-      <textarea  class="form-control" type="text" name="descripcion_completa" id="descripcionCompletaInput" maxlength="5000">{{ sitio.descCompleta }}</textarea>
+      <textarea  class="form-control" type="text" name="descripcion_completa" id="descripcionCompletaInput" maxlength="5000" required>{{ sitio.descCompleta }}</textarea>
     </div>
     <br>
 
     <div class="form-group" >
       <label>Provincia:</label>
       <div class="error-message" id="error-provincia">⚠️ Por favor, seleccione la provincia.</div>
-      <select id="provinciaSelect" name="provincia" class="form-control" >
+      <select id="provinciaSelect" name="provincia" class="form-control" required>
           <option value="">Seleccione provincia</option>
           {% set selectedProv = sitio.ciudad.provincia.id if sitio.ciudad and sitio.ciudad.provincia else '' %}
           {% for p in provincias %}
@@ -74,7 +74,7 @@
     <div class="form-group" >
       <label>Ciudad:</label>
       <div class="error-message" id="error-ciudad">⚠️ Por favor, seleccione la ciudad.</div>
-      <select id="ciudadSelect" name="ciudad" class="form-control" >
+      <select id="ciudadSelect" name="ciudad" class="form-control" required>
           <option value="">Seleccione ciudad</option>
           {% for c in ciudades %}
           <option value="{{ c.id }}" data-provincia="{{ c.idProvincia }}" {% if sitio.idCiudad == c.id %}selected{% endif %}>{{ c.nombre }}</option>
@@ -86,7 +86,7 @@
     <div class="form-group" >
       <label>Estado Conservación:</label>
       <div class="error-message" id="error-estado_conservacion">⚠️ Por favor, seleccione el estado de conservación.</div>
-      <select name="estado_conservacion" id="estadoConservacionSelect" class="form-control" >
+      <select name="estado_conservacion" id="estadoConservacionSelect" class="form-control" required>
           <option value="">Seleccione estado</option>
           {% set estados = ['Bueno', 'Regular', 'Malo'] %}
           {% for estado in estados %}
@@ -98,7 +98,7 @@
     <div class="form-group" >
       <label>Categoría:</label>
       <div class="error-message" id="error-categoria">⚠️ Por favor, seleccione la categoría.</div>
-      <select name="categoria" id="categoriaSelect" class="form-control" >
+      <select name="categoria" id="categoriaSelect" class="form-control" required>
           <option value="">Seleccione categoría</option>
           {% for c in categorias %}
           <option value="{{ c.id }}" {% if sitio.idCategoria == c.id %}selected{% endif %}>{{ c.nombre }}</option>
@@ -112,7 +112,7 @@
       <div class="error-message" id="error-fecha_inauguracion">⚠️ Por favor, ingrese la fecha de inauguración.</div>
       <input type="date" name="fecha_inauguracion" id="fechaInauguracionInput" class="form-control" 
         value="{{ sitio.anioInauguracion.strftime('%Y-%m-%d') if sitio.anioInauguracion else '' }}"
-          max="{{ today }}">
+          max="{{ today }}" required>
     </div>
 
 
@@ -121,7 +121,7 @@
       <div class="error-message" id="error-fecha_registro">⚠️ Por favor, ingrese la fecha de registro.</div>
       <input type="date" name="fecha_registro" id="fechaRegistroInput" class="form-control" 
         value="{{ sitio.fechaRegistro.strftime('%Y-%m-%d') if sitio.fechaRegistro else '' }}"
-          max="{{ today }}"><br>
+          max="{{ today }}" required><br>
     </div>
 
     <div class="form-group" >
@@ -184,14 +184,11 @@
     <label>Acción:</label>
     <select name="accion" class="form-control">
       <option value="">Todas</option>
-      {% for a in ['CREATED', 'UPDATED', 'DELETED', 'STATE_CHANGED', 'TAGS_CHANGED', 'IMAGES_CHANGED'] %}
+      {% for a in ['CREATED', 'UPDATED', 'TAGS_CHANGED'] %}
       {% set a_label =
         'Creado' if a=='CREATED' else
         'Actualizado' if a=='UPDATED' else
-        'Eliminado' if a=='DELETED' else
-        'Cambio de estado' if a=='STATE_CHANGED' else
-        'Cambio de etiquetas' if a=='TAGS_CHANGED' else
-        'Imágenes actualizadas' if a=='IMAGES_CHANGED' else a %}
+        'Cambio de etiquetas' if a=='TAGS_CHANGED' else a %}
       <option value="{{ a }}" {% if filtros.accion == a %}selected{% endif %}>{{ a_label }}</option>
       {% endfor %}
     </select>

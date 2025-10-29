@@ -1,18 +1,20 @@
-from src.core import board
-from src.core.board.validaciones import validar_sitio_historico
+from src.core.entity import services
+from src.core.entity.services import EntityNotFoundError
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from src.core.auth import Usuario
-from src.core.board import SitioHistorico
+from src.core.entity.sitio_historico import SitioHistorico
 from src.core.database import db
-from src.core.board.ciudad import Ciudad
-from datetime import datetime, date
+from src.core.entity.ciudad import Ciudad
+from datetime import datetime, timezone, date
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from sqlalchemy import or_
-from src.core.board.tag import Tag
+from src.core.entity.tag import Tag
+from src.core.entity.validaciones import validar_sitio_historico
 from src.web.handlers.auth import login_required, check_permission, check
 from sqlalchemy import func
 import io, csv
 from flask import Response
-from datetime import date 
+from datetime import date, timezone, timedelta
 
 
 
@@ -79,6 +81,24 @@ def _fmt_value(campo: str, valor, ciudades_by_id: dict[int, str], categorias_by_
     return str(valor)
 
 
+try:
+    APP_TZ = ZoneInfo("America/Argentina/Buenos_Aires")
+except ZoneInfoNotFoundError:
+    APP_TZ = timezone(timedelta(hours=-3))  # UTC-3 como reemplazo
+
+
+def _to_local(dt: datetime | None) -> datetime | None:
+    if not dt:
+        return None
+    # Si viene naive, asumir UTC
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    try:
+        return dt.astimezone(APP_TZ)
+    except Exception:
+        return dt
+
+
 def _build_historial_view(historial: dict, ciudades, categorias, usuarios_by_id: dict[int, Usuario] | dict[int, str] | None = None):
     ciudades_by_id = {c.id: c.nombre for c in ciudades}
     categorias_by_id = {c.id: c.nombre for c in categorias}
@@ -109,12 +129,15 @@ def _build_historial_view(historial: dict, ciudades, categorias, usuarios_by_id:
         except Exception:
             usuario_label = None
 
+        fecha_local = _to_local(e.fechaAccion)
+        fecha_str = fecha_local.strftime('%Y-%m-%d %H:%M') if fecha_local else ""
         items_view.append({
-            "fecha": e.fechaAccion,
+            "fecha": fecha_local,
             "usuario_id": e.idUsuario,
             "usuario": usuario_label or f"#{e.idUsuario}",
             "accion": e.accion,
             "cambios": cambios,
+            "fecha_str": fecha_str,
         })
     return {
         "items": items_view,
@@ -135,10 +158,10 @@ def agregar_sitio_get():
     """
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
     hoy = date.today().strftime('%Y-%m-%d')
-    provincias = board.listar_provincias()
-    ciudades = board.listar_ciudades()
-    categorias = board.listar_categorias()
-    tags = board.listar_tags()
+    provincias = services.listar_provincias()
+    ciudades = services.listar_ciudades()
+    categorias = services.listar_categorias()
+    tags = services.listar_tags()
     return render_template(
         "sitios_historicos/formAgregar.html",
         provincias=provincias,
@@ -168,7 +191,7 @@ def agregar_sitio_post():
         return redirect(url_for("sitios_historicos.agregar_sitio_get", next=next_url))
     
     try:
-        nombre_sitio = board.crear_sitio(request.form, id_usuario=_current_user_id())
+        nombre_sitio = services.crear_sitio(request.form, id_usuario=_current_user_id())
         if nombre_sitio:
             # Usamos el nombre devuelto en el mensaje flash
             flash(f"El sitio histórico '{nombre_sitio.nombre}' ha sido agregado exitosamente.", "success")
@@ -192,14 +215,17 @@ def editar_sitio_get(sitio_id):
     """
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
     hoy = date.today().strftime('%Y-%m-%d')
-    sitio = board.obtener_sitio(sitio_id)
+    sitio = services.obtener_sitio(sitio_id)
+    if not sitio:
+        flash("Sitio histórico no encontrado.", "error")
+        return redirect(url_for("sitios_historicos.busqueda_avanzada"))
         # Filtros de historial
     usuario_id = request.args.get("usuario_id", type=int)
     accion = request.args.get("accion")
     desde = request.args.get("desde")
     hasta = request.args.get("hasta")
     page = request.args.get("page", default=1, type=int)
-    historial = board.listar_historial_sitio(
+    historial = services.listar_historial_sitio(
         id_sitio=sitio_id,
         usuario_id=usuario_id,
         accion=accion,
@@ -208,9 +234,9 @@ def editar_sitio_get(sitio_id):
         page=page,
         per_page=25,
     )
-    provincias = board.listar_provincias()
-    ciudades = board.listar_ciudades()
-    categorias = board.listar_categorias()
+    provincias = services.listar_provincias()
+    ciudades = services.listar_ciudades()
+    categorias = services.listar_categorias()
     # construir mapa de usuarios mencionados en historial
     user_ids = {e.idUsuario for e in historial["items"]}
     usuarios = []
@@ -222,7 +248,7 @@ def editar_sitio_get(sitio_id):
         for u in usuarios
     ]
     historial_view = _build_historial_view(historial, ciudades, categorias, usuarios_by_id)
-    tags = board.listar_tags()
+    tags = services.listar_tags()
     return render_template(
         "sitios_historicos/formEditar.html",
         sitio=sitio,
@@ -263,13 +289,16 @@ def editar_sitio_post(sitio_id):
         return redirect(url_for("sitios_historicos.editar_sitio_get", sitio_id=sitio_id, next=next_url))
         
     try:
-        nombre_sitio = board.editar_sitio(sitio_id, request.form, id_usuario=_current_user_id())
+        nombre_sitio = services.editar_sitio(sitio_id, request.form, id_usuario=_current_user_id())
         if nombre_sitio:
             # Usamos el nombre devuelto en el mensaje flash
             flash(f"El sitio histórico '{nombre_sitio.nombre}' ha sido editado exitosamente.", "success")
-        elif nombre_sitio is False:
-             # Esto ocurre si obtener_sitio(sitio_id) no encontró el sitio (no deberia pasar)
-            flash("Error: El sitio histórico no fue encontrado para su edicion.", "error")
+
+        return redirect(url_for("sitios_historicos.busqueda_avanzada"))
+
+    except EntityNotFoundError:
+        # Captura la excepción de "no encontrado"
+        flash("Error: El sitio histórico no fue encontrado para su edición.", "error")
         return redirect(url_for("sitios_historicos.busqueda_avanzada"))
     except Exception as e:
         flash(f"Ocurrió un error al intentar editar el sitio: {e}.", "error")
@@ -288,15 +317,16 @@ def eliminar_sitio(sitio_id):
     """
     try:
         # 💡 Capturamos el valor devuelto (el nombre del sitio o False)
-        nombre_sitio = board.eliminar_sitio(sitio_id, id_usuario=_current_user_id()) 
+        nombre_sitio = services.eliminar_sitio(sitio_id, id_usuario=_current_user_id()) 
         
         if nombre_sitio:
             # Usamos el nombre devuelto en el mensaje flash
             flash(f"El sitio histórico '{nombre_sitio.nombre}' ha sido eliminado exitosamente.", "success")
-        elif nombre_sitio is False:
-             # Esto ocurre si obtener_sitio(sitio_id) no encontró el sitio (no deberia pasar)
-            flash("Error: El sitio histórico no fue encontrado para su eliminación.", "error")
-            
+
+    except EntityNotFoundError:
+        # Captura la excepción de "no encontrado"
+        flash("Error: El sitio histórico que intentaste eliminar no fue encontrado.", "error")
+
     except Exception as e:
         flash(f"Ocurrió un error al intentar eliminar el sitio: {e}.", "error")
     
@@ -312,14 +342,17 @@ def ver_sitio(sitio_id):
     Maneja el caso donde el sitio no existe.
     """
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
-    sitio = board.obtener_sitio(sitio_id)
+    sitio = services.obtener_sitio(sitio_id)
+    if not sitio:
+        flash("Sitio histórico no encontrado.", "error")
+        return redirect(url_for("sitios_historicos.busqueda_avanzada"))
     # Filtros de historial
     usuario_id = request.args.get("usuario_id", type=int)
     accion = request.args.get("accion")
     desde = request.args.get("desde")
     hasta = request.args.get("hasta")
     page = request.args.get("page", default=1, type=int)
-    historial = board.listar_historial_sitio(
+    historial = services.listar_historial_sitio(
         id_sitio=sitio_id,
         usuario_id=usuario_id,
         accion=accion,
@@ -328,8 +361,8 @@ def ver_sitio(sitio_id):
         page=page,
         per_page=25,
     )
-    ciudades = board.listar_ciudades()
-    categorias = board.listar_categorias()
+    ciudades = services.listar_ciudades()
+    categorias = services.listar_categorias()
     # construir mapa y lista de usuarios para filtros y labels
     user_ids = {e.idUsuario for e in historial["items"]}
     usuarios = []
@@ -367,10 +400,10 @@ def busqueda_avanzada():
     Soporta paginación y ordenamiento de resultados.
     Proporciona un enlace para exportar los resultados filtrados a CSV.
     """
-    provincias = board.listar_provincias()
-    ciudades = board.listar_ciudades()
-    categorias = board.listar_categorias()
-    tags = board.listar_tags()
+    provincias = services.listar_provincias()
+    ciudades = services.listar_ciudades()
+    categorias = services.listar_categorias()
+    tags = services.listar_tags()
 
     provincia_id = request.args.get("provincia")
     ciudad_id = request.args.get("ciudad")

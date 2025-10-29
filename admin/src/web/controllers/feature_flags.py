@@ -1,9 +1,10 @@
 from __future__ import annotations
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from src.web.handlers.auth import login_required, is_system_admin
-from src.core.board import feature_flags as ff_service
+from src.core.entity.services import feature_flags as ff_service
 from src.core import auth as core_auth
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+from datetime import date, timezone, timedelta
 
 NOMBRE_A_ETIQUETA = {
     "admin_maintenance_mode": "Mantenimiento del sistema de administración",
@@ -19,7 +20,10 @@ def index():
     flags = ff_service.list_flags()
     # Enrich flags with modifier user email if available
     enriched = []
-    tz = ZoneInfo("America/Argentina/Buenos_Aires")
+    try:
+        APP_TZ = ZoneInfo("America/Argentina/Buenos_Aires")
+    except ZoneInfoNotFoundError:
+        APP_TZ = timezone(timedelta(hours=-3))  # UTC-3 como reemplazo
     for f in flags:
         user_email = None
         if getattr(f, 'idUsuarioModificacion', None):

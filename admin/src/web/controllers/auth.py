@@ -1,7 +1,8 @@
+from re import U
 from flask import Blueprint
 from flask import render_template, request, redirect, url_for, flash, session
 from src.core import auth
-from src.core.board import feature_flags as ff_service
+from src.core.entity.services import feature_flags as ff_service
 from src.web.handlers.auth import is_system_admin
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
@@ -24,8 +25,7 @@ def authenticate():
     # Si el panel está en mantenimiento admin, sólo administradores (esAdmin=True) pueden iniciar sesión
     flag = ff_service.get_flag('admin_maintenance_mode')
     if flag and flag.valor:
-        # Usar helper centralizado (booleano esAdmin)
-        if not is_system_admin():
+        if not getattr(user, 'esAdmin', False):
             msg = flag.mensaje or 'Sistema en mantenimiento.'
             flash(msg, 'error')
             return redirect(url_for('auth.login'))

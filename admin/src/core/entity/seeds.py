@@ -4,9 +4,9 @@ from typing import List
 import requests
 
 from src.core.database import db
-from src.core.board.provincia import Provincia
-from src.core.board.ciudad import Ciudad
-from src.core.board.categoria_sitio import CategoriaSitio
+from src.core.entity.provincia import Provincia
+from src.core.entity.ciudad import Ciudad
+from src.core.entity.categoria_sitio import CategoriaSitio
 
 
 def seed_geografia() -> None:

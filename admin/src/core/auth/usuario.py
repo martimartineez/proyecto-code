@@ -3,12 +3,12 @@ from typing import List, TYPE_CHECKING
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, DateTime, Boolean, Integer, ForeignKey
 from datetime import datetime, timezone
-from src.core.board.rol import Rol  
+from src.core.entity.rol import Rol  
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey, String, Table, Column
 
 if TYPE_CHECKING:
-    from src.core.board.rol import Rol
+    from src.core.entity.rol import Rol
 
 
 roles_usuarios = Table(

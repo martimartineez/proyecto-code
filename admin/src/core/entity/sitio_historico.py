@@ -6,9 +6,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.core.database import Base
 
 if TYPE_CHECKING:
-    from src.core.board.tag import Tag
-    from src.core.board.categoria_sitio import CategoriaSitio
-    from src.core.board.ciudad import Ciudad
+    from src.core.entity.tag import Tag
+    from src.core.entity.categoria_sitio import CategoriaSitio
+    from src.core.entity.ciudad import Ciudad
 
 
 class SitioHistorico(Base):

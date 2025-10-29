@@ -13,7 +13,7 @@
     <tbody>
       {% for e in historial_view['items'] %}
       <tr>
-        <td class="historial-fecha">{{ e.fecha.strftime('%Y-%m-%d %H:%M') if e.fecha else '' }}</td>
+        <td class="historial-fecha">{{ e.fecha_str }}</td>
         <td>{{ e.usuario }}</td>
         <td>
           {% set badge_class =

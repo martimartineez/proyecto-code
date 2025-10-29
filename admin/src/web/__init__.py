@@ -12,10 +12,10 @@ from src.web.controllers.tags import bp as tags_bp
 from src.core import seeds
 from src.web.controllers.auth import bp as auth_bp
 from src.core.bcrypt import bcrypt
-from src.web.handlers.auth import is_autenticated, check_permission
+from src.web.handlers.auth import is_autenticated, check_permission, is_system_admin
 from src.core import auth as core_auth
-from src.core.board import feature_flags as ff_service
-from src.core.board.feature_flags import get_flag
+from src.core.entity.services import feature_flags as ff_service
+from src.core.entity.services.feature_flags import get_flag
 from src.web.controllers.feature_flags import bp as feature_flags_bp
 
 session = Session()
@@ -53,22 +53,6 @@ def create_app(env="development", static_folder="../../static"):
 
     app.jinja_env.globals['is_autenticated'] = is_autenticated
     app.jinja_env.globals['check_permission'] = check_permission
-
-    # Helpers
-    def is_system_admin() -> bool:
-        from flask import session as _session
-        uid = _session.get('user_id')
-        if not uid:
-            return False
-        u = core_auth.get_user_by_id(uid)
-        if not u:
-            return False
-        try:
-            roles = getattr(u, 'roles', []) or []
-            has_role = any(getattr(r, 'nombre', None) in {'SystemAdmin'} for r in roles)
-        except Exception:
-            has_role = False
-        return bool(has_role)
 
     # Helper para usar flags en template
     def get_flag_value(nombre: str) -> bool:
