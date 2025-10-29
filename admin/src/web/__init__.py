@@ -12,7 +12,7 @@ from src.web.controllers.tags import bp as tags_bp
 from src.core import seeds
 from src.web.controllers.auth import bp as auth_bp
 from src.core.bcrypt import bcrypt
-from src.web.handlers.auth import is_autenticated, is_system_admin
+from src.web.handlers.auth import is_autenticated, check_permission
 from src.core import auth as core_auth
 from src.core.board import feature_flags as ff_service
 from src.core.board.feature_flags import get_flag
@@ -25,26 +25,21 @@ def create_app(env="development", static_folder="../../static"):
     app = Flask(__name__, static_folder=static_folder)
     app.config.from_object(config[env])
 
-    # initialize database
     database.init_db(app)
-    # initialize session
     session.init_app(app)
-    # initialize bcrypt
     bcrypt.init_app(app)
 
-    # Ensure default feature flags exist
     with app.app_context():
         try:
             ff_service.ensure_default_flags()
         except Exception:
-            # DB may not be ready yet for CLI commands like reset-db
             pass
 
     @app.route("/")
     def home():
         return render_template("home.html")
 
-    # Register blueprints
+    # Registro blueprints
     app.register_blueprint(sitios_historicos_bp)
     app.register_blueprint(user_management_bp)
     app.register_blueprint(tags_bp)
@@ -56,10 +51,26 @@ def create_app(env="development", static_folder="../../static"):
     app.register_error_handler(401, error.unauthorized)
     app.register_error_handler(500, error.server_error)
 
-    #register session handler and helpers
     app.jinja_env.globals['is_autenticated'] = is_autenticated
+    app.jinja_env.globals['check_permission'] = check_permission
 
-    # Simple helpers to use flags in templates
+    # Helpers
+    def is_system_admin() -> bool:
+        from flask import session as _session
+        uid = _session.get('user_id')
+        if not uid:
+            return False
+        u = core_auth.get_user_by_id(uid)
+        if not u:
+            return False
+        try:
+            roles = getattr(u, 'roles', []) or []
+            has_role = any(getattr(r, 'nombre', None) in {'SystemAdmin'} for r in roles)
+        except Exception:
+            has_role = False
+        return bool(has_role)
+
+    # Helper para usar flags en template
     def get_flag_value(nombre: str) -> bool:
         f = get_flag(nombre)
         return bool(f and f.valor)
@@ -68,6 +79,7 @@ def create_app(env="development", static_folder="../../static"):
         f = get_flag(nombre)
         return f.mensaje if f else None
 
+    app.jinja_env.globals['is_system_admin'] = is_system_admin
     app.jinja_env.globals['get_flag_value'] = get_flag_value
     app.jinja_env.globals['get_flag_message'] = get_flag_message
     # Exponer helper "system admin" (booleano esAdmin) a Jinja

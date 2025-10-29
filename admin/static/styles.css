@@ -509,7 +509,7 @@ form {
 /* 🧱 ESTILOS BASE */
 /* ==================== */
 table {
-    width: 100%;
+    width: 80%;
     border-collapse: collapse;
     margin-top: 15px;
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
