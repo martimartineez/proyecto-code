@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.core.database import Base
 
 if TYPE_CHECKING:
-    from src.core.board.sitio_historico import SitioHistorico
+    from src.core.entity.sitio_historico import SitioHistorico
 
 
 tags_sitios = Table(

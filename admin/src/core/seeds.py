@@ -1,12 +1,12 @@
-from src.core import board
-from src.core.board import seeds as board_seeds
+from src.core.entity import services
+from src.core.entity import seeds as entity_seeds
 from src.core import auth
 from src.core.database import db
-from src.core.board.ciudad import Ciudad
-from src.core.board.categoria_sitio import CategoriaSitio
-from src.core.board.rol import Rol
+from src.core.entity.ciudad import Ciudad
+from src.core.entity.categoria_sitio import CategoriaSitio
+from src.core.entity.rol import Rol
 from src.core.auth import Usuario
-from src.core.board.sitio_historico import SitioHistorico
+from src.core.entity.sitio_historico import SitioHistorico
 
 
 def _get_ciudad_id(nombre_ciudad: str) -> int | None:
@@ -26,11 +26,11 @@ def _get_categoria_id(nombre_categoria: str) -> int | None:
 def run():
     # 0) Seed geografía completa (Provincias y Ciudades) y Categorías
     try:
-        board_seeds.seed_geografia_completa()
+        entity_seeds.seed_geografia_completa()
     except Exception as exc:
         print(f"Error en seed_geografia_completa: {exc}")
     try:
-        board_seeds.seed_categorias()
+        entity_seeds.seed_categorias()
     except Exception as exc:
         print(f"Error en seed_categorias: {exc}")
 
@@ -46,7 +46,7 @@ def run():
 
     db.session.commit()
 
-    # Crear sitios con el esquema actual utilizando board.crear_sitio
+    # Crear sitios con el esquema actual utilizando services.crear_sitio
     # Asegúrate de haber corrido reset-db para tener ciudades y categorías seed-eadas
     if db.session.query(SitioHistorico).count() > 0:
         return
@@ -383,16 +383,16 @@ def run():
             "visible": item.get("visible", "True"),
             "baja": item.get("baja", "False"),
         }
-        created.append(board.crear_sitio_seed(form_like))
+        created.append(services.crear_sitio_seed(form_like))
 
     print("Seeded sitios:")
     for s in created:
         print(" ", s)
 
     print("Creating roles...")
-    rol_admin = board.create_rol(nombre="Admin")
-    rol_editor = board.create_rol(nombre="Editor")
-    rol_user = board.create_rol(nombre="Usuario")
+    rol_admin = services.create_rol(nombre="Admin")
+    rol_editor = services.create_rol(nombre="Editor")
+    rol_user = services.create_rol(nombre="Usuario")
     print("Created roles! 👍🏻")
 
     print('Creando permisos..')

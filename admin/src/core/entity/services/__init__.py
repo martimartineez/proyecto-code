@@ -1,12 +1,12 @@
 from datetime import datetime, timedelta
 from sqlalchemy.exc import IntegrityError
 from src.core.database import db
-from src.core.board.sitio_historico import SitioHistorico
-from src.core.board.historial_sitio import HistorialSitio
-from src.core.board.provincia import Provincia
-from src.core.board.ciudad import Ciudad
-from src.core.board.categoria_sitio import CategoriaSitio  # noqa: F401
-from src.core.board.tag import Tag  # noqa: F401
+from src.core.entity.sitio_historico import SitioHistorico
+from src.core.entity.historial_sitio import HistorialSitio
+from src.core.entity.provincia import Provincia
+from src.core.entity.ciudad import Ciudad
+from src.core.entity.categoria_sitio import CategoriaSitio  # noqa: F401
+from src.core.entity.tag import Tag  # noqa: F401
 from src.core.auth.usuario import Usuario
 import re
 
@@ -392,6 +392,7 @@ def listar_historial_sitio(
         "per_page": per_page,
         "pages": (total + per_page - 1) // per_page if per_page else 1,
     }
+
 def listar_tags(page=1, per_page=25, q=None, sort=None, order="asc"):
     """
     Lista los tags con paginacion, busqueda y ordenamiento.
@@ -526,7 +527,6 @@ def editar_tag(tag_id: int, nombre_nuevo: str):
     return tag
 
 
-
 def eliminar_tag(tag_id: int):
     """
     Realiza la eliminación lógica de un Tag (establece 'baja' en True).
@@ -559,8 +559,9 @@ def eliminar_tag(tag_id: int):
         # Lanza cualquier otro error de DB
         raise
 
+
 def create_rol(nombre: str):
-    from src.core.board.rol import Rol
+    from src.core.entity.rol import Rol
 
     nuevo = Rol(nombre=nombre)
     db.session.add(nuevo)
@@ -568,17 +569,17 @@ def create_rol(nombre: str):
     return nuevo
 
 def list_roles():
-    from src.core.board.rol import Rol
+    from src.core.entity.rol import Rol
 
     return db.session.query(Rol).order_by(Rol.id).all()
 
 def get_rol_by_id(rol_id: int):
-    from src.core.board.rol import Rol
+    from src.core.entity.rol import Rol
 
     return db.session.get(Rol, rol_id)
 
 def get_id_rol_admin():
-    from src.core.board.rol import Rol
+    from src.core.entity.rol import Rol
 
     rol_admin = db.session.query(Rol).filter(Rol.nombre == "Admin").first()
     return rol_admin.id if rol_admin else None

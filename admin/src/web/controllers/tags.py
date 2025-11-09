@@ -1,8 +1,8 @@
-from src.core import board
-from src.core.board import TagVinculadoError, EntityNotFoundError
+from src.core.entity import services
+from src.core.entity.services import TagVinculadoError, EntityNotFoundError
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from src.web.handlers.auth import login_required, check
-from core.board.validaciones import validar_tag
+from src.core.entity.validaciones import validar_tag
 from sqlalchemy.exc import IntegrityError
 from src.core.database import db
 
@@ -22,8 +22,8 @@ def index():
     sort = request.args.get("sort", "nombre")  # puede ser "nombre,fecha"
     order = request.args.get("order", "asc")
 
-    tags = board.listar_tags(page=page, per_page=per_page, q=q, sort=sort, order=order)
-    total = board.contar_tags(q=q)
+    tags = services.listar_tags(page=page, per_page=per_page, q=q, sort=sort, order=order)
+    total = services.contar_tags(q=q)
     total_pages = (total + per_page - 1) // per_page
 
     return render_template(
@@ -65,7 +65,7 @@ def agregar_tag_post():
     
     try:
         # 2. Llamar a la lógica de negocio simple
-        tag_creado = board.procesar_o_crear_tag(nombre_tag) 
+        tag_creado = services.procesar_o_crear_tag(nombre_tag) 
         
         # 3. Éxito: retorna la entidad (Tag)
         if tag_creado:
@@ -99,7 +99,7 @@ def editar_tag_get(tag_id):
     Renderiza el formulario para editar un tag existente.
     Maneja el caso donde el tag no existe.
     """
-    tag = board.obtener_tag(tag_id)
+    tag = services.obtener_tag(tag_id)
     if not tag:
         flash("Tag no encontrado.", "error")
         return redirect(url_for("tags.index"))
@@ -114,7 +114,7 @@ def editar_tag_post(tag_id):
     Procesa el formulario para editar un tag existente.
     Maneja validaciones y muestra mensajes flash según el resultado.
     """
-    tag = board.obtener_tag(tag_id)
+    tag = services.obtener_tag(tag_id)
     if not tag:
         flash("Tag no encontrado.", "error")
         return redirect(url_for("tags.index"))
@@ -133,7 +133,7 @@ def editar_tag_post(tag_id):
     
     try:
         # La función solo hace la edición o lanza excepción
-        board.editar_tag(tag.id, nombre_nuevo) 
+        services.editar_tag(tag.id, nombre_nuevo) 
         
         # 1. Éxito:
         flash("Tag editado exitosamente.", "success")
@@ -164,7 +164,7 @@ def eliminar_tag(tag_id):
     """
     try:
         # 1. Llama a la lógica de negocio (elimina o lanza error)
-        board.eliminar_tag(tag_id)
+        services.eliminar_tag(tag_id)
         
         # ÉXITO: La eliminación fue exitosa o el tag no existía (retornó True)
         flash("Tag eliminado exitosamente.", "success")

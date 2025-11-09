@@ -1,6 +1,6 @@
 from typing import List, TYPE_CHECKING
 from src.core.database import Base
-from src.core.board.permiso import Permiso
+from src.core.entity.permiso import Permiso
 #from src.core.auth.usuario import Usuario
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey, String, Table, Column

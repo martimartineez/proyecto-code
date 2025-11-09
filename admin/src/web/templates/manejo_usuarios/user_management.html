@@ -175,6 +175,8 @@
     <tbody>
         {% for usuario in usuarios %}
         {% if not usuario.borradoLogico %}
+        {% set tieneRolAdmin = usuario.roles | selectattr('nombre', 'equalto', 'Admin') | list | length > 0 %}
+        {% set esAdminSistemaUsuario = usuario.esAdmin or tieneRolAdmin %}
         <tr>
             <td>{{ usuario.nombre }}</td>
             <td>{{ usuario.email }}</td>
@@ -185,42 +187,45 @@
                     <button type="submit" class="button-18" role="button">Ver detalles</button>
                 </form>
                 <!-- BOTON MODIFICAR -->
+                {% if not usuario.esAdmin %}
                 <form action="{{ url_for('usuarios.modificar_get', usuario_id=usuario.id) }}" method="get"
                     style="display:inline;">
                     <button type="submit" class="button-18" role="button" style="background-color: green">Editar</button>
                 </form>
+                {% endif %}
                 <!-- BOTON ELIMINAR -->
+                {% if not usuario.esAdmin %}    
                 <form action="{{ url_for('usuarios.eliminar', usuario_id=usuario.id) }}" method="post"
                     style="display:inline;">
                     <button type="submit" onclick="return confirm('¿Seguro que deseas eliminar este usuario?');"
                         class="button-18" role="button" style="background-color: rgb(204, 45, 45)">Eliminar</button>
                 </form>
-                         <!-- BOTON DESACTIVAR/ACTIVAR -->
-                {% set esAdmin = usuario.roles | selectattr("nombre", "equalto", "Admin") | list | length > 0 %}
-
-                {% if not esAdmin %}
-                {% if usuario.activo %}
-                <form action="{{ url_for('usuarios.desactivar', usuario_id=usuario.id) }}" method="post"
-                    style="display:inline;">
-                    <button type="submit" onclick="return confirm('¿Seguro que deseas desactivar este usuario?');"
-                        class="button-18" role="button" style="background-color: rgb(148, 67, 67)">
-                        Desactivar
-                    </button>
-                </form>
-                {% else %}
-                <form action="{{ url_for('usuarios.activar', usuario_id=usuario.id) }}" method="post"
-                    style="display:inline;">
-                    <button type="submit" onclick="return confirm('¿Seguro que deseas activar este usuario?');"
-                        class="button-18" role="button" style="background-color: green">
-                        Activar
-                    </button>
-                </form>
                 {% endif %}
+                <!-- BOTON DESACTIVAR/ACTIVAR -->
+               
+                {% if not esAdminSistemaUsuario %}
+                  {% if usuario.activo %}
+                    <form action="{{ url_for('usuarios.desactivar', usuario_id=usuario.id) }}" method="post"
+                        style="display:inline;">
+                        <button type="submit" onclick="return confirm('¿Seguro que deseas desactivar este usuario?');"
+                            class="button-18" role="button" style="background-color: rgb(148, 67, 67)">
+                            Desactivar
+                        </button>
+                    </form>
+                  {% else %}
+                    <form action="{{ url_for('usuarios.activar', usuario_id=usuario.id) }}" method="post"
+                        style="display:inline;">
+                        <button type="submit" onclick="return confirm('¿Seguro que deseas activar este usuario?');"
+                            class="button-18" role="button" style="background-color: green">
+                            Activar
+                        </button>
+                    </form>
+                  {% endif %}
                 {% endif %}
-            </td>
-        </tr>
-        {% endif %}
-        {% endfor %}
+                </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
     </tbody>
 </table>
 
