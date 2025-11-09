@@ -390,21 +390,7 @@ def ver_sitio(sitio_id):
         next_url=next_url,
     )
 
-@bp.route("/", methods=["GET"])
-@login_required
-@check("site_index")
-def busqueda_avanzada():
-    """
-    Muestra la página de búsqueda avanzada de sitios históricos con múltiples filtros.
-    Permite filtrar por provincia, ciudad, categoría, estado de conservación, fechas, visibilidad y tags.
-    Soporta paginación y ordenamiento de resultados.
-    Proporciona un enlace para exportar los resultados filtrados a CSV.
-    """
-    provincias = services.listar_provincias()
-    ciudades = services.listar_ciudades()
-    categorias = services.listar_categorias()
-    tags = services.listar_tags()
-
+def filtrar(request):
     provincia_id = request.args.get("provincia")
     ciudad_id = request.args.get("ciudad")
     categoria_id = request.args.get("categoria")
@@ -412,14 +398,12 @@ def busqueda_avanzada():
     fecha_desde = request.args.get("fecha_desde")
     fecha_hasta = request.args.get("fecha_hasta")
     visibilidad = request.args.get("visibilidad")
-    page = request.args.get("page", 1, type=int)
     sort_by = request.args.get("sort_by", "fecha_registro")
     order = request.args.get("order", "asc")
     tag_ids = request.args.getlist("tags", type=int)
 
-    per_page = 25
-
     query = db.session.query(SitioHistorico).join(Ciudad)
+
     buscar = request.args.get("buscar", "").strip()
     if tag_ids:
         query = query.join(SitioHistorico.tags).filter(Tag.id.in_(tag_ids))
@@ -461,6 +445,28 @@ def busqueda_avanzada():
     query = query if sort_by == "ciudad" else query
     query = query.order_by(column.desc() if order == "desc" else column.asc())
 
+    return query
+
+
+@bp.route("/", methods=["GET"])
+@login_required
+@check("site_index")
+def busqueda_avanzada():
+    """
+    Muestra la página de búsqueda avanzada de sitios históricos con múltiples filtros.
+    Permite filtrar por provincia, ciudad, categoría, estado de conservación, fechas, visibilidad y tags.
+    Soporta paginación y ordenamiento de resultados.
+    Proporciona un enlace para exportar los resultados filtrados a CSV.
+    """
+    provincias = services.listar_provincias()
+    ciudades = services.listar_ciudades()
+    categorias = services.listar_categorias()
+    tags = services.listar_tags()
+
+
+    per_page = 25
+    page = request.args.get("page", 1, type=int)
+    query = filtrar(request);
     
     total_results = query.count()
     total_pages = (total_results + per_page - 1) // per_page
@@ -490,62 +496,8 @@ def exportar_csv():
     Exporta los resultados filtrados de la búsqueda avanzada de sitios históricos a un archivo CSV.
     Aplica los mismos filtros que la búsqueda avanzada y genera un archivo CSV descargable.
     """
-    provincia_id = request.args.get("provincia")
-    ciudad_id = request.args.get("ciudad")
-    categoria_id = request.args.get("categoria")
-    estado_conservacion = request.args.get("estado_conservacion")
-    fecha_desde = request.args.get("fecha_desde")
-    fecha_hasta = request.args.get("fecha_hasta")
-    visibilidad = request.args.get("visibilidad")
-    sort_by = request.args.get("sort_by", "fecha_registro")
-    order = request.args.get("order", "asc")
-    tag_ids = request.args.getlist("tags", type=int)
-
-    query = db.session.query(SitioHistorico)
-
-    buscar = request.args.get("buscar", "").strip()
-    if tag_ids:
-        query = query.join(SitioHistorico.tags).filter(Tag.id.in_(tag_ids))
-        query = query.group_by(SitioHistorico.id)
-        query = query.having(func.count(Tag.id) == len(tag_ids))
-
-    if provincia_id:
-        query = query.join(Ciudad).filter(Ciudad.idProvincia == provincia_id)
-    if ciudad_id:
-        query = query.filter(SitioHistorico.idCiudad == ciudad_id)
-    if categoria_id:
-        query = query.filter(SitioHistorico.idCategoria == categoria_id)
-    if estado_conservacion:
-        query = query.filter(SitioHistorico.estadoConservacion.ilike(f"%{estado_conservacion}%"))
-    if fecha_desde:
-        query = query.filter(SitioHistorico.fechaRegistro >= fecha_desde)
-    if fecha_hasta:
-        query = query.filter(SitioHistorico.fechaRegistro <= fecha_hasta)
-    if visibilidad == "1":
-        query = query.filter(SitioHistorico.visible == True)
-    elif visibilidad == "0":
-        query = query.filter(SitioHistorico.visible == False)
-    if buscar:
-        from sqlalchemy import or_
-        query = query.filter(
-            or_(
-                SitioHistorico.nombre.ilike(f"%{buscar}%"),
-                SitioHistorico.descBreve.ilike(f"%{buscar}%")
-            )
-        )
-
-    if sort_by == "nombre":
-        columna = SitioHistorico.nombre
-    elif sort_by == "fecha_registro":
-        columna = SitioHistorico.fechaRegistro
-    else:
-        columna = SitioHistorico.fechaRegistro  # default
-
-    if order == "desc":
-        query = query.order_by(columna.desc())
-    else:
-        query = query.order_by(columna.asc())
-    sitios = query.all()
+    
+    sitios = filtrar(request).all()
 
     data = []
     for s in sitios:
