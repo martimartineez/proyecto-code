@@ -9,6 +9,7 @@ from src.web.controllers.sitios_historicos import bp as sitios_historicos_bp
 from src.web.controllers.tags import bp as tags_bp
 from src.web.controllers.user_management import bp as user_management_bp
 from src.web.controllers.tags import bp as tags_bp
+from src.web.api.sites import bp as sites_api_bp
 from src.core import seeds
 from src.web.controllers.auth import bp as auth_bp
 from src.core.bcrypt import bcrypt
@@ -24,6 +25,7 @@ session = Session()
 def create_app(env="development", static_folder="../../static"):
     app = Flask(__name__, static_folder=static_folder)
     app.config.from_object(config[env])
+    app.config['JSON_SORT_KEYS'] = False
 
     database.init_db(app)
     session.init_app(app)
@@ -50,6 +52,7 @@ def create_app(env="development", static_folder="../../static"):
     app.register_error_handler(404, error.not_found)
     app.register_error_handler(401, error.unauthorized)
     app.register_error_handler(500, error.server_error)
+    app.register_blueprint(sites_api_bp)
 
     app.jinja_env.globals['is_autenticated'] = is_autenticated
     app.jinja_env.globals['check_permission'] = check_permission

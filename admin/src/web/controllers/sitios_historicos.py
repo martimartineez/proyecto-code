@@ -390,21 +390,21 @@ def ver_sitio(sitio_id):
         next_url=next_url,
     )
 
-def filtrar(request):
-    provincia_id = request.args.get("provincia")
-    ciudad_id = request.args.get("ciudad")
-    categoria_id = request.args.get("categoria")
-    estado_conservacion = request.args.get("estado_conservacion")
-    fecha_desde = request.args.get("fecha_desde")
-    fecha_hasta = request.args.get("fecha_hasta")
-    visibilidad = request.args.get("visibilidad")
-    sort_by = request.args.get("sort_by", "fecha_registro")
-    order = request.args.get("order", "asc")
-    tag_ids = request.args.getlist("tags", type=int)
+def filtrar(filtros):
+    provincia_id = filtros.get("provincia")
+    ciudad_id = filtros.get("ciudad")
+    categoria_id = filtros.get("categoria")
+    estado_conservacion = filtros.get("estado_conservacion")
+    fecha_desde = filtros.get("fecha_desde")
+    fecha_hasta = filtros.get("fecha_hasta")
+    visibilidad = filtros.get("visibilidad")
+    sort_by = filtros.get("sort_by", "fecha_registro")
+    order = filtros.get("order", "asc")
+    tag_ids = filtros.get("tags", [])
 
     query = db.session.query(SitioHistorico).join(Ciudad)
 
-    buscar = request.args.get("buscar", "").strip()
+    buscar = (filtros.get("buscar") or "").strip()
     if tag_ids:
         query = query.join(SitioHistorico.tags).filter(Tag.id.in_(tag_ids))
         query = query.group_by(SitioHistorico.id)
@@ -466,7 +466,21 @@ def busqueda_avanzada():
 
     per_page = 25
     page = request.args.get("page", 1, type=int)
-    query = filtrar(request);
+
+    filtros = {
+    "provincia": request.args.get("provincia"),
+    "ciudad": request.args.get("ciudad"),
+    "categoria": request.args.get("categoria"),
+    "estado_conservacion": request.args.get("estado_conservacion"),
+    "fecha_desde": request.args.get("fecha_desde"),
+    "fecha_hasta": request.args.get("fecha_hasta"),
+    "visibilidad": request.args.get("visibilidad"),
+    "sort_by": request.args.get("sort_by"),
+    "order": request.args.get("order"),
+    "tags": request.args.getlist("tags", type=int),
+    "buscar": request.args.get("buscar"),
+}
+    query = filtrar(filtros);
     
     total_results = query.count()
     total_pages = (total_results + per_page - 1) // per_page

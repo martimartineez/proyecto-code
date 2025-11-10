@@ -5,6 +5,7 @@ from typing import List, TYPE_CHECKING
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.core.database import Base
 
+from collections import OrderedDict
 if TYPE_CHECKING:
     from src.core.entity.tag import Tag
     from src.core.entity.categoria_sitio import CategoriaSitio
@@ -64,3 +65,18 @@ class SitioHistorico(Base):
             f"<SitioHistorico(id={self.id}, nombre={self.nombre}, ciudad={self.ciudad}, "
             f"latitud={self.latitud}, longitud={self.longitud}, baja={self.baja})>"
         )
+    def to_dict(self):
+        d = OrderedDict()
+        d["id"] = self.id
+        d["name"] = self.nombre
+        d["short_description"] = self.descBreve
+        d["description"] = self.descCompleta
+        d["city"] = self.ciudad.nombre if self.ciudad else None
+        d["province"] = self.ciudad.provincia.nombre if self.ciudad and self.ciudad.provincia else None
+        d["lat"] = self.latitud
+        d["long"] = self.longitud
+        d["tags"] = [t.nombre for t in self.tags]
+        d["state_of_conservation"] = self.estadoConservacion
+        d["inserted_at"] = self.inserted_at.isoformat() if self.inserted_at else None
+        d["updated_at"] = self.updated_at.isoformat() if self.updated_at else None
+        return d
