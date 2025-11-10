@@ -18,6 +18,7 @@ from src.core import auth as core_auth
 from src.core.entity.services import feature_flags as ff_service
 from src.core.entity.services.feature_flags import get_flag
 from src.web.controllers.feature_flags import bp as feature_flags_bp
+from flask_jwt_extended import JWTManager
 
 session = Session()
 
@@ -26,6 +27,8 @@ def create_app(env="development", static_folder="../../static"):
     app = Flask(__name__, static_folder=static_folder)
     app.config.from_object(config[env])
     app.config['JSON_SORT_KEYS'] = False
+    app.config["JWT-SECRET-KEY"] = "miClaveJWTSecreta12345678"
+    jwt = JWTManager(app)
 
     database.init_db(app)
     session.init_app(app)
