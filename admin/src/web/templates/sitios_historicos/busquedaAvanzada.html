@@ -5,19 +5,19 @@
 {% block content %}
 <h1>Sitios Históricos</h1>
 <a href="/">
-    <button type="button" type="button" class="button-22">Página principal</button>
+  <button type="button" type="button" class="button-22">Página principal</button>
 </a>
 <div>
   <a href="{{ url_for('sitios_historicos.agregar_sitio_get') }}">
-      <button type="button" type="button" class="button-18" role="button">Agregar sitio histórico</button>
+    <button type="button" type="button" class="button-18" role="button" style="background-color: green">Agregar sitio histórico</button>
   </a>
-  {% if permisocsv %}
-  <a href="{{ url_for('sitios_historicos.exportar_csv', **request_args) }}" type="button" class="button-18">
+  {% if check_permission("site_export") %}
+  <a href="{{ url_for('sitios_historicos.exportar_csv', **request_args) }}" type="button" class="button-18" style="background-color: green">
     Exportar CSV
   </a>
   {% endif %}
 </div>
-<button id="btnFiltros" type= "button" class="button-18" role="button">Mostrar filtros avanzados</button>
+<button id="btnFiltros" type="button" class="button-18" role="button">Mostrar filtros avanzados</button>
 
 {%with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}
@@ -35,9 +35,9 @@
       <select id="provinciaSelect" name="provincia" class="form-control">
         <option value="">Seleccione provincia</option>
         {% for p in provincias %}
-          <option value="{{ p.id }}" {% if request_args.get('provincia') == p.id|string %}selected{% endif %}>
-            {{ p.nombre }}
-          </option>
+        <option value="{{ p.id }}" {% if request_args.get('provincia')==p.id|string %}selected{% endif %}>
+          {{ p.nombre }}
+        </option>
         {% endfor %}
       </select>
     </div>
@@ -47,10 +47,10 @@
       <select id="ciudadSelect" name="ciudad" disabled class="form-control">
         <option value="">Seleccione ciudad</option>
         {% for c in ciudades %}
-          <option value="{{ c.id }}" data-provincia="{{ c.idProvincia }}"
-            {% if request_args.get('ciudad') == c.id|string %}selected{% endif %}>
-            {{ c.nombre }}
-          </option>
+        <option value="{{ c.id }}" data-provincia="{{ c.idProvincia }}" {% if request_args.get('ciudad')==c.id|string
+          %}selected{% endif %}>
+          {{ c.nombre }}
+        </option>
         {% endfor %}
       </select>
     </div>
@@ -60,9 +60,9 @@
       <select name="categoria" class="form-control">
         <option value="">Seleccione categoría</option>
         {% for c in categorias %}
-          <option value="{{ c.id }}" {% if request_args.get('categoria') == c.id|string %}selected{% endif %}>
-            {{ c.nombre }}
-          </option>
+        <option value="{{ c.id }}" {% if request_args.get('categoria')==c.id|string %}selected{% endif %}>
+          {{ c.nombre }}
+        </option>
         {% endfor %}
       </select>
     </div>
@@ -71,63 +71,69 @@
       <label>Estado:</label>
       <select name="estado_conservacion" class="form-control">
         <option value="">Seleccione estado</option>
-        <option value="Bueno" {% if request_args.get('estado_conservacion') == 'Bueno' %}selected{% endif %}>Bueno</option>
-        <option value="Regular" {% if request_args.get('estado_conservacion') == 'Regular' %}selected{% endif %}>Regular</option>
-        <option value="Malo" {% if request_args.get('estado_conservacion') == 'Malo' %}selected{% endif %}>Malo</option>
+        <option value="Bueno" {% if request_args.get('estado_conservacion')=='Bueno' %}selected{% endif %}>Bueno
+        </option>
+        <option value="Regular" {% if request_args.get('estado_conservacion')=='Regular' %}selected{% endif %}>Regular
+        </option>
+        <option value="Malo" {% if request_args.get('estado_conservacion')=='Malo' %}selected{% endif %}>Malo</option>
       </select>
     </div>
 
     <div>
-  <label>Tags:</label>
-  <div class="tag-checkboxes">
-    {% for t in tags %}
-      <label class="tag-option">
-        <input type="checkbox" name="tags" value="{{ t.id }}"
-          {% if t.id|string in request_args.getlist('tags') %}checked{% endif %}>
-        {{ t.nombre }}
-      </label>
-    {% endfor %}
-  </div>
-</div>
+      <label>Tags:</label>
+      <div class="tag-checkboxes">
+        {% for t in tags %}
+        <label class="tag-option">
+          <input type="checkbox" name="tags" value="{{ t.id }}" {% if t.id|string in request_args.getlist('tags')
+            %}checked{% endif %}>
+          {{ t.nombre }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
 
     <div>
       <label>Desde:</label>
-      <input class="form-control" type="date" name="fecha_desde" value="{{ request_args.get('fecha_desde','') }}" max="{{ date.today().isoformat() }}">
+      <input class="form-control" type="date" name="fecha_desde" value="{{ request_args.get('fecha_desde','') }}"
+        max="{{ date.today().isoformat() }}">
     </div>
 
     <div>
       <label>Hasta:</label>
-      <input class="form-control" type="date" name="fecha_hasta" value="{{ request_args.get('fecha_hasta','') }}" max="{{ date.today().isoformat() }}">
+      <input class="form-control" type="date" name="fecha_hasta" value="{{ request_args.get('fecha_hasta','') }}"
+        max="{{ date.today().isoformat() }}">
     </div>
 
     <div>
       <label>Visibilidad:</label>
       <select name="visibilidad" class="form-control">
-        <option value="" {% if request_args.get('visibilidad') == '' %}selected{% endif %}>Todos</option>
-        <option value="1" {% if request_args.get('visibilidad') == '1' %}selected{% endif %}>Sí</option>
-        <option value="0" {% if request_args.get('visibilidad') == '0' %}selected{% endif %}>No</option>
+        <option value="" {% if request_args.get('visibilidad')=='' %}selected{% endif %}>Todos</option>
+        <option value="1" {% if request_args.get('visibilidad')=='1' %}selected{% endif %}>Sí</option>
+        <option value="0" {% if request_args.get('visibilidad')=='0' %}selected{% endif %}>No</option>
       </select>
     </div>
 
     <div>
       <label>Buscar:</label>
-      <input class="form-control" type="text" name="buscar" value="{{ request_args.get('buscar','') }}" placeholder="Nombre o descripción">
+      <input class="form-control" type="text" name="buscar" value="{{ request_args.get('buscar','') }}"
+        placeholder="Nombre o descripción">
     </div>
 
     <div>
       <label>Ordenar por:</label>
       <select name="sort_by" id="sort_by" class="form-control">
-        <option value="fecha_registro" {% if request_args.get('sort_by') == 'fecha_registro' %}selected{% endif %}>Fecha</option>
-        <option value="nombre" {% if request_args.get('sort_by') == 'nombre' %}selected{% endif %}>Nombre</option>
-        <option value="ciudad" {% if request_args.get('sort_by') == 'ciudad' %}selected{% endif %}>Ciudad</option>
+        <option value="fecha_registro" {% if request_args.get('sort_by')=='fecha_registro' %}selected{% endif %}>Fecha
+        </option>
+        <option value="nombre" {% if request_args.get('sort_by')=='nombre' %}selected{% endif %}>Nombre</option>
+        <option value="ciudad" {% if request_args.get('sort_by')=='ciudad' %}selected{% endif %}>Ciudad</option>
       </select>
     </div>
 
     <div>
       <label>Orden:</label>
       <select name="order" id="order" class="form-control">
-        <option value="asc" {% if request_args.get('order') == 'asc' %}selected{% endif %}>Ascendente</option>
-        <option value="desc" {% if request_args.get('order') == 'desc' %}selected{% endif %}>Descendente</option>
+        <option value="asc" {% if request_args.get('order')=='asc' %}selected{% endif %}>Ascendente</option>
+        <option value="desc" {% if request_args.get('order')=='desc' %}selected{% endif %}>Descendente</option>
       </select>
     </div>
 
@@ -138,55 +144,63 @@
 
   </div>
 </form>
+
+<!-- TABLA SITIOS -->
+
 {% if sitios is not none %}
-    {% if sitios %}
-        <p>Total de resultados encontrados: {{ total_results }}</p>
-        <h2>Resultados</h2>
-        <table>
-    <thead>
-        <tr>
-            <th>Nombre</th>
-            <th>Ciudad</th>
-            <th>Provincia</th>
-            <th>Estado Conservación</th>
-            <th>Fecha Registro</th>
-            <th>Visible</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for sitio in sitios %}
-        <tr>
-            <td>{{ sitio.nombre }}</td>
-            <td>{{ sitio.ciudad.nombre if sitio.ciudad else 'N/A' }}</td>
-            <td>{{ sitio.ciudad.provincia.nombre if sitio.ciudad and sitio.ciudad.provincia else 'N/A' }}</td>
-            <td>{{ sitio.estadoConservacion }}</td>
-            <td>{{ sitio.fechaRegistro.strftime('%Y-%m-%d') if sitio.fechaRegistro else 'N/A' }}</td>
-            <td>{{ 'Sí' if sitio.visible else 'No' }}</td>
-            <td>
-                <a href="{{ url_for('sitios_historicos.ver_sitio', sitio_id=sitio.id) }}">
-                  <button type="button" class="button-18" role="button">Ver detalle</button>
-                </a>
-                <a href="{{ url_for('sitios_historicos.editar_sitio_get', sitio_id=sitio.id) }}">
-                     <button type="button" class="button-18" role="button">Editar</button>
-                </a>
-                {% if permiso %}
-                    <form action="{{ url_for('sitios_historicos.eliminar_sitio', sitio_id=sitio.id) }}" method="post" style="display:inline;">
-                        <button type="submit" onclick="return confirm('¿Estás seguro de que quieres eliminar el sitio: {{ sitio.nombre }}?');" class="button-18" role="button">
-                          Eliminar
-                        </button>
-                    </form>
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-    {% else %}
-        {% if request_args %}
-            <p>No se encontraron sitios históricos con los filtros aplicados.</p>
+{% if sitios %}
+<p>Total de resultados encontrados: {{ total_results }}</p>
+<h2>Resultados</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Ciudad</th>
+      <th>Provincia</th>
+      <th>Estado Conservación</th>
+      <th>Fecha Registro</th>
+      <th>Visible</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for sitio in sitios %}
+    <tr>
+      <td data-label="Nombre">{{ sitio.nombre }}</td>
+      <td data-label="Ciudad">{{ sitio.ciudad.nombre if sitio.ciudad else 'N/A' }}</td>
+      <td data-label="Provincia">{{ sitio.ciudad.provincia.nombre if sitio.ciudad and sitio.ciudad.provincia else 'N/A'
+        }}</td>
+      <td data-label="Estado Conservación">{{ sitio.estadoConservacion }}</td>
+      <td data-label="Fecha Registro">{{ sitio.fechaRegistro.strftime('%Y-%m-%d') if sitio.fechaRegistro else 'N/A' }}
+      </td>
+      <td data-label="Visible">{{ 'Sí' if sitio.visible else 'No' }}</td>
+      <td data-label="Acciones">
+        <a href="{{ url_for('sitios_historicos.ver_sitio', sitio_id=sitio.id) }}">
+          <button type="button" class="button-18" role="button">Ver detalle</button>
+        </a>
+        <a href="{{ url_for('sitios_historicos.editar_sitio_get', sitio_id=sitio.id) }}">
+          <button type="button" class="button-18" role="button" style="background-color: green">Editar</button>
+        </a>
+        {% if check_permission("site_destroy") %}
+        <form action="{{ url_for('sitios_historicos.eliminar_sitio', sitio_id=sitio.id) }}" method="post"
+          style="display:inline;">
+          <button type="submit"
+            onclick="return confirm('¿Estás seguro de que quieres eliminar el sitio: {{ sitio.nombre }}?');"
+            class="button-18" role="button" style="background-color: rgb(204, 45, 45)">
+            Eliminar
+          </button>
+        </form>
         {% endif %}
-    {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+{% if request_args %}
+<p>No se encontraron sitios históricos con los filtros aplicados.</p>
+{% endif %}
+{% endif %}
 {% endif %}
 
 
@@ -210,59 +224,49 @@
     {# Calculamos los límites de páginas visibles manualmente #}
     {% set start_page = page - 4 %}
     {% set end_page = page + 5 %}
-    {% if start_page < 1 %}
-      {% set end_page = end_page + (1 - start_page) %}
-      {% set start_page = 1 %}
-    {% endif %}
-    {% if end_page > total_pages %}
+    {% if start_page < 1 %} {% set end_page=end_page + (1 - start_page) %} {% set start_page=1 %} {% endif %} {% if
+      end_page> total_pages %}
       {% set start_page = start_page - (end_page - total_pages) %}
       {% set end_page = total_pages %}
-    {% endif %}
-    {% if start_page < 1 %}
-      {% set start_page = 1 %}
-    {% endif %}
-
-    {# Primera página y puntos suspensivos si corresponde #}
-    {% if start_page > 1 %}
-      <li>
-        <a href="{{ url_for('sitios_historicos.busqueda_avanzada', page=1, **args) }}">
-          <button type="button">1</button>
-        </a>
-      </li>
-      {% if start_page > 2 %}
-        <span>...</span>
       {% endif %}
-    {% endif %}
-
-    {# Páginas visibles #}
-    {% for p in range(start_page, end_page + 1) %}
-      <li class="{% if p == page %}active{% endif %}">
-        <a href="{{ url_for('sitios_historicos.busqueda_avanzada', page=p, **args) }}">
-          <button type="button">{{ p }}</button>
-        </a>
-      </li>
-    {% endfor %}
-
-    {# Última página y puntos suspensivos si corresponde #}
-    {% if end_page < total_pages %}
-      {% if end_page < total_pages - 1 %}
+      {% if start_page < 1 %} {% set start_page=1 %} {% endif %} {# Primera página y puntos suspensivos si corresponde
+        #} {% if start_page> 1 %}
+        <li>
+          <a href="{{ url_for('sitios_historicos.busqueda_avanzada', page=1, **args) }}">
+            <button type="button">1</button>
+          </a>
+        </li>
+        {% if start_page > 2 %}
         <span>...</span>
-      {% endif %}
-      <li>
-        <a href="{{ url_for('sitios_historicos.busqueda_avanzada', page=total_pages, **args) }}">
-          <button type="button">{{ total_pages }}</button>
-        </a>
-      </li>
-    {% endif %}
+        {% endif %}
+        {% endif %}
 
-    {# Botón Siguiente #}
-    {% if page < total_pages %}
-    <li>
-      <a href="{{ url_for('sitios_historicos.busqueda_avanzada', page=page+1, **args) }}">
-        <button type="button">Siguiente</button>
-      </a>
-    </li>
-    {% endif %}
+        {# Páginas visibles #}
+        {% for p in range(start_page, end_page + 1) %}
+        <li class="{% if p == page %}active{% endif %}">
+          <a href="{{ url_for('sitios_historicos.busqueda_avanzada', page=p, **args) }}">
+            <button type="button">{{ p }}</button>
+          </a>
+        </li>
+        {% endfor %}
+
+        {# Última página y puntos suspensivos si corresponde #}
+        {% if end_page < total_pages %} {% if end_page < total_pages - 1 %} <span>...</span>
+          {% endif %}
+          <li>
+            <a href="{{ url_for('sitios_historicos.busqueda_avanzada', page=total_pages, **args) }}">
+              <button type="button">{{ total_pages }}</button>
+            </a>
+          </li>
+          {% endif %}
+
+          {# Botón Siguiente #}
+          {% if page < total_pages %} <li>
+            <a href="{{ url_for('sitios_historicos.busqueda_avanzada', page=page+1, **args) }}">
+              <button type="button">Siguiente</button>
+            </a>
+            </li>
+            {% endif %}
   </ul>
 </nav>
 {% endif %}
@@ -270,7 +274,7 @@
 
 
 <script>
-(function() {
+  (function () {
     const provSel = document.getElementById('provinciaSelect');
     const ciudadSel = document.getElementById('ciudadSelect');
     if (!provSel || !ciudadSel) return;
@@ -279,71 +283,71 @@
     const allCityOptions = Array.from(ciudadSel.querySelectorAll('option'));
 
     function actualizarCiudades() {
-        const provId = provSel.value;
-        const ciudadSeleccionada = ciudadSel.value; // Guardamos la ciudad seleccionada antes de actualizar
+      const provId = provSel.value;
+      const ciudadSeleccionada = ciudadSel.value; // Guardamos la ciudad seleccionada antes de actualizar
 
-        // Limpiar opciones actuales
-        ciudadSel.innerHTML = '';
-        const placeholder = document.createElement('option');
-        placeholder.value = '';
-        placeholder.textContent = 'Seleccione ciudad';
-        ciudadSel.appendChild(placeholder);
+      // Limpiar opciones actuales
+      ciudadSel.innerHTML = '';
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = 'Seleccione ciudad';
+      ciudadSel.appendChild(placeholder);
 
-        if (!provId) {
-            ciudadSel.disabled = true;
-            return;
+      if (!provId) {
+        ciudadSel.disabled = true;
+        return;
+      }
+
+      let anyAdded = false;
+      allCityOptions.forEach(opt => {
+        if (opt.dataset.provincia == provId) {
+          ciudadSel.appendChild(opt.cloneNode(true));
+          anyAdded = true;
         }
+      });
 
-        let anyAdded = false;
-        allCityOptions.forEach(opt => {
-            if (opt.dataset.provincia == provId) {
-                ciudadSel.appendChild(opt.cloneNode(true));
-                anyAdded = true;
-            }
-        });
+      ciudadSel.disabled = !anyAdded;
 
-        ciudadSel.disabled = !anyAdded;
-
-        // Restaurar la ciudad seleccionada si existe en el nuevo select
-        if (ciudadSeleccionada) {
-            const nuevaCiudad = Array.from(ciudadSel.options).find(o => o.value == ciudadSeleccionada);
-            if (nuevaCiudad) ciudadSel.value = ciudadSeleccionada;
-        }
+      // Restaurar la ciudad seleccionada si existe en el nuevo select
+      if (ciudadSeleccionada) {
+        const nuevaCiudad = Array.from(ciudadSel.options).find(o => o.value == ciudadSeleccionada);
+        if (nuevaCiudad) ciudadSel.value = ciudadSeleccionada;
+      }
     }
 
     // Ejecutamos al cargar la página para mostrar ciudades correctas si ya hay provincia seleccionada
     actualizarCiudades();
 
     provSel.addEventListener('change', actualizarCiudades);
-})();
+  })();
 </script>
 
 <script>
-    const btn = document.getElementById('btnFiltros');
-const filtros = document.getElementById('filtrosAvanzados');
+  const btn = document.getElementById('btnFiltros');
+  const filtros = document.getElementById('filtrosAvanzados');
 
-btn.addEventListener('click', () => {
-  if (filtros.style.display === 'none' || filtros.style.display === '') {
-    filtros.style.display = 'flex';
-    btn.textContent = 'Ocultar filtros';
-  } else {
-    filtros.style.display = 'none';
-    btn.textContent = 'Mostrar filtros avanzados';
-  }
-});
+  btn.addEventListener('click', () => {
+    if (filtros.style.display === 'none' || filtros.style.display === '') {
+      filtros.style.display = 'flex';
+      btn.textContent = 'Ocultar filtros';
+    } else {
+      filtros.style.display = 'none';
+      btn.textContent = 'Mostrar filtros avanzados';
+    }
+  });
 </script>
 
 <script>
-const btnLimpiar = document.getElementById('btnLimpiar');
-const formFiltros = document.querySelector('form');
+  const btnLimpiar = document.getElementById('btnLimpiar');
+  const formFiltros = document.querySelector('form');
 
-btnLimpiar.addEventListener('click', () => {
-    
+  btnLimpiar.addEventListener('click', () => {
+
     formFiltros.reset();
 
     document.getElementById('provinciaSelect').value = "";
     document.getElementById('ciudadSelect').value = "";
-    document.getElementById('ciudadSelect').disabled = true; 
+    document.getElementById('ciudadSelect').disabled = true;
     document.querySelector('[name="categoria"]').value = "";
     document.querySelector('[name="estado_conservacion"]').value = "";
     document.querySelector('[name="tags"]').value = "";
@@ -356,112 +360,122 @@ btnLimpiar.addEventListener('click', () => {
     document.querySelector('#order').value = "asc";
 
     document.querySelectorAll('input[name="tags"]').forEach(cb => cb.checked = false);
-});
+  });
 </script>
 
 
 <style>
-.pagination li {
-  display: inline-block;
-  margin: 2px;
-}
+  .pagination li {
+    display: inline-block;
+    margin: 2px;
+  }
 
-.pagination li a button {
-  background-color: #f8f9fa;
-  border: 1px solid #ccc;
-  padding: 5px 10px;
-  cursor: pointer;
-  border-radius: 4px;
-}
+  .pagination li a button {
+    background-color: #f8f9fa;
+    border: 1px solid #ccc;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
 
-.pagination li.active a button {
-  background-color: #007bff; /* Azul */
-  color: white;
-  border-color: #007bff;
-  font-weight: bold;
-}
+  .pagination li.active a button {
+    background-color: #007bff;
+    /* Azul */
+    color: white;
+    border-color: #007bff;
+    font-weight: bold;
+  }
 
-.pagination li a button:hover {
-  background-color: #e2e6ea;
-}
+  .pagination li a button:hover {
+    background-color: #e2e6ea;
+  }
 </style>
 <style>
-.filtros {
-  display: none;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-  background: #f8f8f8;
-  padding: 15px;
-  border-radius: 8px;
-  margin-top: 10px;
-}
+  .filtros {
+    display: none;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    background: #f8f8f8;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 10px;
+  }
 
-.filtros div {
-  display: flex;
-  flex-direction: column;
-  margin-right: 10px;
-}
+  .filtros div {
+    display: flex;
+    flex-direction: column;
+    margin-right: 10px;
+  }
 
-.filtros select,
-.filtros input[type="text"],
-.filtros input[type="date"] {
-  width: auto;
-  max-width: 180px;   /* ajustá este número si querés más o menos ancho */
-}
+  .filtros select,
+  .filtros input[type="text"],
+  .filtros input[type="date"] {
+    width: auto;
+    max-width: 180px;
+    /* ajustá este número si querés más o menos ancho */
+  }
 </style>
 
 <style>
-.filtros {
-  display: none;              /* oculto por defecto */
-  flex-wrap: wrap;            /* permite varias líneas */
-  justify-content: flex-start;
-  gap: 15px 25px;             /* espacio entre columnas y filas */
-  background: #f8f8f8;
-  padding: 15px;
-  border-radius: 8px;
-  margin-top: 10px;
-  max-width: 1500px;          /* fuerza que el contenido salte de línea */
-}
+  .filtros {
+    display: none;
+    /* oculto por defecto */
+    flex-wrap: wrap;
+    /* permite varias líneas */
+    justify-content: flex-start;
+    gap: 15px 25px;
+    /* espacio entre columnas y filas */
+    background: #f8f8f8;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 10px;
+    max-width: 1500px;
+    /* fuerza que el contenido salte de línea */
+  }
 
-.filtros div {
-  display: flex;
-  flex-direction: column;
-  min-width: 200px;           /* tamaño mínimo por bloque */
-  max-width: 220px;           /* evita que se estiren mucho */
-}
+  .filtros div {
+    display: flex;
+    flex-direction: column;
+    min-width: 200px;
+    /* tamaño mínimo por bloque */
+    max-width: 220px;
+    /* evita que se estiren mucho */
+  }
 
-.filtros select,
-.filtros input[type="text"],
-.filtros input[type="date"] {
-  width: 100%;
-  padding: 4px;
-  box-sizing: border-box;
-}
+  .filtros select,
+  .filtros input[type="text"],
+  .filtros input[type="date"] {
+    width: 100%;
+    padding: 4px;
+    box-sizing: border-box;
+  }
 
-.filtros .botones {
-  display: flex;
-  align-items: flex-end;
-  gap: 10px;
-  min-width: 180px;
-}
+  .filtros .botones {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    min-width: 180px;
+  }
 </style>
 <style>
-.tag-checkboxes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 20px;
-  padding: 5px 0;
-  max-height: 120px;       /* ajustá si querés que no ocupe tanto espacio */
-  overflow-y: auto;        /* agrega scroll si hay muchos tags */
-}
+  .tag-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    padding: 5px 0;
+    max-height: 120px;
+    /* ajustá si querés que no ocupe tanto espacio */
+    overflow-y: auto;
+    /* agrega scroll si hay muchos tags */
+  }
 
-.tag-option {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 14px;
-}
+  .tag-option {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+  }
 </style>
 
 {% endblock %}

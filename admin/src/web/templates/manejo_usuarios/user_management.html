@@ -98,7 +98,7 @@
 
 <div>
     <a href="{{ url_for('usuarios.agregar_usuario_post') }}">
-        <button id="agregarUsuarioBtn" class="button-18" role="button">Agregar usuario</button>
+        <button id="agregarUsuarioBtn" class="button-18" role="button" style="background-color: green;">Agregar usuario</button>
     </a>
     <button type="button" id="toggleBusquedaBtn" class="button-18" role="button">Búsqueda Avanzada</button>
     <a href="{{ url_for('usuarios.index') }}">
@@ -175,6 +175,8 @@
     <tbody>
         {% for usuario in usuarios %}
         {% if not usuario.borradoLogico %}
+        {% set tieneRolAdmin = usuario.roles | selectattr('nombre', 'equalto', 'Admin') | list | length > 0 %}
+        {% set esAdminSistemaUsuario = usuario.esAdmin or tieneRolAdmin %}
         <tr>
             <td>{{ usuario.nombre }}</td>
             <td>{{ usuario.email }}</td>
@@ -185,44 +187,53 @@
                     <button type="submit" class="button-18" role="button">Ver detalles</button>
                 </form>
                 <!-- BOTON MODIFICAR -->
+                {% if not usuario.esAdmin %}
                 <form action="{{ url_for('usuarios.modificar_get', usuario_id=usuario.id) }}" method="get"
                     style="display:inline;">
-                    <button type="submit" class="button-18" role="button">Editar</button>
+                    <button type="submit" class="button-18" role="button" style="background-color: green">Editar</button>
                 </form>
-                <!-- BOTON DESACTIVAR/ACTIVAR -->
-                {% set esAdmin = usuario.roles | selectattr("nombre", "equalto", "Admin") | list | length > 0 %}
-
-                {% if not esAdmin %}
-                {% if usuario.activo %}
-                <form action="{{ url_for('usuarios.desactivar', usuario_id=usuario.id) }}" method="post"
-                    style="display:inline;">
-                    <button type="submit" onclick="return confirm('¿Seguro que deseas desactivar este usuario?');"
-                        class="button-18" role="button">
-                        Desactivar
-                    </button>
-                </form>
-                {% else %}
-                <form action="{{ url_for('usuarios.activar', usuario_id=usuario.id) }}" method="post"
-                    style="display:inline;">
-                    <button type="submit" onclick="return confirm('¿Seguro que deseas activar este usuario?');"
-                        class="button-18" role="button">
-                        Activar
-                    </button>
-                </form>
-                {% endif %}
                 {% endif %}
                 <!-- BOTON ELIMINAR -->
+                {% if not usuario.esAdmin %}    
                 <form action="{{ url_for('usuarios.eliminar', usuario_id=usuario.id) }}" method="post"
                     style="display:inline;">
                     <button type="submit" onclick="return confirm('¿Seguro que deseas eliminar este usuario?');"
-                        class="button-18" role="button">Eliminar</button>
+                        class="button-18" role="button" style="background-color: rgb(204, 45, 45)">Eliminar</button>
                 </form>
-            </td>
-        </tr>
-        {% endif %}
-        {% endfor %}
+                {% endif %}
+                <!-- BOTON DESACTIVAR/ACTIVAR -->
+               
+                {% if not esAdminSistemaUsuario %}
+                  {% if usuario.activo %}
+                    <form action="{{ url_for('usuarios.desactivar', usuario_id=usuario.id) }}" method="post"
+                        style="display:inline;">
+                        <button type="submit" onclick="return confirm('¿Seguro que deseas desactivar este usuario?');"
+                            class="button-18" role="button" style="background-color: rgb(148, 67, 67)">
+                            Desactivar
+                        </button>
+                    </form>
+                  {% else %}
+                    <form action="{{ url_for('usuarios.activar', usuario_id=usuario.id) }}" method="post"
+                        style="display:inline;">
+                        <button type="submit" onclick="return confirm('¿Seguro que deseas activar este usuario?');"
+                            class="button-18" role="button" style="background-color: green">
+                            Activar
+                        </button>
+                    </form>
+                  {% endif %}
+                {% endif %}
+                </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
     </tbody>
 </table>
+
+{% if not usuarios and (email or activo or orden or rol_filtro) %}
+<p style="margin-top: 15px; font-weight: bold; color: #555;">
+    No se encontraron coincidencias con los filtros aplicados.
+</p>
+{% endif %}
 
 <!-- 🔹 Paginación avanzada estilo sitios históricos -->
 {% if total > per_page %}

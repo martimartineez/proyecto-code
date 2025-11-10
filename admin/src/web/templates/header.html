@@ -9,28 +9,34 @@
         </a>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
-                {% if is_autenticated(session) %}
+            {% if is_autenticated(session) %}
+                {% if check_permission("site_index") %}
                 <li class="nav-item">
                     <a class="nav-link text-white" href="/sitioshistoricos">Sitios Historicos</a>
                 </li>
+                {% endif %}
                 <!-- <li class="nav-item">
                     <a class="nav-link text-white" href="/propuestas">Validacion de Propuestas</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-white" href="/reseñas">Reseñas</a>
                 </li>-->
+                {% if check_permission("user_index") %}
                 <li class="nav-item">
                     <a class="nav-link text-white" href="/manejo_usuarios/">Usuarios</a>
                 </li>
+                {% endif %}
+                {% if check_permission("tag_index") %}
                 <li class="nav-item">
                     <a class="nav-link text-white" href="/tags">Tags</a>
                 </li>
+                {% endif %}
                 {% if is_system_admin() %}
                 <li class="nav-item">
                     <a class="nav-link text-white" href="/feature_flags/">Funciones del sistema</a>
                 </li>
                 {% endif %}
-                {% endif %}
+            {% endif %}
             </ul>
             <!-- Icono de usuario y menú -->
             <ul class="navbar-nav ms-auto">

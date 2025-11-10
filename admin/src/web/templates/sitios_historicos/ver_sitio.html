@@ -86,20 +86,21 @@
     border-color: #cc0000;
   }
 
-  /* Aplicamos las reglas de gap y flex-wrap del detail-grid al location-group */
   .location-group {
-    /* No necesitamos flex: 1 1 100% aquí porque ya tiene full-width */
+    display: flex;
+    flex-wrap: wrap;
+    /* Reducir el gap horizontal para que quepan 4 ítems */
+    gap: 15px 10px;
     margin-bottom: 5px;
-    /* Heredamos el comportamiento de flex de detail-grid */
-    /* Para PC, esto resultará en 2 columnas por línea */
+    /* Pequeño ajuste visual */
   }
 
-  /* El divisor entre Ubicación y Coordenadas */
-  .location-group hr.location-divider {
-    border: 0;
-    border-top: 1px dotted #ccc;
-    /* Usamos puntos para sutilidad */
-    margin: 10px 0;
+  /* En pantallas de escritorio (por defecto), dividimos el ancho en 4 */
+  .location-group .detail-item {
+    /* Ocupa el 25% del ancho menos el espacio del gap. */
+    flex: 1 1 calc(25% - 8px);
+    min-width: unset;
+    /* Reiniciamos el min-width para permitir 4 columnas */
   }
 </style>
 
@@ -116,7 +117,7 @@
 
 <div>
   <a href="{{ url_for('sitios_historicos.agregar_sitio_get', next=request.path) }}">
-    <button type="button" class="button-18" role="button">Agregar sitio</button>
+    <button type="button" class="button-18" role="button" style="background-color: green">Agregar sitio</button>
   </a>
 </div>
 <br>
@@ -144,7 +145,7 @@
 
     <hr class="full-width">
 
-    <div class="location-group full-width detail-grid">
+    <div class="location-group full-width">
 
       <div class="detail-item">
         <label>Ciudad:</label>
@@ -154,8 +155,6 @@
         <label>Provincia:</label>
         <span>{{ sitio.ciudad.provincia.nombre if sitio.ciudad and sitio.ciudad.provincia else 'N/A' }}</span>
       </div>
-
-      <hr class="full-width location-divider">
       <div class="detail-item">
         <label>Latitud:</label>
         <span>{{ sitio.latitud }}</span>
@@ -199,14 +198,14 @@
 
 <div>
   <a href="{{ url_for('sitios_historicos.editar_sitio_get', sitio_id=sitio.id, next=request.path) }}">
-    <button type="button" class="button-18" role="button">Editar</button>
+    <button type="button" class="button-18" role="button" style="background-color: green">Editar</button>
   </a>
-  {% if permiso %}
+  {% if check_permission("site_destroy") %}
   <form action="{{ url_for('sitios_historicos.eliminar_sitio', sitio_id=sitio.id)}}" method="post"
     style="display:inline-block;">
     <button type="submit"
       onclick="return confirm('¿Estás seguro de que quieres eliminar el sitio historico: {{ sitio.nombre }}?');"
-      class="button-18" role="button">Eliminar</button>
+      class="button-18" role="button" style="background-color: rgb(204, 45, 45)">Eliminar</button>
   </form>
   {% endif %}
 </div>
@@ -312,14 +311,11 @@
     <label>Acción:</label>
     <select name="accion">
       <option value="">Todas</option>
-      {% for a in ['CREATED', 'UPDATED', 'DELETED', 'STATE_CHANGED', 'TAGS_CHANGED', 'IMAGES_CHANGED'] %}
+      {% for a in ['CREATED', 'UPDATED', 'TAGS_CHANGED'] %}
       {% set a_label =
       'Creado' if a=='CREATED' else
       'Actualizado' if a=='UPDATED' else
-      'Eliminado' if a=='DELETED' else
-      'Cambio de estado' if a=='STATE_CHANGED' else
-      'Cambio de etiquetas' if a=='TAGS_CHANGED' else
-      'Imágenes actualizadas' if a=='IMAGES_CHANGED' else a %}
+      'Cambio de etiquetas' if a=='TAGS_CHANGED' else a %}
       <option value="{{ a }}" {% if filtros.accion==a %}selected{% endif %}>{{ a_label }}</option>
       {% endfor %}
     </select>

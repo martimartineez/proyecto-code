@@ -12,17 +12,17 @@ def init_db(app):
 
 
 def reset_db():
-    from src.core.board.permiso import Permiso
-    from src.core.board.rol import Rol, roles_permisos  # noqa: F401
+    from src.core.entity.permiso import Permiso
+    from src.core.entity.rol import Rol, roles_permisos  # noqa: F401
     from src.core.auth.usuario import Usuario  # noqa: F401
-    from src.core.board.sitio_historico import SitioHistorico  # noqa: F401
-    from src.core.board.tag import Tag, tags_sitios  # noqa: F401
-    from src.core.board.categoria_sitio import CategoriaSitio  # noqa: F401
-    from src.core.board.provincia import Provincia  # noqa: F401
-    from src.core.board.ciudad import Ciudad  # noqa: F401
-    from src.core.board.feature_flag import FeatureFlag  # noqa: F401
-    from src.core.board.historial_sitio import HistorialSitio  # noqa: F401
-    from src.core.board.seeds import seed_geografia, seed_categorias
+    from src.core.entity.sitio_historico import SitioHistorico  # noqa: F401
+    from src.core.entity.tag import Tag, tags_sitios  # noqa: F401
+    from src.core.entity.categoria_sitio import CategoriaSitio  # noqa: F401
+    from src.core.entity.provincia import Provincia  # noqa: F401
+    from src.core.entity.ciudad import Ciudad  # noqa: F401
+    from src.core.entity.feature_flag import FeatureFlag  # noqa: F401
+    from src.core.entity.historial_sitio import HistorialSitio  # noqa: F401
+    from src.core.entity.seeds import seed_geografia, seed_categorias
 
     Base.metadata.drop_all(bind=db.engine)
     Base.metadata.create_all(bind=db.engine)
