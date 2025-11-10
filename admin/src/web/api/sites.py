@@ -10,7 +10,7 @@ from sqlalchemy import func
 from flask import Response
 import json
 from src.core.entity.services import obtener_sitio,  registrar_evento_historial,obtener_sitio
-from flask_jwt_extended import create_access_token, set_access_cookies, jwt_required
+from flask_jwt_extended import create_access_token, set_access_cookies, jwt_required, get_jwt_identity
 from src.core.bcrypt import bcrypt
 from datetime import timedelta
 
@@ -174,10 +174,11 @@ def crear_sitio():
             sitio.tags.append(tag)
 
         db.session.commit()
-
+        user_id = get_jwt_identity()
+        user = db.session.query(Usuario).get(user_id)
         registrar_evento_historial(
             id_sitio=sitio.id,
-            id_usuario=1,          ## TODO cambiar esto cuando tenga lo de JWT
+            id_usuario=user.id,
             accion="CREATED",
             valores_anteriores=None,
             valores_nuevos={
