@@ -112,4 +112,3 @@ def comprobar_bloqueado(user):
     estado = user.activo
     return estado
 
-
