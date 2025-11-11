@@ -1,7 +1,7 @@
 <template>
   <main v-if="site" class="site-detail-container">
     <button @click="router.back()" class="back-button">
-      &larr; Volver
+      &larr; Volver al Listado
     </button>
     
     <section class="info-and-media">
@@ -10,11 +10,11 @@
       </div>
       
       <div class="header-info">
-        <h1>{{ site.nombre }}</h1>
-        <p class="location">{{ site.ciudad }}, {{ site.provincia }}</p>
+        <h1>{{ site.name }}</h1>
+        <p class="location">{{ site.city }}, {{ site.province }}</p>
         
-        <span :class="['status-chip', getConservationClass(site.estadoConservacion)]">
-          {{ site.estadoConservacion }}
+        <span :class="['status-chip', getConservationClass(site.state_of_conservation)]">
+          {{ site.state_of_conservation }}
         </span>
       </div>
 
@@ -25,19 +25,16 @@
     
     <section>
         <h2>Descripción</h2>
-        <p>{{ site.descCompleta.substring(0, 300) }}...</p>
-        <p style="font-style: italic;">[Descripción Plegable: usa descCompleta]</p>
+        <p>{{ site.description.substring(0, 300) }}...</p>
+        <p style="font-style: italic;">[Descripción Plegable: usa description]</p>
     </section>
 
 
     <section class="map-section">
       <h2>Ubicación</h2>
       <SiteMap 
-        :lat="site.latitude" 
-        :lon="site.longitude" 
-        :title="site.nombre" 
-        :description="site.descBreve" 
-      />
+        :lat="site.lat"         :lon="site.long"        :title="site.name" 
+        :description="site.short_description" />
     </section>
 
     <hr>
@@ -48,7 +45,7 @@
         <p>Calificación: {{ site.calificacion_promedio }} ({{ site.cantidad_reseñas }} reseñas)</p>
         
         <div class="action-buttons">
-            <button class="action-btn">Escribir Reseña </button>
+            <button class="action-btn">Escribir Reseña (Login requerido)</button>
             
             <button class="action-btn">Marcar Favorito</button>
         </div>
@@ -83,23 +80,25 @@ const router = useRouter();
 const site = ref(null); 
 const isAuthenticated = ref(false); 
 
-// DATOS SIMULADOS ACTUALIZADOS
+// DATOS SIMULADOS ACTUALIZADOS PARA COINCIDIR CON LA API (NOMBRES EN INGLÉS)
 const DUMMY_SITE_DATA = {
     id: 123,
-    nombre: "Catedral Metropolitana",
-    ciudad: "La Plata",
-    provincia: "Buenos Aires",
-    estadoConservacion: "Excelente",
-    latitude: -34.9213, // Coordenadas de prueba
-    longitude: -57.9544,
-    descBreve: "Impresionante ejemplo de arquitectura neogótica.",
-    descCompleta: "La Catedral de La Plata, dedicada a la Inmaculada Concepción, es uno de los templos más grandes de América. Su construcción se inició en 1884 y combina elementos arquitectónicos de la época con modernas técnicas de ingeniería. Es un punto clave en la historia urbana de la ciudad y un sitio de gran valor patrimonial. [Este texto es largo para simular la descripción completa que se debería plegar]...",
-    imagenes: [{id: 1, url: '...', alt: 'Portada'}, /* ... */],
-    tags: [{id: 1, name: 'Arquitectura'}, {id: 2, name: 'Neogótico'}],
-    calificacion_promedio: 4.8,
+    // CAMPOS DE LA API DE SITIOS HISTÓRICOS (GET /sites/{id}):
+    name: "Catedral Metropolitana", // API: name
+    city: "La Plata", // API: city
+    province: "Buenos Aires", // API: province
+    state_of_conservation: "excelente", // API: state_of_conservation
+    lat: -34.9213, // API: lat
+    long: -57.9544, // API: long
+    short_description: "Impresionante ejemplo de arquitectura neogótica.", // API: short_description
+    description: "La Catedral de La Plata, dedicada a la Inmaculada Concepción, es uno de los templos más grandes de América. Su construcción se inició en 1884 y combina elementos arquitectónicos de la época con modernas técnicas de ingeniería. Es un punto clave en la historia urbana de la ciudad y un sitio de gran valor patrimonial. [Este texto es largo para simular la descripción completa que se debería plegar]...", // API: description
+    tags: [{id: 1, name: 'Arquitectura'}, {id: 2, name: 'Neogótico'}], 
+    
+    // CAMPOS AGREGADOS (Estos no vienen del GET /sites/{id} y se mantendrán con nombres en español)
+    calificacion_promedio: 4.8, 
     cantidad_reseñas: 155,
-    favorito: false,
-    reseñas: [ /* ... */ ]
+    is_favorite: false, 
+    reviews: [ /* ... */ ]
 }
 
 // Función para mapear el estado de conservación a una clase CSS
@@ -108,9 +107,10 @@ const getConservationClass = (estado) => {
     if (!estado) return 'unknown';
     const lowerCaseEstado = estado.toLowerCase();
     
+    // Basado en los choices de la API: 'excelente', 'bueno', 'regular', 'malo'
     if (lowerCaseEstado.includes('excelente') || lowerCaseEstado.includes('bueno')) return 'good';
-    if (lowerCaseEstado.includes('regular') || lowerCaseEstado.includes('mantenimiento')) return 'fair';
-    if (lowerCaseEstado.includes('pobre') || lowerCaseEstado.includes('ruinas')) return 'poor';
+    if (lowerCaseEstado.includes('regular')) return 'fair';
+    if (lowerCaseEstado.includes('malo')) return 'poor';
     
     return 'neutral';
 }
@@ -118,7 +118,10 @@ const getConservationClass = (estado) => {
 const fetchSiteData = async () => {
   const siteId = route.params.id; 
   try {
-    // USAMOS LOS DATOS SIMULADOS (DUMMY_SITE_DATA)
+    // NOTA: Cuando implementes la llamada real, la URL será algo como:
+    // const response = await fetch(`{BASE_URL}/api/sites/${siteId}`);
+    
+    // USAMOS LOS DATOS SIMULADOS ACTUALIZADOS 
     console.log(`Simulando carga para el sitio ID: ${siteId}`);
     site.value = DUMMY_SITE_DATA;
 
@@ -144,6 +147,22 @@ onMounted(fetchSiteData);
   max-width: 100%;
 }
 
+.back-button {
+  background: none;
+  border: none;
+  color: #007bff; 
+  cursor: pointer;
+  padding: 0.5rem 0;
+  margin-bottom: 1rem;
+}
+
+hr {
+    border: 0;
+    height: 1px;
+    background-color: #eee;
+    margin: 1.5rem 0;
+}
+
 .status-chip {
   display: inline-block;
   padding: 0.3rem 0.6rem;
@@ -158,8 +177,23 @@ onMounted(fetchSiteData);
   &.neutral { background-color: #f1f1f1; color: #333; } /* Gris - Desconocido */
 }
 
-/* ... (El resto de estilos como back-button, hr, etc., se mantiene igual) */
+/* Estilos base para simulación */
+.tag-placeholder, .action-btn {
+    border: 1px solid #ccc;
+    padding: 8px;
+    border-radius: 4px;
+    margin-top: 10px;
+    font-size: 0.9em;
+}
 
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+
+/* Media Query para Tablet/Escritorio */
 @media (min-width: 768px) {
   .site-detail-container {
     max-width: 1200px;
