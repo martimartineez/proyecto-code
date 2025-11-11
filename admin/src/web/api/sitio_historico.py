@@ -132,7 +132,7 @@ def listar_sitios_publicos():
         if lat is not None and lng is not None and radius_km is not None and radius_km > 0:
             # 1 grado lat ~ 111 km, 1 grado lon ~ 111*cos(lat)
             lat_delta = radius_km / 111.0
-            lon_delta = radius_km / max(0.0001, (111.0 * func.cos(func.radians(lat))))
+            lon_delta = radius_km / func.greatest(0.0001, 111.0 * func.cos(func.radians(lat)))
             query = query.filter(
                 and_(
                     SitioHistorico.latitud.isnot(None),

@@ -1,6 +1,6 @@
 <template>
   <section class="page">
-    <!-- Toolbar mejorado con mejor espaciado y diseño en desktop -->
+    <!-- Barra superior con búsqueda y acciones -->
     <header class="toolbar">
       <div class="search-container">
         <input
@@ -17,6 +17,7 @@
           </svg>
         </button>
       </div>
+
       <div class="toolbar-actions">
         <button class="btn btn-filters" @click="toggleFilters">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -29,7 +30,19 @@
     </header>
 
     <div class="content">
-      <!-- Sidebar de filtros con mejor diseño y organización -->
+      <!-- Controles de vista -->
+      <div class="view-controls">
+        <button 
+          @click="showMap = !showMap" 
+          class="btn btn-secondary"
+        >
+          {{ showMap ? 'Ocultar Mapa' : 'Mostrar Mapa' }}
+        </button>
+      </div>
+      
+      
+
+      <!-- Filtros -->
       <aside class="filters" :class="{ open: filtersOpen }">
         <div class="filters-header">
           <h3 class="filters-title">Filtros</h3>
@@ -52,9 +65,19 @@
 
           <div class="field">
             <label class="field-label">Ciudad</label>
-            <select v-model="state.city" @change="onSearch" class="field-select">
-              <option :value="undefined">Todas</option>
-              <option v-for="c in cities" :key="c.id" :value="String(c.id)">{{ c.nombre }}</option>
+            <select 
+              v-model="state.city" 
+              @change="onSearch" 
+              class="field-select"
+              :disabled="!state.province"
+              :class="{ 'opacity-50': !state.province }"
+            >
+              <option :value="undefined">
+                {{ state.province ? 'Todas' : 'Seleccione una provincia' }}
+              </option>
+              <option v-for="c in cities" :key="c.id" :value="String(c.id)">
+                {{ c.nombre }}
+              </option>
             </select>
           </div>
 
@@ -96,8 +119,19 @@
         </div>
       </aside>
 
-      <!-- Grid mejorado con mejor espaciado y responsive -->
+      <!-- Resultados -->
       <main class="results">
+      
+        <!-- Mapa -->
+      <div v-if="showMap" class="map-container">
+        <MapView
+          :sites="items"
+          :initial-location="searchLocation"
+          @location-updated="handleLocationUpdate"
+          @select-site="handleSiteSelect"
+        />
+      </div>
+
         <div class="results-header">
           <p class="results-count" v-if="!loading && items.length > 0">
             {{ items.length }} sitio{{ items.length !== 1 ? 's' : '' }} encontrado{{ items.length !== 1 ? 's' : '' }}
@@ -105,11 +139,17 @@
         </div>
         
         <div class="grid">
-          <SiteCard v-for="s in items" :key="s.id" :site="s" />
+          <SiteCard 
+            v-for="site in items" 
+            :key="site.id" 
+            :site="site"
+            :id="'site-' + site.id"
+          />
         </div>
         
         <div ref="infiniteEl" class="infinite"></div>
         
+        <!-- Estados de carga y mensajes -->
         <p v-if="loading" class="loading">
           <span class="spinner"></span>
           Cargando...
@@ -128,100 +168,205 @@
 </template>
 
 <script setup>
+// Vue y Vue Router
 import { onMounted, ref, reactive, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+
+// API y componentes
 import { api } from '@/api/client';
 import SiteCard from '@/components/SiteCard.vue';
+import MapView from './MapView.vue';
 
+// Constantes
+const per_page = 12;
+
+// Inicialización de Vue Router
 const route = useRoute();
 const router = useRouter();
 
+// Referencias reactivas para datos
 const provinces = ref([]);
 const cities = ref([]);
 const tags = ref([]);
-
 const items = ref([]);
+
+// Estado de la UI
 const loading = ref(false);
 const error = ref(null);
+const filtersOpen = ref(false);
+const showMap = ref(false);
+
+// Paginación
 const page = ref(1);
 const pages = ref(1);
-const per_page = 12;
-
-const filtersOpen = ref(false);
 const infiniteEl = ref(null);
 
+// Ubicación y búsqueda
+const searchLocation = ref({
+  lat: route.query.latitude ? parseFloat(route.query.latitude) : -34.6037,
+  lng: route.query.longitude ? parseFloat(route.query.longitude) : -58.3816,
+  radius: route.query.radius ? parseInt(route.query.radius) : 5000
+});
+
+// Estado de los filtros
 const state = reactive({
+  // Búsqueda
   q: route.query.q ?? '',
+  
+  // Ubicación
   city: route.query.city ?? undefined,
   province: route.query.province ? Number(route.query.province) : undefined,
+  latitude: route.query.latitude ? parseFloat(route.query.latitude) : undefined,
+  longitude: route.query.longitude ? parseFloat(route.query.longitude) : undefined,
+  radius: route.query.radius ? parseInt(route.query.radius) : 5000,
+  
+  // Filtros
   tags: Array.isArray(route.query.tags)
     ? route.query.tags.map(String)
     : route.query.tags ? String(route.query.tags).split(',') : [],
   state: route.query.state ?? '',
+  
+  // Ordenamiento
   order_by: route.query.order_by ?? 'fecha_registro',
-  order: route.query.order ?? 'desc',
+  order: route.query.order ?? 'desc'
 });
 
+/**
+ * Actualiza la URL con los parámetros de búsqueda actuales
+ */
 function updateUrlQuery() {
   const q = {
     ...state,
+    // Limpiar valores vacíos o por defecto
     tags: state.tags.length ? state.tags : undefined,
     city: state.city || undefined,
     province: state.province ?? undefined,
+    latitude: state.latitude,
+    longitude: state.longitude,
+    radius: state.radius
   };
+  
+  // Eliminar propiedades undefined del query
+  Object.keys(q).forEach(key => q[key] === undefined && delete q[key]);
+  
+  // Actualizar la ubicación del mapa si hay coordenadas
+  if (state.latitude && state.longitude) {
+    searchLocation.value = {
+      lat: state.latitude,
+      lng: state.longitude,
+      radius: state.radius
+    };
+  }
+  
+  // Actualizar la URL sin recargar la página
   router.replace({ query: q });
 }
 
+/**
+ * Obtiene la lista de provincias y tags
+ */
 async function fetchFilters() {
-  const [prov, tg] = await Promise.all([
-    api.listProvinces(),
-    api.listTags(),
-  ]);
-  provinces.value = prov;
-  tags.value = tg;
-  await fetchCities();
+  try {
+    const [prov, tg] = await Promise.all([
+      api.listProvinces(),
+      api.listTags(),
+    ]);
+    provinces.value = prov;
+    tags.value = tg;
+    await fetchCities();
+  } catch (err) {
+    console.error('Error al cargar los filtros:', err);
+    error.value = 'Error al cargar los filtros';
+  }
 }
 
+/**
+ * Obtiene las ciudades de la provincia seleccionada
+ */
 async function fetchCities() {
-  const cs = await api.listCities({ province: state.province || undefined });
-  cities.value = cs;
+  if (!state.province) {
+    cities.value = [];
+    return;
+  }
+  
+  try {
+    const cs = await api.listCities({ province: state.province });
+    cities.value = cs;
+  } catch (err) {
+    console.error('Error al cargar las ciudades:', err);
+    error.value = 'Error al cargar las ciudades';
+  }
 }
 
+/**
+ * Obtiene una página de resultados
+ * @param {boolean} reset - Si es true, reinicia la lista de items
+ */
 async function fetchPage(reset = false) {
   if (loading.value) return;
+  
   loading.value = true;
   error.value = null;
+  
   try {
     const params = {
+      // Búsqueda
       q: state.q || undefined,
+      
+      // Ubicación
       city: state.city || undefined,
       province: state.province ?? undefined,
-      tags: state.tags,
+      lat: state.latitude,
+      long: state.longitude,
+      radius: state.radius/1000,
+      
+      // Filtros
+      tags: state.tags.length ? state.tags : undefined,
       state: state.state || undefined,
+      
+      // Ordenamiento
       order_by: state.order_by,
       order: state.order,
+      
+      // Paginación
       page: page.value,
-      per_page,
+      per_page
     };
+
+    
     const res = await api.listSites(params);
     pages.value = res.pages;
-    if (reset) items.value = res.items; else items.value = [...items.value, ...res.items];
+    
+    // Actualizar la lista de items
+    if (reset) {
+      items.value = res.items;
+    } else {
+      items.value = [...items.value, ...res.items];
+    }
+    
     updateUrlQuery();
   } catch (err) {
     error.value = err.message || 'Error al cargar sitios';
-    console.error('Error fetching sites:', err);
+    console.error('Error al cargar sitios:', err);
     if (reset) items.value = [];
   } finally {
     loading.value = false;
   }
 }
 
+/**
+ * Ejecuta una nueva búsqueda
+ */
 function onSearch() {
   page.value = 1;
   fetchPage(true);
 }
 
+/**
+ * Limpia todos los filtros
+ */
 function onClear() {
+  // Restablecer el estado
   state.q = '';
   state.city = undefined;
   state.province = undefined;
@@ -229,38 +374,141 @@ function onClear() {
   state.state = '';
   state.order_by = 'fecha_registro';
   state.order = 'desc';
+  state.latitude = undefined;
+  state.longitude = undefined;
+  state.radius = 5000;
+  
+  // Reiniciar paginación y cargar resultados
   page.value = 1;
   fetchPage(true);
 }
 
-function toggleFilters() { filtersOpen.value = !filtersOpen.value; }
+/**
+ * Muestra/oculta el panel de filtros
+ */
+function toggleFilters() {
+  filtersOpen.value = !filtersOpen.value;
+}
 
+/**
+ * Actualiza la ubicación de búsqueda desde el mapa
+ * @param {Object|null} location - Objeto con lat, lng y radius, o null para limpiar
+ */
+function handleLocationUpdate(location) {
+  if (!location) {
+    // Si no hay ubicación, limpiar los filtros de ubicación
+    state.latitude = undefined;
+    state.longitude = undefined;
+    state.radius = 5000; // Radio por defecto de 5km (5000 metros)
+  } else {
+    // Actualizar el estado con la nueva ubicación
+    state.latitude = location.latitude || location.lat;
+    state.longitude = location.longitude || location.lng;
+    state.radius = location.radius || 5000; // Usar 5km por defecto si no hay radio
+  }
+  
+  // Actualizar la URL
+  updateUrlQuery();
+  
+  // Reiniciar la paginación y buscar
+  page.value = 1;
+  fetchPage(true);
+}
+
+/**
+ * Maneja la selección de un sitio en el mapa
+ * @param {Object} site - Sitio seleccionado
+ */
+function handleSiteSelect(site) {
+  const element = document.getElementById(`site-${site.id}`);
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    element.classList.add('selected');
+    setTimeout(() => element.classList.remove('selected'), 2000);
+  }
+}
+
+let io; // Referencia al IntersectionObserver
+
+/**
+ * Configura el scroll infinito
+ */
 function setupInfiniteScroll() {
-  const io = new IntersectionObserver((entries) => {
+  if (io) io.disconnect();
+
+  io = new IntersectionObserver((entries) => {
     const entry = entries[0];
     if (entry.isIntersecting && page.value < pages.value && !loading.value) {
       page.value += 1;
       fetchPage(false);
     }
   }, { rootMargin: '200px' });
+
   if (infiniteEl.value) io.observe(infiniteEl.value);
 }
 
-// When province changes, reload cities and trigger search
-watch(() => state.province, async () => {
-  state.city = undefined;
-  await fetchCities();
+// Recargar ciudades cuando cambia la provincia
+watch(() => state.province, async (newVal) => {
+  state.city = undefined; // Limpiar ciudad seleccionada
+  
+  if (newVal) {
+    await fetchCities();
+  } else {
+    cities.value = [];
+  }
+  
   onSearch();
 });
 
+// Configurar scroll infinito cuando cambian los items
+watch(items, () => {
+  if (infiniteEl.value) setupInfiniteScroll();
+});
+
+// Cargar filtros y la primera página al montar el componente
+
 onMounted(async () => {
-  await fetchFilters();
-  await fetchPage(true);
-  setupInfiniteScroll();
+  try {
+    await fetchFilters();
+    await fetchPage(true);
+    setupInfiniteScroll();
+  } catch (err) {
+    console.error('Error al inicializar el componente:', err);
+    error.value = 'Error al cargar la página';
+  }
 });
 </script>
 
 <style scoped>
+/* Estilos para el mapa */
+.map-toggle {
+  margin-bottom: 16px;
+  text-align: right;
+}
+
+.map-container {
+  height: 400px;
+  width: 100%;
+  margin-bottom: 24px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Estilo para el sitio seleccionado */
+.site-card.selected {
+  box-shadow: 0 0 0 2px #3b82f6;
+  transform: translateY(-2px);
+  transition: all 0.2s ease;
+}
+
+/* Ajustes responsivos */
+@media (min-width: 1024px) {
+  .map-container {
+    height: 500px;
+  }
+}
+
 /* Base styles - Mobile First */
 .page {
   display: flex;
@@ -479,13 +727,15 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px;
-  border: 2px solid #e5e7eb;
-  border-radius: 999px;
+  padding: 6px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
   background: #ffffff;
   cursor: pointer;
   transition: all 0.2s;
   user-select: none;
+  font-size: 14px;
+  color: #374151;
 }
 
 .chip:hover {
@@ -496,10 +746,12 @@ onMounted(async () => {
 .chip-input {
   margin: 0;
   cursor: pointer;
+  width: 16px;
+  height: 16px;
 }
 
 .chip-input:checked + .chip-label {
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .chip:has(.chip-input:checked) {
@@ -510,9 +762,11 @@ onMounted(async () => {
 
 .chip-label {
   font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
-/* Results */
+/* Resultados */
 .results {
   min-height: 400px;
 }
@@ -594,7 +848,6 @@ onMounted(async () => {
   .toolbar {
     flex-direction: row;
     align-items: center;
-    /* Aumentado padding horizontal para mejor uso del espacio */
     padding: 20px 32px;
   }
 
@@ -606,10 +859,16 @@ onMounted(async () => {
     flex: 0;
   }
 
+  /* Colocar la barra de filtros a la izquierda y el contenido principal a la derecha */
   .content {
-    /* Sidebar más angosto (240px) para más ancho en cards */
     grid-template-columns: 240px 1fr;
     gap: 24px;
+  }
+
+  /* Forzar que la barra de vista y el mapa ocupen ambas columnas (encabezado y mapa full-width) */
+  .view-controls,
+  .map-container {
+    grid-column: 1 / -1;
   }
 
   .filters {
@@ -621,6 +880,9 @@ onMounted(async () => {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     max-height: calc(100vh - 120px);
     overflow-y: auto;
+    /* Ubicar la sidebar en la primera columna (izquierda) */
+    grid-column: 1;
+    align-self: start;
   }
 
   .filters-header {
@@ -635,7 +897,11 @@ onMounted(async () => {
     padding: 16px;
   }
 
-  /* Grid con minmax más flexible para aprovechar el ancho */
+  /* Resultados a la derecha (columna 2) */
+  .results {
+    grid-column: 2;
+  }
+
   .grid {
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: 24px;
@@ -645,26 +911,24 @@ onMounted(async () => {
 /* Desktop - 1024px */
 @media (min-width: 1024px) {
   .page {
-    /* Más padding en desktop */
     padding: 32px;
   }
 
   .toolbar {
-    /* Más padding horizontal en toolbar */
     padding: 24px 40px;
   }
 
   .content {
-    /* Sidebar de 260px en desktop */
+    /* Sidebar de filtros a la izquierda (260px) */
     grid-template-columns: 260px 1fr;
     gap: 32px;
   }
 
   .filters {
     top: 110px;
+    grid-column: 1;
   }
 
-  /* Grid más flexible, permite 2-3 columnas según el espacio */
   .grid {
     grid-template-columns: repeat(3, minmax(280px, 1fr));
     gap: 28px;

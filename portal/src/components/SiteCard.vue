@@ -9,7 +9,7 @@
         <span v-if="site.ciudad">{{ site.ciudad }}</span>
         <span v-if="site.provincia">, {{ site.provincia }}</span>
       </p>
-      <p v-if="site.estado" class="state">{{ site.estado }}</p>
+      <p v-if="site.estado" class="state"> Estado de conservación: {{ site.estado }}</p>
       <ul class="tags">
         <li v-for="t in site.tags" :key="t" class="tag">{{ t }}</li>
       </ul>
