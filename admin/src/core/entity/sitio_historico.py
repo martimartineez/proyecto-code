@@ -4,13 +4,13 @@ from sqlalchemy import String, Integer, Boolean, Date, DateTime, Float, ForeignK
 from typing import List, TYPE_CHECKING
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.core.database import Base
+from src.core.auth.usuario import favoritos_usuarios_sitios
 
 from collections import OrderedDict
 if TYPE_CHECKING:
     from src.core.entity.tag import Tag
     from src.core.entity.categoria_sitio import CategoriaSitio
     from src.core.entity.ciudad import Ciudad
-
 
 class SitioHistorico(Base):
     __tablename__ = "sitios_historicos"
@@ -58,6 +58,10 @@ class SitioHistorico(Base):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
+    favorited_by: Mapped[List["Usuario"]] = relationship(
+    secondary=favoritos_usuarios_sitios,
+    back_populates="favoritos"
+)
 
 
     def __repr__(self):

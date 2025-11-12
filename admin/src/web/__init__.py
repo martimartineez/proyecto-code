@@ -1,5 +1,5 @@
 from flask import Flask
-from flask import render_template, request, redirect, url_for, flash
+from flask import render_template, request, redirect, url_for, flash, jsonify
 from flask_session import Session
 from src.core import database
 from src.web.handlers import error
@@ -19,6 +19,7 @@ from src.core.entity.services import feature_flags as ff_service
 from src.core.entity.services.feature_flags import get_flag
 from src.web.controllers.feature_flags import bp as feature_flags_bp
 from flask_jwt_extended import JWTManager
+
 
 session = Session()
 
