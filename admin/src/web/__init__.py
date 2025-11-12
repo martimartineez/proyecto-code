@@ -21,6 +21,7 @@ from src.web.controllers.feature_flags import bp as feature_flags_bp
 from flask_jwt_extended import JWTManager
 
 from flask_cors import CORS
+from src.web.api import bp as api_bp
 
 session = Session()
 
@@ -53,6 +54,7 @@ def create_app(env="development", static_folder="../../static"):
     app.register_blueprint(tags_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(feature_flags_bp)
+    app.register_blueprint(api_bp)
 
     app.register_error_handler(403, error.forbidden)
     app.register_error_handler(404, error.not_found)
@@ -83,8 +85,8 @@ def create_app(env="development", static_folder="../../static"):
         # Allow static and CLI
         if request.endpoint in (None, 'static'):
             return None
-        # Always allow auth routes
-        if request.blueprint == 'auth':
+        # Always allow auth and public api routes
+        if request.blueprint in ('auth', 'api'):
             return None
         # Permitir Feature Flags solo a administradores (esAdmin=True)
         if request.blueprint == 'feature_flags':

@@ -19,6 +19,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import 'leaflet/dist/leaflet.css';
+import '@/assets/map-shared.css';
 import { LMap, LTileLayer, LMarker, LTooltip } from '@vue-leaflet/vue-leaflet';
 
 import L from 'leaflet';
@@ -42,7 +43,7 @@ const props = defineProps({
 });
 
 // El zoom inicial
-const currentZoom = ref(14); 
+const currentZoom = ref(14);
 
 // Coordenadas reactivas basadas en las props para el mapa y el marcador
 const centerCoordinates = computed(() => [props.lat, props.lon]);
@@ -52,22 +53,4 @@ const tooltipContent = computed(() => `<strong>${props.title}</strong><br>${prop
 </script>
 
 <style scoped>
-.map-container-wrapper {
-  height: 300px; /* Altura fija para móvil */
-  width: 100%;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-
-.leaflet-container {
-  height: 100%;
-}
-
-
-@media (min-width: 768px) {
-  .map-container-wrapper {
-    height: 400px; 
-  }
-}
 </style>
