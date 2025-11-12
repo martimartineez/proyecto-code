@@ -378,7 +378,7 @@ function onClear() {
   state.longitude = undefined;
   state.radius = 5000;
   showMap.value = false;
-  
+
   // Reiniciar paginación y cargar resultados
   page.value = 1;
   fetchPage(true);

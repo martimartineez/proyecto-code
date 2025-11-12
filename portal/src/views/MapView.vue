@@ -23,12 +23,11 @@
         </div>
       </div>
       
-      <div class="map-wrapper">
+      <div class="map-wrapper map-container-wrapper">
         <l-map 
           ref="map" 
           v-model:zoom="zoom" 
           :center="center"
-          :use-global-leaflet="false"
           @click="handleMapClick"
         >
           <l-tile-layer
@@ -41,11 +40,7 @@
             v-if="selectedLocation"
             :lat-lng="[selectedLocation.lat, selectedLocation.lng]"
             @click="selectSite(null)"
-          >
-            <l-icon :icon-size="[32, 32]" :icon-anchor="[16, 32]">
-              <div class="search-marker">📍</div>
-            </l-icon>
-          </l-marker>
+          />
           
           <l-circle
             v-if="selectedLocation"
@@ -74,8 +69,13 @@
   </template>
   
   <script>
-  import { LMap, LTileLayer, LMarker, LPopup, LCircle, LIcon } from "@vue-leaflet/vue-leaflet";
+  import { LMap, LTileLayer, LMarker, LPopup, LCircle } from "@vue-leaflet/vue-leaflet";
   import "leaflet/dist/leaflet.css";
+  import '@/assets/map-shared.css';
+  import L from 'leaflet';
+  import markerIcon from 'leaflet/dist/images/marker-icon.png';
+  import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+  import markerShadow from 'leaflet/dist/images/marker-shadow.png';
   
   export default {
     components: {
@@ -83,8 +83,7 @@
       LTileLayer,
       LMarker,
       LPopup,
-      LCircle,
-      LIcon
+      LCircle
     },
     props: {
       sites: {
@@ -98,13 +97,22 @@
     },
     data() {
       return {
-        zoom: 5,
+        zoom: 7,
         center: [-34.6037, -58.3816],
         searchMode: false,
         selectedLocation: null,
-        searchRadius: 5,
+        searchRadius: 50,
         map: null
       };
+    },
+    created() {
+      // Configure Leaflet default marker assets so icons render properly
+      try { if (L.Icon && L.Icon.Default && L.Icon.Default.prototype) { delete L.Icon.Default.prototype._get } } catch(e) {}
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: markerIcon2x,
+        iconUrl: markerIcon,
+        shadowUrl: markerShadow
+      });
     },
     computed: {
       sitesWithCoords() {
@@ -129,6 +137,7 @@
       }
     },
     methods: {
+      
       toggleSearchMode() {
         this.searchMode = !this.searchMode;
         if (!this.searchMode) {
@@ -244,4 +253,5 @@
     transform: translateY(-50%);
     cursor: pointer;
   }
+
   </style>
