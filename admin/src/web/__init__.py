@@ -1,5 +1,5 @@
 from flask import Flask
-from flask import render_template, request, redirect, url_for, flash
+from flask import render_template, request, redirect, url_for, flash, jsonify
 from flask_session import Session
 from src.core import database
 from src.web.handlers import error
@@ -9,6 +9,7 @@ from src.web.controllers.sitios_historicos import bp as sitios_historicos_bp
 from src.web.controllers.tags import bp as tags_bp
 from src.web.controllers.user_management import bp as user_management_bp
 from src.web.controllers.tags import bp as tags_bp
+from src.web.api.sites import bp as sites_api_bp
 from src.core import seeds
 from src.web.controllers.auth import bp as auth_bp
 from src.core.bcrypt import bcrypt
@@ -17,6 +18,8 @@ from src.core import auth as core_auth
 from src.core.entity.services import feature_flags as ff_service
 from src.core.entity.services.feature_flags import get_flag
 from src.web.controllers.feature_flags import bp as feature_flags_bp
+from flask_jwt_extended import JWTManager
+
 from flask_cors import CORS
 from src.web.api import bp as api_bp
 
@@ -26,6 +29,9 @@ session = Session()
 def create_app(env="development", static_folder="../../static"):
     app = Flask(__name__, static_folder=static_folder)
     app.config.from_object(config[env])
+    app.config['JSON_SORT_KEYS'] = False
+    app.config["JWT-SECRET-KEY"] = "miClaveJWTSecreta12345678"
+    jwt = JWTManager(app)
 
     database.init_db(app)
     session.init_app(app)
@@ -54,6 +60,7 @@ def create_app(env="development", static_folder="../../static"):
     app.register_error_handler(404, error.not_found)
     app.register_error_handler(401, error.unauthorized)
     app.register_error_handler(500, error.server_error)
+    app.register_blueprint(sites_api_bp)
 
     app.jinja_env.globals['is_autenticated'] = is_autenticated
     app.jinja_env.globals['check_permission'] = check_permission
