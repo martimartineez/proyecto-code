@@ -25,7 +25,7 @@
           </svg>
           Filtros
         </button>
-        <button class="link" @click="onClear">Limpiar</button>
+        <button class="btn btn-filters" @click="onClear">Limpiar</button>
       </div>
     </header>
 
@@ -227,8 +227,8 @@ const state = reactive({
   state: route.query.state ?? '',
   
   // Ordenamiento
-  order_by: route.query.order_by ?? 'fecha_registro',
-  order: route.query.order ?? 'desc'
+  order_by: route.query.order_by ?? 'nombre',
+  order: route.query.order ?? 'asc'
 });
 
 /**
@@ -372,11 +372,12 @@ function onClear() {
   state.province = undefined;
   state.tags = [];
   state.state = '';
-  state.order_by = 'fecha_registro';
-  state.order = 'desc';
+  state.order_by = 'nombre';
+  state.order = 'asc';
   state.latitude = undefined;
   state.longitude = undefined;
   state.radius = 5000;
+  showMap.value = false;
   
   // Reiniciar paginación y cargar resultados
   page.value = 1;
@@ -603,22 +604,18 @@ onMounted(async () => {
   border-color: #d1d5db;
 }
 
-.btn-filters {
-  flex: 1;
+/* Asegurar que los botones secundarios muestren texto legible y no se compriman */
+.btn-secondary {
+  color: #111827; /* texto oscuro */
+  background: #d0befa;
+  border-color: #e5e7eb;
+  min-width: 120px; /* evitar que el botón se encoja y oculte el texto */
+  text-align: center;
 }
 
-.link {
-  background: transparent;
-  border: 0;
-  color: #3b82f6;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 10px 16px;
-  transition: color 0.2s;
-}
-
-.link:hover {
-  color: #2563eb;
+.btn-secondary svg {
+  margin-right: 8px;
+  vertical-align: middle;
 }
 
 /* Content Layout */
@@ -937,9 +934,9 @@ onMounted(async () => {
 
 /* Large Desktop - 1280px */
 @media (min-width: 1280px) {
-  /* Grid optimizado para pantallas grandes, permite 3-4 columnas */
+  /* Mantener 3 columnas en desktop grande */
   .grid {
-    grid-template-columns: repeat(4, minmax(280px, 1fr));
+    grid-template-columns: repeat(3, minmax(280px, 1fr));
     gap: 32px;
   }
 }
@@ -955,9 +952,9 @@ onMounted(async () => {
     gap: 40px;
   }
 
-  /* Grid que permite hasta 4-5 columnas en pantallas muy grandes */
+  /* Forzar 3 columnas también en pantallas extra grandes */
   .grid {
-    grid-template-columns: repeat(5, minmax(280px, 1fr));
+    grid-template-columns: repeat(3, minmax(280px, 1fr));
     gap: 36px;
   }
 }

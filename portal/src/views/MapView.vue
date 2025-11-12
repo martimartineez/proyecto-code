@@ -9,11 +9,6 @@
           {{ searchMode ? 'Cancelar búsqueda' : 'Buscar en el mapa' }}
         </button>
         <div v-if="selectedLocation" class="location-info">
-          <p>Ubicación seleccionada</p>
-          <div class="coordinates">
-            Lat: {{ selectedLocation.lat.toFixed(4) }}, 
-            Lng: {{ selectedLocation.lng.toFixed(4) }}
-          </div>
           <div class="radius-control">
             <label>Radio de búsqueda: {{ searchRadius }} km</label>
             <input 
@@ -45,8 +40,7 @@
           <l-marker
             v-if="selectedLocation"
             :lat-lng="[selectedLocation.lat, selectedLocation.lng]"
-            :draggable="true"
-            @dragend="onMarkerDragEnd"
+            @click="selectSite(null)"
           >
             <l-icon :icon-size="[32, 32]" :icon-anchor="[16, 32]">
               <div class="search-marker">📍</div>
@@ -130,7 +124,6 @@
           if (newVal) {
             this.selectedLocation = { ...newVal };
             this.center = [newVal.lat, newVal.lng];
-            this.zoom = 12;
           }
         }
       }
@@ -144,15 +137,7 @@
       },
       
       handleMapClick(event) {
-        if (!this.searchMode) return;
-        
         const { lat, lng } = event.latlng;
-        this.selectedLocation = { lat, lng };
-        this.updateSearch();
-      },
-      
-      onMarkerDragEnd(event) {
-        const { lat, lng } = event.target.getLatLng();
         this.selectedLocation = { lat, lng };
         this.updateSearch();
       },
@@ -162,10 +147,7 @@
         
         // Emitir radius en metros (backend espera metros). Antes se emitía en kilómetros.
         const radiusMeters = this.searchRadius * 1000;
-  
-        // Debug temporal para verificar los valores enviados
-        try { console.debug('MapView.updateSearch ->', { lat: this.selectedLocation.lat, lng: this.selectedLocation.lng, radius: radiusMeters }); } catch (e) {}
-  
+
         this.$emit('location-updated', {
           latitude: this.selectedLocation.lat,
           longitude: this.selectedLocation.lng,
@@ -190,15 +172,29 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    position: relative;
   }
   
   .map-controls {
     padding: 10px;
     background: #f8f9fa;
     border-bottom: 1px solid #dee2e6;
-    z-index: 1000;
+    z-index: 2; 
+    position: relative;
   }
-  
+
+  .map-wrapper {
+    flex: 1;
+    min-height: 400px;
+    position: relative;
+    z-index: 0; 
+  }
+
+  /* Forzar que el contenedor de Leaflet no suba por encima del header */
+  .map-wrapper .leaflet-container {
+    z-index: 0 !important;
+  }
+
   .search-toggle {
     padding: 8px 16px;
     background: #1978c8;
@@ -223,6 +219,8 @@
     background: white;
     border-radius: 4px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: relative; 
+    z-index: 1;
   }
   
   .radius-control {
@@ -241,15 +239,9 @@
     margin: 5px 0;
   }
   
-  .map-wrapper {
-    flex: 1;
-    min-height: 400px;
-    position: relative;
-  }
-  
   .search-marker {
     font-size: 24px;
     transform: translateY(-50%);
-    cursor: move;
+    cursor: pointer;
   }
   </style>
