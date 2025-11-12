@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import DetalleSitioView from '../views/DetalleSitioView.vue'
 import SitesView from '../views/SitesView.vue'
 import MapView from '../views/MapView.vue'
 
@@ -29,6 +30,11 @@ const router = createRouter({
       // which is lazy-loaded when the route is visited.
       component: () => import('../views/AboutView.vue'),
     },
+    {
+      path: '/sitios/:id',
+      name: 'detalle-sitio',
+      component: DetalleSitioView,
+    }
   ],
 })
 
