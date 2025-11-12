@@ -10,11 +10,10 @@ from src.web.controllers.sitios_historicos import filtrar
 from sqlalchemy import func
 from flask import Response
 import json
-from src.core.entity.favoritos_usuarios_sitios import favoritos_usuarios_sitios
+from src.core.auth.usuario import favoritos_usuarios_sitios
 from src.core.entity.services import (
     obtener_sitio,
     registrar_evento_historial,
-    obtener_sitio,
 )
 from flask_jwt_extended import (
     create_access_token,
@@ -147,7 +146,7 @@ def crear_sitio():
         return (
             jsonify(
                 {
-                    "error": {
+                    "erroraa": {
                         "code": "invalid_data",
                         "message": "Invalid input data",
                         "details": {" name": ["This field is required"]},
@@ -156,27 +155,14 @@ def crear_sitio():
             ),
             400,
         )
-    existe = obtener_sitio(data.get("id"))
-    if existe:
-        return (
-            jsonify(
-                {
-                    "error": {
-                        "code": "invalid_data",
-                        "message": "Invalid input data",
-                        "details": {"name": ["This field is required"]},
-                    }
-                }
-            ),
-            400,
-        )
+    
     data = request.get_json()
     errores = validar_datos_sitio(data)
     if errores:
         return (
             jsonify(
                 {
-                    "error": {
+                    "errorcccc": {
                         "code": "invalid_data",
                         "message": "Invalid input data",
                         "details": errores,
@@ -342,7 +328,7 @@ def crear_resena_sitio(id_sitio):
             404,
         )
 
-    if puntaje < 1 or puntaje > 5 or len(texto) < 20:
+    if not texto or puntaje is None or puntaje < 1 or puntaje > 5 or len(texto) < 20:
         return (
             jsonify(
                 {
@@ -414,8 +400,8 @@ def obtener_resena_por_idSitio(id_sitio, id_resena):
         "site_id": resena.id_sitio,
         "rating": resena.puntaje,
         "comment": resena.texto,
-        "inserted_at": resena.inserted_at,
-        "updated_at": resena.updated_at,
+        "inserted_at": resena.inserted_at.isoformat() + "Z" if resena.inserted_at else None,
+        "updated_at": resena.updated_at.isoformat() + "Z" if resena.updated_at else None,
     }
 
     return jsonify(data), 200
@@ -470,7 +456,7 @@ def marcar_sitio_como_favorito(id_sitio):
         return "", 204
     user.favoritos.append(sitio)
     db.session.commit()
-    return jsonify(), 204
+    return "", 204
 
 
 @bp.route("/sites/<int:id_sitio>/favorite", methods=["DELETE"])
@@ -485,10 +471,11 @@ def desmarcar_sitio_como_favorito(id_sitio):
 
     user_id = int(get_jwt_identity())
     user = db.session.query(Usuario).get(user_id)
-
+    if sitio not in user.favoritos:
+        return "", 204
     user.favoritos.remove(sitio)
     db.session.commit()
-    return jsonify(), 204
+    return "", 204
 
 
 @bp.route("/me/favorites", methods=["GET"])

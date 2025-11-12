@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Text, CheckConstraint, ForeignKey, DateTime, func
+from sqlalchemy import Column, Integer, Text, CheckConstraint, ForeignKey, DateTime, func, String
 from sqlalchemy.orm import relationship
 from src.core.database import Base
 
@@ -22,6 +22,16 @@ class Reseña(Base):
         CheckConstraint('puntaje >= 1 AND puntaje <= 5', name='check_puntaje_range'),
 
         CheckConstraint("length(texto) >= 20", name="check_text_length"),
+        CheckConstraint(
+            "estado IN ('pendiente', 'aprobada', 'rechazada')",
+            name="check_estado_valido"
+        ),
+    )
+
+    estado = Column(
+        String(20),
+        nullable=False,
+        server_default="pendiente",
     )
 
     def to_dict(self):
