@@ -11,6 +11,7 @@
       
       <div class="header-info">
         <h1>{{ site.name }}</h1>
+        <h5>{{ site.short_description }}</h5>
         <p class="location">{{ site.city }}, {{ site.province }}</p>
         
         <span :class="['status-chip', getConservationClass(site.state_of_conservation)]">
@@ -18,15 +19,14 @@
         </span>
       </div>
       
-      <div class="tag-placeholder">Tags: {{ site.tags?.map(t => t.name).join(', ') || 'N/A' }}</div>
+      <div class="tag-placeholder">Tags: {{ site.tags?.join(', ') || 'N/A' }}</div>
     </section>
 
     <hr>
     
     <section>
         <h2>Descripción</h2>
-        <p>{{ site.description.substring(0, 300) }}...</p>
-        <p style="font-style: italic;">[Descripción Plegable: usa description]</p>
+        <CollapsibleDescription :text="site.description" :limit="300" />
     </section>
 
 
@@ -42,7 +42,10 @@
     <section class="reviews-section">
       <h2>Calificaciones y Reseñas</h2>
       <div class="review-summary-actions">
-        <p>Calificación: {{ site.calificacion_promedio }} ({{ site.cantidad_reseñas }} reseñas)</p>
+        <RatingSummary 
+            :rating="site.calificacion_promedio" 
+            :count="site.cantidad_reseñas" 
+        />
         
         <div class="action-buttons">
             <button class="action-btn">Escribir Reseña (Login requerido)</button>
@@ -51,9 +54,8 @@
         </div>
       </div>
 
-      <div style="margin-top: 1rem; border: 1px dashed #ccc; padding: 10px;">
-        [Listado de Reseñas Paginadas: se requiere GET /sites/{id}/reviews]
-      </div>
+      <ReviewList :site-id="site.id" @update-summary="updateReviewSummary" />
+      
     </section>
 
   </main>
@@ -71,19 +73,28 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import SiteMap from '@/components/SiteMap.vue';
+import CollapsibleDescription from '@/components/CollapsibleDescription.vue';
+import ReviewList from '@/components/ReviewList.vue'; 
+import RatingSummary from '@/components/RatingSummary.vue';
 
 
 const route = useRoute();
 const router = useRouter();
 const site = ref(null); 
-const isAuthenticated = ref(false); // Mantener para futura implementación de JWT
+const isAuthenticated = ref(false); 
+
+// Función para actualizar las propiedades del sitio cuando el hijo (ReviewList) emite el resumen
+const updateReviewSummary = (summary) => {
+    // Estas líneas se ejecutan cuando ReviewList termina de cargar los metadatos
+    site.value.cantidad_reseñas = summary.count;
+    site.value.calificacion_promedio = summary.average_rating;
+};
 
 // Función para mapear el estado de conservación a una clase CSS
 const getConservationClass = (estado) => {
     if (!estado) return 'unknown';
     const lowerCaseEstado = estado.toLowerCase();
     
-    // Basado en los choices de la API: 'excelente', 'bueno', 'regular', 'malo'
     if (lowerCaseEstado.includes('bueno')) return 'good';
     if (lowerCaseEstado.includes('regular')) return 'fair';
     if (lowerCaseEstado.includes('malo')) return 'poor';
@@ -92,45 +103,38 @@ const getConservationClass = (estado) => {
 }
 
 const fetchSiteData = async () => {
-  const siteId = route.params.id; 
-  
-  // 1. Definición de la URL base usando la convención de Vite
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'; 
+    const siteId = route.params.id; 
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'; 
+    
+    let siteData = null; 
 
-  try {
-    console.log(`Intentando cargar detalles del sitio ID: ${siteId} desde la API: ${baseUrl}/api/sites/${siteId}`);
-    
-    // 2. Solicitud GET al endpoint de la API
-    const response = await fetch(`${baseUrl}/api/sites/${siteId}`);
-    
-    // 3. Manejo de errores de HTTP (incluyendo 404, confirmado en sites.py)
-    if (!response.ok) {
-      if (response.status === 404) {
-          site.value = { error: 'El sitio no existe (Error 404).' };
-          return; 
-      }
-      throw new Error(`Error HTTP: ${response.status}`);
+    try {
+        // 1. LLAMADA AL DETALLE DEL SITIO (única llamada)
+        const siteResponse = await fetch(`${baseUrl}/api/sites/${siteId}`);
+        if (!siteResponse.ok) {
+            if (siteResponse.status === 404) {
+                 site.value = { error: 'El sitio no existe (Error 404).' };
+                 return; 
+            }
+            throw new Error(`Error HTTP: ${siteResponse.status}`);
+        }
+        siteData = await siteResponse.json();
+        
+        // Inicializamos los placeholders que el ReviewList actualizará
+        siteData.cantidad_reseñas = 0;
+        siteData.calificacion_promedio = 'N/A';
+
+        // 2. Asignar los datos
+        site.value = siteData; 
+
+        // NOTA: La lógica de reseñas (la segunda llamada) ahora se encuentra encapsulada en ReviewList.vue
+
+    } catch (error) {
+        console.error("Error al cargar detalles del sitio:", error);
+        site.value = { error: 'No se pudo contactar al servidor de la API o hubo un error de red.' };
     }
-    
-    // 4. Convertir la respuesta a JSON
-    let data = await response.json();
-    
-    // 5. Mapeo temporal de campos faltantes (Calificación y conteo de reseñas)
-    // Estos campos deberían venir de una llamada separada (GET /sites/{id}/reviews) o del to_dict() del modelo.
-    // Los inicializamos para evitar que el template falle.
-    data.calificacion_promedio = data.rating_avg || 'N/A';
-    data.cantidad_reseñas = data.reviews_count || 0;
-
-    // 6. Asignar los datos reales al estado reactivo
-    site.value = data; 
-
-  } catch (error) {
-    console.error("Error al cargar detalles del sitio:", error);
-    site.value = { error: 'No se pudo contactar al servidor de la API o hubo un error de red.' };
-  }
 };
 
-// Función para navegar al listado filtrado por tag - COMENTADA LA LÓGICA DE NAVEGACIÓN
 const filterByTag = (tag) => {
     console.log(`Lógica de navegación a listado filtrado por tag: ${tag.name}`);
     // router.push({ path: '/listado', query: { tag: tag.name } });
