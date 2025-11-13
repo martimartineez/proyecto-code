@@ -8,6 +8,7 @@ from src.core.entity.ciudad import Ciudad
 from src.core.entity.categoria_sitio import CategoriaSitio  # noqa: F401
 from src.core.entity.tag import Tag  # noqa: F401
 from src.core.auth.usuario import Usuario
+from src.core.entity.reseña import Reseña
 import re
 
 #definicion de excepciones personalizadas
