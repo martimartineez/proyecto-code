@@ -1,12 +1,12 @@
 <template>
     <div class="map-search-container">
       <div class="map-controls">
-        <button 
-          @click="toggleSearchMode" 
-          :class="{ 'active': searchMode }"
-          class="search-toggle"
+        <button
+          v-if="selectedLocation"
+          @click="clearSearch"
+          class="search-toggle active"
         >
-          {{ searchMode ? 'Cancelar búsqueda' : 'Buscar en el mapa' }}
+        Cancelar búsqueda
         </button>
         <div v-if="selectedLocation" class="location-info">
           <div class="radius-control">
@@ -39,6 +39,7 @@
           <l-marker
             v-if="selectedLocation"
             :lat-lng="[selectedLocation.lat, selectedLocation.lng]"
+            :icon="selectionIcon"
             @click="selectSite(null)"
           />
           
@@ -52,16 +53,18 @@
             :weight="2"
           />
           
-          <template v-for="site in sitesWithCoords" :key="site.id">
-            <l-marker
-              :lat-lng="[site.latitude, site.longitude]"
-              @click="selectSite(site)"
-            >
-              <l-popup>
-                <h3>{{ site.name }}</h3>
-                <p>{{ site.city }}, {{ site.province }}</p>
-              </l-popup>
-            </l-marker>
+          <template v-if="selectedLocation">
+            <template v-for="site in sitesWithCoords" :key="site.id">
+              <l-marker
+                :lat-lng="[site.latitude, site.longitude]"
+                @click="selectSite(site)"
+              >
+                <l-popup>
+                  <h3>{{ site.name }}</h3>
+                  <p>{{ site.city }}, {{ site.province }}</p>
+                </l-popup>
+              </l-marker>
+            </template>
           </template>
         </l-map>
       </div>
@@ -101,17 +104,24 @@
         center: [-34.6037, -58.3816],
         searchMode: false,
         selectedLocation: null,
-        searchRadius: 50,
-        map: null
+        searchRadius: 25,
+        map: null,
+        selectionIcon: null,
       };
     },
     created() {
-      // Configure Leaflet default marker assets so icons render properly
       try { if (L.Icon && L.Icon.Default && L.Icon.Default.prototype) { delete L.Icon.Default.prototype._get } } catch(e) {}
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: markerIcon2x,
         iconUrl: markerIcon,
         shadowUrl: markerShadow
+      });
+
+      this.selectionIcon = L.divIcon({
+        className: 'selection-icon',
+        html: '<div class="sel-pin"><span class="inner"></span></div>',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
       });
     },
     computed: {
@@ -125,30 +135,14 @@
         );
       }
     },
-    watch: {
-      initialLocation: {
-        immediate: true,
-        handler(newVal) {
-          if (newVal) {
-            this.selectedLocation = { ...newVal };
-            this.center = [newVal.lat, newVal.lng];
-          }
-        }
-      }
-    },
+
     methods: {
-      
-      toggleSearchMode() {
-        this.searchMode = !this.searchMode;
-        if (!this.searchMode) {
-          this.clearSearch();
-        }
-      },
       
       handleMapClick(event) {
         const { lat, lng } = event.latlng;
         this.selectedLocation = { lat, lng };
         this.updateSearch();
+
       },
       
       updateSearch() {
@@ -177,6 +171,26 @@
   </script>
   
   <style scoped>
+
+  .selection-icon .sel-pin {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #1978c8;
+    border-radius: 50%;
+    background: rgba(25, 120, 200, 0.15);
+    position: relative;
+    box-shadow: 0 0 0 2px rgba(25, 120, 200, 0.15);
+  }
+  .selection-icon .sel-pin .inner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 6px;
+    height: 6px;
+    background: #1978c8;
+    border-radius: 50%;
+  }
   .map-search-container {
     display: flex;
     flex-direction: column;
