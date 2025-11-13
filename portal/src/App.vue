@@ -7,40 +7,40 @@ import { RouterLink, RouterView } from 'vue-router'
 <template>
   <header>
       <nav class="navbar navbar-expand-lg">
-        <div class="container-fluid p-2">
-          <RouterLink to="/" class="navbar-brand" id="title">
-            <img alt="UNLP logo" class="logo" src="@/assets/UNLP_Logo.svg" width="70" height="70" />
-            <span> Sitios Historicos </span>
-          </RouterLink>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo01" aria-controls="navbarTogglerDemo01" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="navbarNav">
-            <RouterLink to="" class="nav-link m-2">Explorar</RouterLink>
-            <RouterLink to="" class="nav-link m-2">¿Quienes somos?</RouterLink> 
-        </div>
-        <!-- barra de busqueda  -->
-        <div class="container-fluid ms-5">
-          <form class="d-flex" role="search">
-            <div id="search">
-              <svg viewBox="0 0 420 60" xmlns="http://www.w3.org/2000/svg">
-                <rect class="bar"/>
-                  <g class="magnifier">
-                    <circle class="glass"/>
-                    <line class="handle" x1="32" y1="32" x2="44" y2="44"></line>
-                  </g>
-              </svg>
-              <input type=search name=q aria-label="Search for inspiration"/>
-            </div>
-          </form>
-        </div>
-          <RouterLink to="" class="nav-link d-none d-lg-flex me-5">Mi perfil</RouterLink>
+        <div class="container-fluid p-3">
+        	<RouterLink to="/" class="navbar-brand" id="title">
+        		<img alt="UNLP logo" class="logo" src="@/assets/UNLP_Logo.svg" width="70" height="70" />
+            	<span> Sitios Historicos </span>
+          	</RouterLink> 
+          	<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarTogglerDemo01" aria-expanded="false" aria-label="Toggle navigation">
+            	<span class="navbar-toggler-icon"></span>
+          	</button>
+			<div class="collapse navbar-collapse" id="navbarNav">
+				<RouterLink to="" class="nav-link m-2">Explorar</RouterLink>
+				<RouterLink to="" class="nav-link m-2">¿Quienes somos?</RouterLink> 
+				<!-- barra de busqueda  -->
+				<div class="container-fluid">
+					<form class="d-flex" role="search">
+						<div id="search">
+						<svg viewBox="0 0 420 60" xmlns="http://www.w3.org/2000/svg">
+							<rect class="bar"/>
+							<g class="magnifier">
+								<circle class="glass"/>
+								<line class="handle" x1="32" y1="32" x2="44" y2="44"></line>
+							</g>
+						</svg>
+						<input type=search name=q aria-label="Search for inspiration"/>
+						</div>
+					</form>
+				</div>
+				<RouterLink to="" class="nav-link d-none d-lg-flex me-5">Mi perfil</RouterLink>
+			</div>
       </div>
     </nav>
   </header>
 <div class="container-md pt-4" id="mainView">
     <RouterView />
-  </div>
+</div>
   
 </template>
 
@@ -52,6 +52,7 @@ import { RouterLink, RouterView } from 'vue-router'
   max-width: 150px;
   font-size: 18px;
   white-space: normal;
+  margin-right: 2em;
 }
 
 #title > span{
@@ -159,14 +160,11 @@ nav{
   #search {
     grid-template:
 		"search" 2.2em
-		/ 20rem;
+		/ 15rem;
 	width: fit-content;
 }
-  .bar{
-    width: 80%;
-  }
 
-}
+}	
 
 #mainView{
 	padding-left: 0;
