@@ -12,6 +12,7 @@ from src.web.controllers.tags import bp as tags_bp
 from src.web.api.sites import bp as sites_api_bp
 from src.core import seeds
 from src.web.controllers.auth import bp as auth_bp
+from src.web.controllers.reseñas import bp as reseñas_bp
 from src.core.bcrypt import bcrypt
 from src.web.handlers.auth import is_autenticated, check_permission, is_system_admin
 from src.core import auth as core_auth
@@ -20,7 +21,7 @@ from src.core.entity.services.feature_flags import get_flag
 from src.web.controllers.feature_flags import bp as feature_flags_bp
 from flask_jwt_extended import JWTManager
 
-from flask_cors import CORS
+#from flask_cors import CORS
 
 session = Session()
 
@@ -35,7 +36,7 @@ def create_app(env="development", static_folder="../../static"):
     database.init_db(app)
     session.init_app(app)
     bcrypt.init_app(app)
-    CORS(app)
+    #CORS(app)
 
     with app.app_context():
         try:
@@ -53,7 +54,7 @@ def create_app(env="development", static_folder="../../static"):
     app.register_blueprint(tags_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(feature_flags_bp)
-
+    app.register_blueprint(reseñas_bp)
     app.register_error_handler(403, error.forbidden)
     app.register_error_handler(404, error.not_found)
     app.register_error_handler(401, error.unauthorized)

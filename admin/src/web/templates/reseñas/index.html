@@ -1,0 +1,520 @@
+{% extends "layout.html" %}
+
+{% block title %}Reseñas{% endblock %}
+
+{% block content %}
+<h1>Reseñas</h1>
+
+<a href="/">
+  <button type="button" class="button-22">Página principal</button>
+</a>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div id="flash-messages">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<form method="GET" action="/reseñas">
+<button id="btnFiltros" type="button" class="button-18" role="button">Mostrar filtros avanzados</button>
+<div id="filtrosAvanzados" class="filtros">
+    <div>
+      <label>Estado</label>
+      <select id="EstadoSelect" name="estado" class="form-control">
+        <option value="">Seleccione estado</option>
+        <option value="aprobada"  {% if request_args.get('estado') == 'aprobada' %}selected{% endif %}>Aprobada</option>
+        <option value="rechazada" {% if request_args.get('estado') == 'rechazada' %}selected{% endif %}>Rechazada</option>
+        <option value="pendiente" {% if request_args.get('estado') == 'pendiente' %}selected{% endif %}>Pendiente</option>
+      </select>
+
+    </div>
+     <div>
+  <label for="sitioSelect">Sitio:</label>
+<select id="sitioSelect" name="sitio" class="form-control">
+  <option value="">-- Seleccione un sitio </option>
+  {% for sitio in sitios %}
+    <option value="{{ sitio.id }}"
+        {% if request_args.get('sitio') == sitio.id|string %}selected{% endif %}
+    >
+      {{ sitio.nombre }} (ID: {{ sitio.id }})
+    </option>
+  {% endfor %}
+</select>
+</div>
+     <div id="PuntajeSelectDiv">
+      <label>Puntaje</label>
+      <select id="PuntajeSelect" name="puntaje" class="form-control">
+  <option value="">Seleccione un puntaje</option>
+  {% for p in [1,2,3,4,5] %}
+    <option value="{{ p }}" {% if request_args.get('puntaje') == p|string %}selected{% endif %}>
+      {{ p }}
+    </option>
+  {% endfor %}
+</select>
+     </div>
+     <div>
+      <label>Desde:</label>
+      <input class="form-control" type="date" name="fecha_desde" value="{{ request_args.get('fecha_desde','') }}"
+        max="{{ date.today().isoformat() }}">
+    </div>
+    <div>
+      <label>Hasta:</label>
+      <input class="form-control" type="date" name="fecha_hasta" value="{{ request_args.get('fecha_hasta','') }}"
+        max="{{ date.today().isoformat() }}">
+    </div>
+
+    <div>
+  <label>Ordenar por:</label>
+  <select name="sort_by" id="sort_by" class="form-control">
+
+    <option value="">Ordenar por </option>
+    <option value="fecha_registro"
+      {% if request_args.get('sort_by')=='fecha_registro' %}selected{% endif %}>
+      Fecha
+    </option>
+    <option value="puntaje"
+      {% if request_args.get('sort_by')=='puntaje' %}selected{% endif %}>
+      Calificación
+    </option>
+  </select>
+</div>
+
+<div>
+  <label>Orden:</label>
+  <select name="order" id="order" class="form-control">
+    <option value=""> Seleccione orden </option>
+    <option value="asc" {% if request_args.get('order')=='asc' %}selected{% endif %}>
+        Ascendente
+    </option>
+    <option value="desc" {% if request_args.get('order')=='desc' %}selected{% endif %}>
+        Descendente
+    </option>
+  </select>
+</div>
+<div>
+      <label>Buscar:</label>
+      <input class="form-control" type="text" name="buscar" value="{{ request_args.get('buscar','') }}">
+    </div>
+
+    <div class="botones">
+      <button type="submit" class="button-18">Buscar</button>
+      <button type="button" id="btnLimpiar" class="button-18">Limpiar</button>
+    </div>
+
+</div>
+</form>
+<p>Total de resultados encontrados: {{ total_results }}</p>
+
+<h2>Resultados</h2>
+
+<style>
+  .button-approve {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .button-approve:hover {
+    background-color: #218838;
+  }
+
+  .button-reject {
+    background-color: #ffc107;
+    color: #000;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .button-reject:hover {
+    background-color: #e0a800;
+  }
+
+  .button-delete {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .button-delete:hover {
+    background-color: #c82333;
+  }
+
+  input[name="motivo"] {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 4px;
+    font-size: 0.9em;
+  }
+</style>
+
+<table>
+  <thead>
+    <tr>
+      <th>Sitio</th>
+      <th>Usuario</th>
+      <th>Calificación</th>
+      <th>Contenido</th>
+      <th>Estado</th>
+      <th>Fecha de Creación</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for resena in resenas %}
+    <tr>
+      <td>
+        {% if resena.sitio %}
+          {{ resena.sitio.nombre }} (ID: {{ resena.sitio.id }})
+        {% else %}
+          —
+        {% endif %}
+      </td>
+      <td>{{ resena.usuario.email if resena.usuario else '—' }}</td>
+      <td>{{ resena.puntaje }}</td>
+      <td>{{ resena.texto }}</td>
+      <td>
+        {% if resena.estado == 'aprobada' %}
+          ✅ Aprobada
+        {% elif resena.estado == 'rechazada' %}
+          ❌ Rechazada
+          {% if resena.motivo %}
+            <br><small><strong>Motivo:</strong> {{ resena.motivo }}</small>
+          {% endif %}
+        {% else %}
+          ⏳ Pendiente
+        {% endif %}
+      </td>
+      <td>{{ resena.inserted_at.strftime('%Y-%m-%d %H:%M') if resena.inserted_at else '' }}</td>
+      <td>
+        <form action="/reseñas/{{ resena.id }}/aprobar" method="POST" style="display:inline;">
+          <button type="submit" class="button-approve">Aprobar</button>
+        </form>
+        <form action="/reseñas/{{ resena.id }}/rechazar" method="POST" 
+            class="form-rechazo" data-id="{{ resena.id }}" style="display:inline;">
+            <button type="button" class="button-reject btnAbrirRechazo">Rechazar</button>
+            <input type="hidden" name="motivo">
+        </form>
+        <form action="/reseñas/{{ resena.id }}/eliminar" 
+            method="POST" 
+            style="display:inline;"
+            onsubmit="return confirm('¿Seguro que querés eliminar esta reseña? Esta acción no se puede deshacer.');">
+            <button type="submit" class="button-delete">Eliminar</button>
+        </form>
+        <form action="/reseñas/reseña/{{ resena.id }}" method="GET" style="display:inline;">
+          <button type="submit" class="button-18">Ver detalles</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+
+{% if total_pages > 1 %}
+<nav>
+  <ul class="pagination">
+    {% set args = request.args.copy() %}
+    {% if 'page' in args %}{% set _ = args.pop('page') %}{% endif %}
+
+    {# Botón Anterior #}
+    {% if page > 1 %}
+    <li>
+      <a href="{{ url_for('reseñas.listar_reseñas', page=page-1, **args) }}">
+        <button type="button">Anterior</button>
+      </a>
+    </li>
+    {% endif %}
+
+    {# Calculamos los límites de páginas visibles manualmente #}
+    {% set start_page = page - 4 %}
+    {% set end_page = page + 5 %}
+    {% if start_page < 1 %} {% set end_page=end_page + (1 - start_page) %} {% set start_page=1 %} {% endif %} {% if
+      end_page> total_pages %}
+      {% set start_page = start_page - (end_page - total_pages) %}
+      {% set end_page = total_pages %}
+      {% endif %}
+      {% if start_page < 1 %} {% set start_page=1 %} {% endif %} {# Primera página y puntos suspensivos si corresponde
+        #} {% if start_page> 1 %}
+        <li>
+          <a href="{{ url_for('reseñas.listar_reseñas', page=1, **args) }}">
+            <button type="button">1</button>
+          </a>
+        </li>
+        {% if start_page > 2 %}
+        <span>...</span>
+        {% endif %}
+        {% endif %}
+
+        {# Páginas visibles #}
+        {% for p in range(start_page, end_page + 1) %}
+        <li class="{% if p == page %}active{% endif %}">
+          <a href="{{ url_for('reseñas.listar_reseñas', page=p, **args) }}">
+            <button type="button">{{ p }}</button>
+          </a>
+        </li>
+        {% endfor %}
+
+        {# Última página y puntos suspensivos si corresponde #}
+        {% if end_page < total_pages %} {% if end_page < total_pages - 1 %} <span>...</span>
+          {% endif %}
+          <li>
+            <a href="{{ url_for('reseñas.listar_reseñas', page=total_pages, **args) }}">
+              <button type="button">{{ total_pages }}</button>
+            </a>
+          </li>
+          {% endif %}
+
+          {# Botón Siguiente #}
+          {% if page < total_pages %} <li>
+            <a href="{{ url_for('reseñas.listar_reseñas', page=page+1, **args) }}">
+              <button type="button">Siguiente</button>
+            </a>
+            </li>
+            {% endif %}
+  </ul>
+</nav>
+{% endif %}
+
+<div id="modalRechazo" style="
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.5);
+  justify-content:center;
+  align-items:center;">
+  
+  <div style="
+    background:white;
+    padding:20px;
+    border-radius:8px;
+    width:350px;">
+    <h3>Motivo del rechazo</h3>
+    <textarea id="motivoInput" maxlength="200" required
+              style="width:100%; height:80px; margin-top:10px;"></textarea>
+    
+    <div style="text-align:right; margin-top:10px;">
+      <button id="cancelarRechazo" style="margin-right:10px;">Cancelar</button>
+      <button id="confirmarRechazo" class="button-reject">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let formSeleccionado = null;
+
+document.querySelectorAll(".btnAbrirRechazo").forEach(btn => {
+  btn.addEventListener("click", () => {
+    formSeleccionado = btn.closest(".form-rechazo");
+    document.getElementById("motivoInput").value = "";
+    document.getElementById("modalRechazo").style.display = "flex";
+  });
+});
+
+document.getElementById("cancelarRechazo").addEventListener("click", () => {
+  document.getElementById("modalRechazo").style.display = "none";
+});
+
+document.getElementById("confirmarRechazo").addEventListener("click", () => {
+  const motivo = document.getElementById("motivoInput").value.trim();
+  if (motivo.length === 0) {
+    alert("Debés ingresar un motivo.");
+    return;
+  }
+  if (motivo.length > 200) {
+    alert("El motivo no puede superar los 200 caracteres.");
+    return;
+  }
+
+  formSeleccionado.querySelector('input[name="motivo"]').value = motivo;
+  formSeleccionado.submit();
+
+  document.getElementById("modalRechazo").style.display = "none";
+});
+</script>
+<script>
+  const btn = document.getElementById('btnFiltros');
+  const filtros = document.getElementById('filtrosAvanzados');
+
+  btn.addEventListener('click', () => {
+    if (filtros.style.display === 'none' || filtros.style.display === '') {
+      filtros.style.display = 'flex';
+      btn.textContent = 'Ocultar filtros';
+    } else {
+      filtros.style.display = 'none';
+      btn.textContent = 'Mostrar filtros avanzados';
+    }
+  });
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  const btnLimpiar = document.getElementById('btnLimpiar');
+  const filtros = document.getElementById('filtrosAvanzados');
+  const btnFiltros = document.getElementById('btnFiltros');
+
+  if (!btnLimpiar || !filtros) return;
+
+  btnLimpiar.addEventListener('click', () => {
+
+    // Limpiar selects dentro de filtros
+    filtros.querySelectorAll("select").forEach(sel => {
+      sel.value = "";
+    });
+
+    // Limpiar inputs de texto y fecha
+    filtros.querySelectorAll('input[type="text"], input[type="date"]').forEach(inp => {
+      inp.value = "";
+    });
+
+    // Limpiar hidden
+    filtros.querySelectorAll('input[type="hidden"]').forEach(inp => {
+      inp.value = "";
+    });
+
+    // Limpiar específicamente Ordenar por y Orden
+    const sortBy = document.getElementById("sort_by");
+    const order = document.getElementById("order");
+
+    if (sortBy) sortBy.value = "";
+    if (order) order.value = "";
+
+    // Cerrar filtros si están abiertos
+    filtros.style.display = "none";
+    btnFiltros.textContent = "Mostrar filtros avanzados";
+
+  });
+
+});
+</script>
+
+
+<style>
+  .filtros {
+    display: none;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    background: #f8f8f8;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 10px;
+  }
+
+  .filtros div {
+    display: flex;
+    flex-direction: column;
+    margin-right: 10px;
+  }
+
+  .filtros select,
+  .filtros input[type="text"],
+  .filtros input[type="date"] {
+    width: auto;
+    max-width: 180px;
+  }
+</style>
+
+<style>
+  .filtros {
+    display: none;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 15px 25px;
+    background: #f8f8f8;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 10px;
+    max-width: 1500px;
+  }
+
+  .filtros div {
+    display: flex;
+    flex-direction: column;
+    min-width: 200px;
+    max-width: 220px;
+  }
+
+  .filtros select,
+  .filtros input[type="text"],
+  .filtros input[type="date"] {
+    width: 100%;
+    padding: 4px;
+    box-sizing: border-box;
+  }
+
+  .filtros .botones {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    min-width: 180px;
+  }
+</style>
+
+<style>
+  .tag-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    padding: 5px 0;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+
+  .tag-option {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+  }
+  .pagination li {
+  display: inline-block;
+  margin: 2px;
+}
+
+.pagination li a button {
+  background-color: #f8f9fa;
+  border: 1px solid #ccc;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.pagination li.active a button {
+  background-color: #007bff; /* Azul */
+  color: white;
+  border-color: #007bff;
+  font-weight: bold;
+}
+
+.pagination li a button:hover {
+  background-color: #e2e6ea;
+}
+</style>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const flashContainer = document.getElementById("flash-messages");
+    if (flashContainer) {
+        setTimeout(() => {
+            flashContainer.style.transition = "opacity 0.5s ease";
+            flashContainer.style.opacity = "0";
+            setTimeout(() => {
+                flashContainer.remove();
+            }, 500); 
+        }, 2000); 
+    }
+});
+</script>
+
+
+
+{% endblock %}
