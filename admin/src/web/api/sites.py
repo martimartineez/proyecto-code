@@ -309,7 +309,7 @@ def listar_resenas_sitio(id):
             400,
         )
 
-    query = db.session.query(Reseña).filter_by(id_sitio=id)
+    query = db.session.query(Reseña).filter_by(id_sitio=id, estado='aprobada')
     total = query.count()
     offset = (page - 1) * per_page
 
