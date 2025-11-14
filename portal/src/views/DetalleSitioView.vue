@@ -19,7 +19,18 @@
         </span>
       </div>
       
-      <div class="tag-placeholder">Tags: {{ site.tags?.join(', ') || 'N/A' }}</div>
+      <div class="tag-list">
+          Tags:
+          <span 
+              v-for="tag in site.tags" 
+              :key="tag" 
+              @click="filterByTag(tag)"
+              class="tag-chip"
+          >
+              {{ tag }}
+          </span>
+          <span v-if="!site.tags || site.tags.length === 0" class="tag-chip-placeholder">N/A</span>
+      </div>
     </section>
 
     <hr>
@@ -85,7 +96,6 @@ const isAuthenticated = ref(false);
 
 // Función para actualizar las propiedades del sitio cuando el hijo (ReviewList) emite el resumen
 const updateReviewSummary = (summary) => {
-    // Estas líneas se ejecutan cuando ReviewList termina de cargar los metadatos
     site.value.cantidad_reseñas = summary.count;
     site.value.calificacion_promedio = summary.average_rating;
 };
@@ -102,6 +112,15 @@ const getConservationClass = (estado) => {
     return 'neutral';
 }
 
+// TAGS CLICABLES
+const filterByTag = (tag) => {
+    router.push({ 
+        path: '/listado', // cambiar ruta porque no es /listado
+        query: { tags: tag } 
+    });
+}
+
+
 const fetchSiteData = async () => {
     const siteId = route.params.id; 
     const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'; 
@@ -109,7 +128,6 @@ const fetchSiteData = async () => {
     let siteData = null; 
 
     try {
-        // 1. LLAMADA AL DETALLE DEL SITIO (única llamada)
         const siteResponse = await fetch(`${baseUrl}/api/sites/${siteId}`);
         if (!siteResponse.ok) {
             if (siteResponse.status === 404) {
@@ -124,21 +142,13 @@ const fetchSiteData = async () => {
         siteData.cantidad_reseñas = 0;
         siteData.calificacion_promedio = 'N/A';
 
-        // 2. Asignar los datos
         site.value = siteData; 
-
-        // NOTA: La lógica de reseñas (la segunda llamada) ahora se encuentra encapsulada en ReviewList.vue
 
     } catch (error) {
         console.error("Error al cargar detalles del sitio:", error);
         site.value = { error: 'No se pudo contactar al servidor de la API o hubo un error de red.' };
     }
 };
-
-const filterByTag = (tag) => {
-    console.log(`Lógica de navegación a listado filtrado por tag: ${tag.name}`);
-    // router.push({ path: '/listado', query: { tag: tag.name } });
-}
 
 onMounted(fetchSiteData);
 </script>
@@ -178,6 +188,27 @@ hr {
   &.fair { background-color: #fff3cd; color: #856404; } 
   &.poor { background-color: #f8d7da; color: #721c24; } 
   &.neutral { background-color: #f1f1f1; color: #333; } 
+}
+
+/* --- ESTILOS DE TAGS CLICABLES --- */
+.tag-list {
+    margin-top: 1rem;
+    font-size: 0.9em;
+}
+
+.tag-chip {
+    display: inline-block;
+    background-color: #e0e0e0;
+    color: #333;
+    padding: 3px 8px;
+    margin-right: 5px;
+    border-radius: 12px;
+    cursor: pointer; /* Indica que es clicable */
+    transition: background-color 0.2s;
+}
+
+.tag-chip:hover {
+    background-color: #c0c0c0;
 }
 
 /* Estilos base para simulación */
