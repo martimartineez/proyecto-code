@@ -192,6 +192,10 @@ const sitiosPorFila = computed(() => {    //muestra de a 1 elemento en celular y
       color: black;
     }
 
+    h4{
+      font-size: 28px;
+    }
+
     .col-center {
       margin: 0 auto;
       float: none !important;
@@ -235,10 +239,16 @@ const sitiosPorFila = computed(() => {    //muestra de a 1 elemento en celular y
       text-align: left;
       background: var(--pri-color);
       box-shadow: 0px 2px 2px rgba(0,0,0,0.1);
+      height: 100%;
     }
     .thumb-content {
+      display: flex;
+      flex-direction: column;
       padding: 15px;
       font-size: 13px;
+    }
+    .thumb-content p{
+      font-size: 19px;
     }
     .carousel-control-prev, .carousel-control-next {
       width: 44px;
