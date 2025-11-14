@@ -16,10 +16,10 @@ import { RouterLink, RouterView } from 'vue-router'
             	<span class="navbar-toggler-icon"></span>
           	</button>
 			<div class="collapse navbar-collapse" id="navbarNav">
-				<RouterLink to="" class="nav-link m-2">Explorar</RouterLink>
+				<RouterLink to="/sites" class="nav-link m-2" id="explorar">Explorar!</RouterLink>
 				<RouterLink to="" class="nav-link m-2">¿Quienes somos?</RouterLink> 
 				<!-- barra de busqueda  -->
-				<div class="container-fluid">
+				<div class="container-fluid p-0 pt-2">
 					<form class="d-flex" role="search">
 						<div id="search">
 						<svg viewBox="0 0 420 60" xmlns="http://www.w3.org/2000/svg">
@@ -38,13 +38,14 @@ import { RouterLink, RouterView } from 'vue-router'
       </div>
     </nav>
   </header>
-<div class="container-md pt-4" id="mainView">
+<div class="container-md pt-3" id="mainView">
     <RouterView />
 </div>
   
 </template>
 
 <style scoped>
+
 
 #title{
   display: flex;
@@ -53,6 +54,7 @@ import { RouterLink, RouterView } from 'vue-router'
   font-size: 18px;
   white-space: normal;
   margin-right: 2em;
+  font-weight: 500;
 }
 
 #title > span{
@@ -61,6 +63,15 @@ import { RouterLink, RouterView } from 'vue-router'
 
 nav{
   border-top: 25px solid var(--pri-color);
+}
+
+#explorar{
+	font-weight: 600;
+	font-size: 22px;
+}
+
+#navbarNav{
+	gap: 20px;
 }
 
 /* estilos de barra de busqueda */

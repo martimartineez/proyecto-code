@@ -1,65 +1,153 @@
-<script setup>
-import SlidersHome from './Sliders-home.vue';
-const openReadmeInEditor = () => fetch('/__open-in-editor?file=README.md')
-</script>
-
 <template>
-  <div id="Main-carrousel" class="carousel slide">
+  <div id="Main-carrousel" class="carousel carousel-dark slide">
     <div class="carousel-inner">
-      <div class="carousel-item active">
+      <div class="carousel-item active" v-if="ultimosSitios[0]">
       <!-- aca deberia sacar informacion usando la api. Hardcodeo un ejemplo-->
-          <img alt="catedral-ejemplo" src="@/assets/catedral_frente.jpg" class="d-block w-100">
+          <RouterLink :to="{ name: 'detalle-sitio', params: { id: ultimosSitios[0].id } }"> 
+          <img alt="catedral-ejemplo" src="@/assets/catedral_frente.jpg" class="d-block w-100">     <!-- reemplazar cuando se integren las imagenes -->
           <div class="carousel-caption d-md-block w-100">
-              <h5>Programa Nacional de Registro y Preservacion de Sitios Historicos</h5>
+              <h5>{{ ultimosSitios[0].nombre}}</h5>
           </div>
+          </RouterLink>
       </div>
-      <div class="carousel-item">
-          <img alt="museo-ejemplo" src="@/assets/museoLP.jpg" class="d-block w-100">
+      <div v-for="sitio in ultimosSitios.slice(1)" :key="sitio.id" class="carousel-item">
+          <RouterLink :to="{ name: 'detalle-sitio', params: { id: sitio.id } }">
+          <img alt="museo-ejemplo" src="@/assets/museoLP.jpg" class="d-block w-100">    <!-- reemplazar cuando se integren las imagenes -->
           <div class="carousel-caption d-md-block w-100">
-              <h5> Museo de La Plata</h5>
+              <h5> {{sitio.nombre}}</h5>
           </div>
+          </RouterLink>
       </div>
     </div>
     <button class="carousel-control-prev" type="button" data-bs-target="#Main-carrousel" data-bs-slide="prev">
       <span class="carousel-control-prev-icon" aria-hidden="true"></span>
       <span class="visually-hidden">Previous</span>
     </button>
-  <button class="carousel-control-next" type="button" data-bs-target="#Main-carrousel" data-bs-slide="next">
-    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-    <span class="visually-hidden">Next</span>
-  </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#Main-carrousel" data-bs-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Next</span>
+    </button>
   </div>
-  <SlidersHome />
+
+  <div id="sliders">
+    <p class="slider-title"> Destacados </p>
+        <div class="row">
+            <div id="myCarousel" class="carousel slide" data-ride="carousel" data-interval="0">
+              <!-- slides -->
+              <div class="carousel-item active">
+              <div class="row">
+                <div class="col-md-4" v-for="sitio in sitiosPorFila[0]" :key="sitio.id">
+                  <RouterLink :to="{ name: 'detalle-sitio', params: { id: sitio.id } }">
+                    <SliderHome>
+                      <template #imagen>
+                        <img src="@/assets/museoLP.jpg" class="img-responsive" />
+                      </template>
+                      <template #titulo>{{ sitio.nombre }}</template>
+                      <template #desc>{{ sitio.descripcion }}</template>
+                    </SliderHome>
+                  </RouterLink>
+                </div>
+              </div>
+            </div>
+            <div v-for="(fila, index) in sitiosPorFila.slice(1)" :key="index" class="carousel-item">
+              <div class="row">
+                <div class="col-md-4" v-for="sitio in fila" :key="sitio.id">
+                  <RouterLink :to="{ name: 'detalle-sitio', params: { id: sitio.id } }">
+                    <SliderHome>
+                      <template #imagen>
+                        <img src="@/assets/museoLP.jpg" class="img-responsive" />
+                      </template>
+                      <template #titulo>{{ sitio.nombre }}</template>
+                      <template #desc>{{ sitio.descripcion }}</template>
+                    </SliderHome>
+                  </RouterLink>
+                </div>
+              </div>
+            </div>
+          <button class="carousel-control-prev" type="button" data-bs-target="#myCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#myCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+          </button>
+          </div>
+      </div>
+  </div>
 </template>
 
+
+
+<script setup>
+import SliderHome from './Slider-home.vue';
+const openReadmeInEditor = () => fetch('/__open-in-editor?file=README.md');
+import { api } from '@/api/client';
+import { ref, onMounted, computed } from 'vue';
+
+
+const sitios = ref([]);
+
+onMounted(async () => {
+     sitios.value  = await api.listSites();
+})
+
+const ultimosSitios = computed(() => {
+  const lista = sitios.value.items || [];
+  console.log(lista.sort((b,a) => new Date(a.fecha_registro) - new Date(b.fecha_registro)).slice(0,3)); //agarro los 3 sitios mas recientes
+  return lista.sort((b,a) => new Date(a.fecha_registro) - new Date(b.fecha_registro)).slice(0,3);
+})
+
+const sitiosPorFila = computed(() => {    //muestra de a 1 elemento en celular y 3 en pc
+  const lista = sitios.value.items || [];
+  const grupos = [];
+  let cant = 0;
+  if (window.innerWidth > 767)
+    cant = 3;
+  else
+    cant = 1;
+  for (let i = 0; i < lista.length; i += cant) {
+        grupos.push(lista.slice(i, i + cant))
+    }
+  return grupos
+})
+
+
+</script>
+
 <style>
-  #Main-carrousel{
+  #Main-carrousel{    /* estilos para el carrusel principal */
     max-height: 75vh;
     overflow: hidden;
-  }
   
-  .carousel-item img {
-    height: 75vh;
-    width: 100%;
-    object-fit: cover;
-  }
+    .carousel-item img {
+        height: 75vh;
+        width: 100%;
+        object-fit: cover;
+      }
 
-  .carousel-caption{
-    color: white; 
-    left: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.315);
-  }
+    .carousel-caption{
+      color: white; 
+      left: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.315);
+    }
 
-  .carousel-caption h5{
-      font-size: 25px;
+    .carousel-caption h5{
+        font-size: 25px;
+        font-weight: 500;
+    }
+
+    .sliders-title{
       font-weight: 500;
-  }
-
-  .sliders-title{
-    font-weight: 500;
-    font-size: 30px;
-    justify-self: center;
+      font-size: 30px;
+      justify-self: center;
+    }
+    
+  .carousel-control-prev-icon,
+  .carousel-control-next-icon {
+    width: 3rem !important;
+    height: 3rem !important;
   }
 
   @media (max-width: 767px) {
@@ -81,5 +169,112 @@ const openReadmeInEditor = () => fetch('/__open-in-editor?file=README.md')
         font-weight: 500;
       }
     }
+    
+  }
+
+  .slider-title{
+    font-size: 44px;
+    font-weight: bold;
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    text-align: center;
+    margin: 0px;
+  }
+
+/* sliders */
+  #sliders{
+
+    margin-top: 1.5em;
+    
+    a{
+      text-decoration: none;
+      color: black;
+    }
+
+    .col-center {
+      margin: 0 auto;
+      float: none !important;
+    }
+    .carousel {
+      margin: 15px auto 60px;
+      padding: 0 80px;
+      overflow: visible;
+    }
+    .carousel-item {
+      text-align: center;
+      overflow: hidden;
+    }
+    .carousel-item h4 {
+      font-family: 'Varela Round', sans-serif;
+    }
+    .carousel-item img {
+      max-width: 100%;
+      display: inline-block;
+    }
+    .btn {
+      border-radius: 0;
+      font-size: 12px;
+      text-transform: uppercase;
+      font-weight: bold;
+      border: none;
+      background: #a177ff;
+      padding: 6px 15px;
+      margin-top: 5px;
+    }
+    .btn:hover {
+      background: #8c5bff;
+    }
+    .btn i {
+      font-size: 14px;
+      font-weight: bold;
+      margin-left: 5px;
+    }
+    .thumb-wrapper {
+      margin: 5px;
+      text-align: left;
+      background: var(--pri-color);
+      box-shadow: 0px 2px 2px rgba(0,0,0,0.1);
+    }
+    .thumb-content {
+      padding: 15px;
+      font-size: 13px;
+    }
+    .carousel-control-prev, .carousel-control-next {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 3px solid rgba(0, 0, 0, 0.8);
+      background: none;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .carousel-control-prev-icon,
+    .carousel-control-next-icon {
+      filter: invert(0.8);
+      width: 20px;
+      height: 20px;
+    }
+    .carousel-indicators [data-bs-target] {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: #ababab;
+    }
+    .carousel-indicators .active {
+      background-color: #555;
+    }
+
+  .carousel-item .row {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+  }
+
+  .carousel-item .col-sm-4 {
+    display: flex;
+  }
+
+}
 
 </style>
