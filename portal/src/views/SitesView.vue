@@ -57,7 +57,7 @@
         <div class="filters-content">
           <div class="field">
             <label class="field-label">Provincia</label>
-            <select v-model.number="state.province" @change="onSearch" class="field-select">
+            <select v-model="state.province" @change="onSearch" class="field-select">
               <option :value="undefined">Todas</option>
               <option v-for="p in provinces" :key="p.id" :value="p.id">{{ p.nombre }}</option>
             </select>
@@ -201,12 +201,7 @@ const page = ref(1);
 const pages = ref(1);
 const infiniteEl = ref(null);
 
-// Ubicación y búsqueda
-const searchLocation = ref({
-  lat: route.query.latitude ? parseFloat(route.query.latitude) : -34.6037,
-  lng: route.query.longitude ? parseFloat(route.query.longitude) : -58.3816,
-  radius: route.query.radius ? parseInt(route.query.radius) : 5000
-});
+const searchLocation = ref(null);
 
 // Estado de los filtros
 const state = reactive({
@@ -215,10 +210,10 @@ const state = reactive({
   
   // Ubicación
   city: route.query.city ?? undefined,
-  province: route.query.province ? Number(route.query.province) : undefined,
-  latitude: route.query.latitude ? parseFloat(route.query.latitude) : undefined,
-  longitude: route.query.longitude ? parseFloat(route.query.longitude) : undefined,
-  radius: route.query.radius ? parseInt(route.query.radius) : 5000,
+  province: route.query.province ?? undefined,
+  latitude: undefined,
+  longitude: undefined,
+  radius: 2000,
   
   // Filtros
   tags: Array.isArray(route.query.tags)
@@ -237,13 +232,9 @@ const state = reactive({
 function updateUrlQuery() {
   const q = {
     ...state,
-    // Limpiar valores vacíos o por defecto
     tags: state.tags.length ? state.tags : undefined,
     city: state.city || undefined,
     province: state.province ?? undefined,
-    latitude: state.latitude,
-    longitude: state.longitude,
-    radius: state.radius
   };
   
   // Eliminar propiedades undefined del query
@@ -271,12 +262,47 @@ async function fetchFilters() {
       api.listProvinces(),
       api.listTags(),
     ]);
-    provinces.value = prov;
-    tags.value = tg;
-    await fetchCities();
+    // Normalizar provincias y tags a { id, nombre }
+    const normProv = Array.isArray(prov) ? prov.map((p) => ({
+      id: p?.id ?? String(p?.nombre ?? p?.name ?? p),
+      nombre: p?.nombre ?? p?.name ?? String(p),
+    })) : [];
+    const normTags = Array.isArray(tg) ? tg.map((t) => ({
+      id: t?.id ?? String(t?.nombre ?? t?.name ?? t?.slug ?? t),
+      nombre: t?.nombre ?? t?.name ?? t?.slug ?? String(t),
+    })) : [];
+    provinces.value = normProv;
+    tags.value = normTags;
+    // Si vinieron vacíos, intentar derivar
+    if (!provinces.value.length || !tags.value.length) {
+      throw new Error('Filters empty, derive from /api/sites');
+    }
   } catch (err) {
-    console.error('Error al cargar los filtros:', err);
-    error.value = 'Error al cargar los filtros';
+    // Fallback: derivar filtros desde /api/sites
+    console.warn('Fallo /filters, derivando filtros desde /api/sites:', err);
+    try {
+      const res = await api.listSites({ page: 1, per_page: 500 });
+      const raw = res?.data ?? res?.items ?? [];
+      // Provincias únicas
+      const provSet = new Set(
+        raw.map(it => (
+          it.provincia ?? it.province?.nombre ?? it.province?.name ?? it.province ?? null
+        )).filter(Boolean)
+      );
+      provinces.value = Array.from(provSet).map((name) => ({ id: String(name), nombre: String(name) }));
+      // Tags únicos (strings u objetos)
+      const tagSet = new Set();
+      raw.forEach(it => {
+        const arr = Array.isArray(it.tags) ? it.tags : [];
+        arr.forEach(t => tagSet.add(typeof t === 'string' ? t : (t?.nombre ?? t?.name))); 
+      });
+      tags.value = Array.from(tagSet).filter(Boolean).map((name, idx) => ({ id: String(name), nombre: String(name) }));
+    } catch (e2) {
+      console.error('Error al derivar filtros desde /api/sites:', e2);
+      error.value = 'Error al cargar los filtros';
+    }
+  } finally {
+    await fetchCities();
   }
 }
 
@@ -288,13 +314,33 @@ async function fetchCities() {
     cities.value = [];
     return;
   }
-  
   try {
     const cs = await api.listCities({ province: state.province });
-    cities.value = cs;
+    const normCities = Array.isArray(cs) ? cs.map((c) => ({
+      id: c?.id ?? String(c?.nombre ?? c?.name ?? c),
+      nombre: c?.nombre ?? c?.name ?? String(c),
+    })) : [];
+    cities.value = normCities;
+    if (!cities.value.length) {
+      throw new Error('Cities empty, derive from /api/sites');
+    }
   } catch (err) {
-    console.error('Error al cargar las ciudades:', err);
-    error.value = 'Error al cargar las ciudades';
+    // Fallback: derivar ciudades desde /api/sites filtrando por provincia seleccionada
+    console.warn('Fallo /filters/cities, derivando ciudades desde /api/sites:', err);
+    try {
+      const provinceName = provinces.value.find(p => String(p.id) === String(state.province))?.nombre || state.province;
+      const res = await api.listSites({ province: provinceName, page: 1, per_page: 500 });
+      const raw = res?.data ?? res?.items ?? [];
+      const citySet = new Set(
+        raw.map(it => (
+          it.ciudad ?? it.city?.nombre ?? it.city?.name ?? it.city ?? null
+        )).filter(Boolean)
+      );
+      cities.value = Array.from(citySet).map((name) => ({ id: String(name), nombre: String(name) }));
+    } catch (e2) {
+      console.error('Error al derivar ciudades desde /api/sites:', e2);
+      error.value = 'Error al cargar las ciudades';
+    }
   }
 }
 
@@ -309,22 +355,34 @@ async function fetchPage(reset = false) {
   error.value = null;
   
   try {
+    // Mapear IDs seleccionados a nombres (el backend de /api/sites espera nombres)
+    const provinceName = state.province != null
+      ? (provinces.value.find(p => p.id === state.province)?.nombre)
+      : undefined;
+    const cityName = state.city != null
+      ? (cities.value.find(c => String(c.id) === String(state.city))?.nombre)
+      : undefined;
+    const tagNames = (state.tags || [])
+      .map(tid => tags.value.find(t => String(t.id) === String(tid))?.nombre)
+      .filter(Boolean);
+
     const params = {
-      // Búsqueda
-      q: state.q || undefined,
+      // Búsqueda (API separa name/description). Usamos SOLO name para evitar un AND restrictivo.
+      name: state.q || undefined,
+      description: undefined,
       
-      // Ubicación
-      city: state.city || undefined,
-      province: state.province ?? undefined,
+      // Ubicación (API espera km)
+      city: cityName || undefined,
+      province: provinceName || undefined,
       lat: state.latitude,
       long: state.longitude,
-      radius: state.radius/1000,
+      radius: state.radius != null ? state.radius / 1000 : undefined,
       
       // Filtros
-      tags: state.tags.length ? state.tags : undefined,
+      tags: tagNames.length ? tagNames : undefined,
       state: state.state || undefined,
       
-      // Ordenamiento
+      // Ordenamiento (si aplica en backend)
       order_by: state.order_by,
       order: state.order,
       
@@ -333,15 +391,46 @@ async function fetchPage(reset = false) {
       per_page
     };
 
-    
     const res = await api.listSites(params);
-    pages.value = res.pages;
+    const raw = res?.data ?? res?.items ?? [];
+    // Normalizar a la forma usada en las cards y mapa
+    const data = raw.map((it) => {
+      const nombre = it.nombre ?? it.name ?? '';
+      const ciudad = it.ciudad ?? it.city?.nombre ?? it.city?.name ?? it.city ?? '';
+      const provincia = it.provincia ?? it.province?.nombre ?? it.province?.name ?? it.province ?? '';
+      const estado = it.estado ?? it.estadoConservacion ?? it.state_of_conservation ?? '';
+      const latitude = it.latitud ?? it.latitude ?? it.lat ?? null;
+      const longitude = it.longitud ?? it.longitude ?? it.long ?? null;
+      const cover_image = it.cover_image ?? it.coverImage ?? null;
+      let tagsArr = it.tags ?? [];
+      if (Array.isArray(tagsArr)) {
+        // si vienen objetos, extraer nombre/name
+        tagsArr = tagsArr.map((t) => (typeof t === 'string' ? t : (t?.nombre ?? t?.name))).filter(Boolean);
+      }
+      return {
+        ...it,
+        nombre,
+        ciudad,
+        provincia,
+        estado,
+        latitude,
+        longitude,
+        cover_image,
+        tags: tagsArr,
+      };
+    });
+    // Log rápido para inspeccionar forma del payload en desarrollo
+    if (raw && raw.length) {
+      try { console.debug('[Sites API] sample item', raw[0]); } catch (e) {}
+    }
+    const meta = res?.meta;
+    pages.value = meta ? Math.max(1, Math.ceil((meta.total || 0) / (meta.per_page || per_page))) : (res?.pages || 1);
     
     // Actualizar la lista de items
     if (reset) {
-      items.value = res.items;
+      items.value = data;
     } else {
-      items.value = [...items.value, ...res.items];
+      items.value = [...items.value, ...data];
     }
     
     updateUrlQuery();
@@ -376,7 +465,8 @@ function onClear() {
   state.order = 'asc';
   state.latitude = undefined;
   state.longitude = undefined;
-  state.radius = 5000;
+  state.radius = 2000;
+  searchLocation.value = null;
   showMap.value = false;
 
   // Reiniciar paginación y cargar resultados
@@ -397,21 +487,17 @@ function toggleFilters() {
  */
 function handleLocationUpdate(location) {
   if (!location) {
-    // Si no hay ubicación, limpiar los filtros de ubicación
     state.latitude = undefined;
     state.longitude = undefined;
-    state.radius = 5000; // Radio por defecto de 5km (5000 metros)
+    state.radius = 2000; 
   } else {
-    // Actualizar el estado con la nueva ubicación
     state.latitude = location.latitude || location.lat;
     state.longitude = location.longitude || location.lng;
-    state.radius = location.radius || 5000; // Usar 5km por defecto si no hay radio
+    state.radius = location.radius || 2000;
   }
   
-  // Actualizar la URL
   updateUrlQuery();
   
-  // Reiniciar la paginación y buscar
   page.value = 1;
   fetchPage(true);
 }
@@ -432,7 +518,7 @@ function handleSiteSelect(site) {
 let io; // Referencia al IntersectionObserver
 
 /**
- * Configura el scroll infinito
+ * Configuración del scroll infinito
  */
 function setupInfiniteScroll() {
   if (io) io.disconnect();
@@ -469,6 +555,16 @@ watch(items, () => {
 // Cargar filtros y la primera página al montar el componente
 
 onMounted(async () => {
+  state.latitude = undefined;
+  state.longitude = undefined;
+  searchLocation.value = null;
+
+  const cleaned = { ...route.query };
+  delete cleaned.latitude;
+  delete cleaned.longitude;
+  delete cleaned.radius;
+  router.replace({ query: cleaned });
+
   try {
     await fetchFilters();
     await fetchPage(true);
