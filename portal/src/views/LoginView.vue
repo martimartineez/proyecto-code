@@ -26,47 +26,27 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { jwtDecode } from 'jwt-decode' // named export
+//import { jwtDecode } from 'jwt-decode' // named export
 
 const router = useRouter()
 const user = ref(null)
 const error = ref(null)
 
+
 const onGoogleResponse = (response) => {
-  error.value = null
+  const credential = response.credential; 
+  fetch("http://localhost:5000/api/google", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({ token: credential })
+})
+  .then(res => res.json())
+  .then(data => {
+    console.log("Respuesta del backend:", data);
+  });
 
-  // el plugin puede devolver diferentes shapes; probamos las opciones más comunes
-  const token = response?.credential || response?.token || response?.access_token
-
-  if (!token) {
-    error.value = 'No se recibió token desde Google.'
-    console.warn('Google response:', response)
-    return
-  }
-
-  try {
-    // jwtDecode devuelve el payload (no valida firma)
-    const decoded = jwtDecode(token)
-
-    // Normalizar perfil (ajusta según campos concretos del JWT)
-    const profile = {
-      name: decoded.name || `${decoded.given_name || ''} ${decoded.family_name || ''}`.trim(),
-      given_name: decoded.given_name || null,
-      family_name: decoded.family_name || null,
-      email: decoded.email || null,
-      picture: decoded.picture || null,
-      raw: decoded
-    }
-
-    // Guardar en localStorage para que la vista /profile lo lea
-    localStorage.setItem('user_profile', JSON.stringify(profile))
-
-    // redirigir al perfil
-    router.push({ name: 'profile' })
-  } catch (e) {
-    error.value = 'Error decodificando token: ' + (e?.message || e)
-    console.error(e)
-  }
 }
 </script>
 

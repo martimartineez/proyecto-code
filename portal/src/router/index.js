@@ -18,6 +18,16 @@ const router = createRouter({
       name: 'detalle-sitio',
       component: DetalleSitioView,
     }
+    , {
+      path: '/login',
+      name: 'login',
+      component: () => import('../views/LoginView.vue')
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: () => import('../views/ProfileView.vue')
+    }
   ],
 })
 

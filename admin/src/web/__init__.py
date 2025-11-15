@@ -28,6 +28,7 @@ session = Session()
 
 def create_app(env="development", static_folder="../../static"):
     app = Flask(__name__, static_folder=static_folder)
+    #app.run(ssl_context="adhoc") # Habilitar HTTPS para desarrollo local
     app.config.from_object(config[env])
     app.config['JSON_SORT_KEYS'] = False
     app.config["JWT-SECRET-KEY"] = "miClaveJWTSecreta12345678"
