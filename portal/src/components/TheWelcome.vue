@@ -1,95 +1,290 @@
-<script setup>
-import WelcomeItem from './WelcomeItem.vue'
-import DocumentationIcon from './icons/IconDocumentation.vue'
-import ToolingIcon from './icons/IconTooling.vue'
-import EcosystemIcon from './icons/IconEcosystem.vue'
-import CommunityIcon from './icons/IconCommunity.vue'
-import SupportIcon from './icons/IconSupport.vue'
+<template>
+  <div id="Main-carrousel" class="carousel carousel-dark slide">
+    <div class="carousel-inner">
+      <div class="carousel-item active" v-if="ultimosSitios[0]">
+      <!-- aca deberia sacar informacion usando la api. Hardcodeo un ejemplo-->
+          <RouterLink :to="{ name: 'detalle-sitio', params: { id: ultimosSitios[0].id } }"> 
+          <img alt="catedral-ejemplo" src="@/assets/catedral_frente.jpg" class="d-block w-100">     <!-- reemplazar cuando se integren las imagenes -->
+          <div class="carousel-caption d-md-block w-100">
+              <h5>{{ ultimosSitios[0].name}}</h5>
+          </div>
+          </RouterLink>
+      </div>
+      <div v-for="sitio in ultimosSitios.slice(1)" :key="sitio.id" class="carousel-item">
+          <RouterLink :to="{ name: 'detalle-sitio', params: { id: sitio.id } }">
+          <img alt="museo-ejemplo" src="@/assets/museoLP.jpg" class="d-block w-100">    <!-- reemplazar cuando se integren las imagenes -->
+          <div class="carousel-caption d-md-block w-100">
+              <h5> {{sitio.name}}</h5>
+          </div>
+          </RouterLink>
+      </div>
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#Main-carrousel" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#Main-carrousel" data-bs-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Next</span>
+    </button>
+  </div>
 
-const openReadmeInEditor = () => fetch('/__open-in-editor?file=README.md')
+  <div id="sliders">
+    <p class="slider-title"> Destacados </p>
+        <div class="row">
+            <div id="myCarousel" class="carousel slide" data-ride="carousel" data-interval="0">
+              <!-- slides -->
+              <div class="carousel-item active">
+              <div class="row">
+                <div class="col-md-4" v-for="sitio in sitiosPorFila[0]" :key="sitio.id">
+                  <RouterLink :to="{ name: 'detalle-sitio', params: { id: sitio.id } }">
+                    <SliderHome>
+                      <template #imagen>
+                        <img src="@/assets/museoLP.jpg" class="img-responsive" />
+                      </template>
+                      <template #titulo>{{ sitio.name }}</template>
+                      <template #desc>{{ sitio.short_description }}</template>
+                    </SliderHome>
+                  </RouterLink>
+                </div>
+              </div>
+            </div>
+            <div v-for="(fila, index) in sitiosPorFila.slice(1)" :key="index" class="carousel-item">
+              <div class="row">
+                <div class="col-md-4" v-for="sitio in fila" :key="sitio.id">
+                  <RouterLink :to="{ name: 'detalle-sitio', params: { id: sitio.id } }">
+                    <SliderHome>
+                      <template #imagen>
+                        <img src="@/assets/museoLP.jpg" class="img-responsive" />
+                      </template>
+                      <template #titulo>{{ sitio.name }}</template>
+                      <template #desc>{{ sitio.short_description }}</template>
+                    </SliderHome>
+                  </RouterLink>
+                </div>
+              </div>
+            </div>
+          <button class="carousel-control-prev" type="button" data-bs-target="#myCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#myCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+          </button>
+          </div>
+      </div>
+  </div>
+</template>
+
+
+
+<script setup>
+import SliderHome from './Slider-home.vue';
+const openReadmeInEditor = () => fetch('/__open-in-editor?file=README.md');
+import { api } from '@/api/client';
+import { ref, onMounted, computed } from 'vue';
+
+
+const sitios = ref([]);
+
+onMounted(async () => {
+     sitios.value  = await api.listSites();
+})
+
+const ultimosSitios = computed(() => {
+  const lista = sitios.value.data || [];
+  console.log(lista.sort((b,a) => new Date(a.fecha_registro) - new Date(b.fecha_registro)).slice(0,3)); //agarro los 3 sitios mas recientes
+  return lista.sort((b,a) => new Date(a.fecha_registro) - new Date(b.fecha_registro)).slice(0,3);
+})
+
+const sitiosPorFila = computed(() => {    //muestra de a 1 elemento en celular y 3 en pc
+  const lista = sitios.value.data || [];
+  const grupos = [];
+  let cant = 0;
+  if (window.innerWidth > 767)
+    cant = 3;
+  else
+    cant = 1;
+  for (let i = 0; i < lista.length; i += cant) {
+        grupos.push(lista.slice(i, i + cant))
+    }
+  return grupos
+})
+
+
 </script>
 
-<template>
-  <WelcomeItem>
-    <template #icon>
-      <DocumentationIcon />
-    </template>
-    <template #heading>Documentation</template>
+<style>
+  #Main-carrousel{    /* estilos para el carrusel principal */
+    max-height: 75vh;
+    overflow: hidden;
+  
+    .carousel-item img {
+        height: 75vh;
+        width: 100%;
+        object-fit: cover;
+      }
 
-    Vue’s
-    <a href="https://vuejs.org/" target="_blank" rel="noopener">official documentation</a>
-    provides you with all information you need to get started.
-  </WelcomeItem>
+    .carousel-caption{
+      color: white; 
+      left: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.315);
+    }
 
-  <WelcomeItem>
-    <template #icon>
-      <ToolingIcon />
-    </template>
-    <template #heading>Tooling</template>
+    .carousel-caption h5{
+        font-size: 25px;
+        font-weight: 500;
+    }
 
-    This project is served and bundled with
-    <a href="https://vite.dev/guide/features.html" target="_blank" rel="noopener">Vite</a>. The
-    recommended IDE setup is
-    <a href="https://code.visualstudio.com/" target="_blank" rel="noopener">VSCode</a>
-    +
-    <a href="https://github.com/vuejs/language-tools" target="_blank" rel="noopener"
-      >Vue - Official</a
-    >. If you need to test your components and web pages, check out
-    <a href="https://vitest.dev/" target="_blank" rel="noopener">Vitest</a>
-    and
-    <a href="https://www.cypress.io/" target="_blank" rel="noopener">Cypress</a>
-    /
-    <a href="https://playwright.dev/" target="_blank" rel="noopener">Playwright</a>.
+    .sliders-title{
+      font-weight: 500;
+      font-size: 30px;
+      justify-self: center;
+    }
+    
+  .carousel-control-prev-icon,
+  .carousel-control-next-icon {
+    width: 3rem !important;
+    height: 3rem !important;
+  }
 
-    <br />
+  @media (max-width: 767px) {
+      #Main-carrousel{
+        max-height: 30vh;
+        overflow: hidden;
+      }
+      .carousel-item img {
+        height: 30vh;
+      }
+      
+      .carousel-caption{
+        display: block;
+        margin: 0;
+        padding: 10px;
+      }
+      .carousel-caption h5{
+        font-size: 20px;
+        font-weight: 500;
+      }
+    }
+    
+  }
 
-    More instructions are available in
-    <a href="javascript:void(0)" @click="openReadmeInEditor"><code>README.md</code></a
-    >.
-  </WelcomeItem>
+  .slider-title{
+    font-size: 44px;
+    font-weight: bold;
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    text-align: center;
+    margin: 0px;
+  }
 
-  <WelcomeItem>
-    <template #icon>
-      <EcosystemIcon />
-    </template>
-    <template #heading>Ecosystem</template>
+/* sliders */
+  #sliders{
 
-    Get official tools and libraries for your project:
-    <a href="https://pinia.vuejs.org/" target="_blank" rel="noopener">Pinia</a>,
-    <a href="https://router.vuejs.org/" target="_blank" rel="noopener">Vue Router</a>,
-    <a href="https://test-utils.vuejs.org/" target="_blank" rel="noopener">Vue Test Utils</a>, and
-    <a href="https://github.com/vuejs/devtools" target="_blank" rel="noopener">Vue Dev Tools</a>. If
-    you need more resources, we suggest paying
-    <a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">Awesome Vue</a>
-    a visit.
-  </WelcomeItem>
+    margin-top: 1.5em;
+    
+    a{
+      text-decoration: none;
+      color: black;
+    }
 
-  <WelcomeItem>
-    <template #icon>
-      <CommunityIcon />
-    </template>
-    <template #heading>Community</template>
+    h4{
+      font-size: 28px;
+    }
 
-    Got stuck? Ask your question on
-    <a href="https://chat.vuejs.org" target="_blank" rel="noopener">Vue Land</a>
-    (our official Discord server), or
-    <a href="https://stackoverflow.com/questions/tagged/vue.js" target="_blank" rel="noopener"
-      >StackOverflow</a
-    >. You should also follow the official
-    <a href="https://bsky.app/profile/vuejs.org" target="_blank" rel="noopener">@vuejs.org</a>
-    Bluesky account or the
-    <a href="https://x.com/vuejs" target="_blank" rel="noopener">@vuejs</a>
-    X account for latest news in the Vue world.
-  </WelcomeItem>
+    .col-center {
+      margin: 0 auto;
+      float: none !important;
+    }
+    .carousel {
+      margin: 15px auto 60px;
+      padding: 0 80px;
+      overflow: visible;
+    }
+    .carousel-item {
+      text-align: center;
+      overflow: hidden;
+    }
+    .carousel-item h4 {
+      font-family: 'Varela Round', sans-serif;
+    }
+    .carousel-item img {
+      max-width: 100%;
+      display: inline-block;
+    }
+    .btn {
+      border-radius: 0;
+      font-size: 12px;
+      text-transform: uppercase;
+      font-weight: bold;
+      border: none;
+      background: #a177ff;
+      padding: 6px 15px;
+      margin-top: 5px;
+    }
+    .btn:hover {
+      background: #8c5bff;
+    }
+    .btn i {
+      font-size: 14px;
+      font-weight: bold;
+      margin-left: 5px;
+    }
+    .thumb-wrapper {
+      margin: 5px;
+      text-align: left;
+      background: var(--pri-color);
+      box-shadow: 0px 2px 2px rgba(0,0,0,0.1);
+      height: 100%;
+    }
+    .thumb-content {
+      display: flex;
+      flex-direction: column;
+      padding: 15px;
+      font-size: 13px;
+    }
+    .thumb-content p{
+      font-size: 19px;
+    }
+    .carousel-control-prev, .carousel-control-next {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 3px solid rgba(0, 0, 0, 0.8);
+      background: none;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .carousel-control-prev-icon,
+    .carousel-control-next-icon {
+      filter: invert(0.8);
+      width: 20px;
+      height: 20px;
+    }
+    .carousel-indicators [data-bs-target] {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: #ababab;
+    }
+    .carousel-indicators .active {
+      background-color: #555;
+    }
 
-  <WelcomeItem>
-    <template #icon>
-      <SupportIcon />
-    </template>
-    <template #heading>Support Vue</template>
+  .carousel-item .row {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+  }
 
-    As an independent project, Vue relies on community backing for its sustainability. You can help
-    us by
-    <a href="https://vuejs.org/sponsor/" target="_blank" rel="noopener">becoming a sponsor</a>.
-  </WelcomeItem>
-</template>
+  .carousel-item .col-sm-4 {
+    display: flex;
+  }
+
+}
+
+</style>
