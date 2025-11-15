@@ -1,4 +1,4 @@
-# src/core/board/validaciones.py
+# Validaciones para entidades (tags, sitios, etc.)
 
 def _validar_texto_obligatorio(valor: str | None, campo_etiqueta: str, min_len: int = 3, max_len: int = 255) -> str | None:
     """

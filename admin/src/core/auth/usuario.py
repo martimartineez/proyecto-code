@@ -3,12 +3,12 @@ from typing import List, TYPE_CHECKING
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, DateTime, Boolean, Integer, ForeignKey
 from datetime import datetime, timezone
-from src.core.board.rol import Rol  
+from src.core.entity.rol import Rol  
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, String, Table, Column
+from sqlalchemy import ForeignKey, String, Table, Column, UniqueConstraint
 
 if TYPE_CHECKING:
-    from src.core.board.rol import Rol
+    from src.core.entity.rol import Rol
 
 
 roles_usuarios = Table(
@@ -16,6 +16,14 @@ roles_usuarios = Table(
     Base.metadata,
     Column("usuarioId", ForeignKey("usuarios.id"), primary_key=True),
     Column("rolId", ForeignKey("roles.id"), primary_key=True),
+)
+
+favoritos_usuarios_sitios = Table(
+    "favoritos_usuarios_sitios",
+    Base.metadata,
+    Column("usuario_id", ForeignKey("usuarios.id"), primary_key=True),
+    Column("sitio_id", ForeignKey("sitios_historicos.id"), primary_key=True),
+    UniqueConstraint("usuario_id", "sitio_id", name="unique_user_site_favorite")
 )
 
 class Usuario(Base):
@@ -33,6 +41,10 @@ class Usuario(Base):
     roles: Mapped[List["Rol"]] = relationship(
         secondary=roles_usuarios,
         back_populates='usuario'
+    )
+    favoritos: Mapped[List["SitioHistorico"]] = relationship(
+        secondary=favoritos_usuarios_sitios,
+        back_populates="favorited_by"
     )
 
 

@@ -1,0 +1,18 @@
+:root {
+    --pri-color: rgb(211, 205, 255);
+}
+
+@font-face {
+  font-family: lora;
+  src: url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Lora:ital,wght@0,400..700;1,400..700&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&family=Raleway:ital,wght@0,100..900;1,100..900&family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+}
+
+@font-face{
+    font-family: montserrat;
+    src: url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+}
+
+body{
+    font-family: montserrat !important;
+    font-size: 18px;
+}

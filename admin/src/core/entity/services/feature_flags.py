@@ -3,7 +3,7 @@ from typing import List, Optional
 from datetime import datetime, timezone
 
 from src.core.database import db
-from src.core.board.feature_flag import FeatureFlag
+from src.core.entity.feature_flag import FeatureFlag
 
 DEFAULT_FLAGS = [
     {

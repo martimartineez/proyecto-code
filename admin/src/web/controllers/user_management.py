@@ -4,7 +4,7 @@ from flask import request, redirect, url_for
 from flask import session, flash, abort
 
 from src.core import auth
-from src.core import board
+from src.core.entity import services
 from src.web.handlers.auth import is_autenticated
 from src.web.handlers.auth import login_required
 from src.web.handlers.auth import check
@@ -60,7 +60,7 @@ def index():
     usuarios = todos[inicio:fin]
 
     # 7️⃣ Roles (si los necesitás para algo en el template)
-    roles = board.list_roles()
+    roles = services.list_roles()
 
     # 8️⃣ Renderizar con los filtros guardados en el template
     return render_template(
@@ -82,11 +82,16 @@ def index():
 @check("user_destroy")
 def eliminar(usuario_id):
     
-    user = auth.get_user_by_id(usuario_id)  
+    user = auth.get_user_by_id(usuario_id)
+    # Proteger administradores del sistema: no permitir eliminar
+    es_admin_sistema = getattr(user, 'esAdmin', False)
+    if es_admin_sistema:
+        flash("No se puede eliminar un usuario administrador del sistema.", 'error')
+        return redirect(url_for("usuarios.index"))
 
-    auth.baja_logica_usuario(auth.get_user_by_id(usuario_id))
+    auth.baja_logica_usuario(user)
 
-    flash(f"Se borro el usuario: '{user.nombre}'",'success')
+    flash(f"Se borro el usuario: '{user.nombre}'", 'success')
     return redirect(url_for("usuarios.index"))
 
 
@@ -100,8 +105,9 @@ def desactivar(usuario_id):
 
     user = auth.get_user_by_id(usuario_id)
     rolesUsuario = auth.listar_roles_usuario(user)
+    es_admin_sistema = getattr(user, 'esAdmin', False)
     
-    if not "Admin" in rolesUsuario: 
+    if not "Admin" in rolesUsuario and not es_admin_sistema:  
         user.activo = False
         auth.db.session.commit()
     flash(f"Se desactivo el usuario: '{user.nombre}'",'success')
@@ -126,7 +132,7 @@ def activar(usuario_id):
 @bp.get("/agregar_usuario")
 def agregar_usuario_get():
     
-    roles = board.list_roles()
+    roles = services.list_roles()
     return render_template("manejo_usuarios/formAgregar.html", roles=roles)
 
 
@@ -160,7 +166,7 @@ def agregar_usuario_post():
         apellido=apellido,
         activo=True,
         esAdmin=False,
-        roles=[board.get_rol_by_id(int(rol_id)) for rol_id in roles_ids]
+        roles=[services.get_rol_by_id(int(rol_id)) for rol_id in roles_ids]
     )
 
     flash(f"Se agrego el usuario: '{nombre}'",'success')
@@ -175,8 +181,11 @@ def modificar_get(usuario_id):
     """
 
     user = auth.get_user_by_id(usuario_id)
+    if user.esAdmin:
+        flash("No se puede modificar un usuario administrador del sistema.", 'error')
+        return redirect(url_for("usuarios.index"))
     rolesUsuario = auth.listar_roles_usuario(user)
-    roles = board.list_roles()
+    roles = services.list_roles()
     return render_template("manejo_usuarios/modificar_usuario.html", usuario=user, roles=roles, rolesUsuario=rolesUsuario) 
 
 
@@ -186,6 +195,9 @@ def modificar_get(usuario_id):
 def modificar_post(usuario_id):
     
     user = auth.get_user_by_id(usuario_id)
+    if user.esAdmin:
+        flash("No se puede modificar un usuario administrador del sistema.", 'error')
+        return redirect(url_for("usuarios.index"))
     return funcion_modificar(user,request.form)
 
 
@@ -233,7 +245,7 @@ def funcion_modificar(user,form):
     user.email = email
 
     roles_ids = form.getlist("rol")
-    user.roles = [board.get_rol_by_id(int(rol_id)) for rol_id in roles_ids]
+    user.roles = [services.get_rol_by_id(int(rol_id)) for rol_id in roles_ids]
 
     auth.db.session.commit()
 
