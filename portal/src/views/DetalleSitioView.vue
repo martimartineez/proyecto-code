@@ -111,7 +111,7 @@ const getConservationClass = (estado) => {
 const filterByTag = (tag) => {
     router.push({ 
         path: '/sites', // Asume que la ruta del listado es /sites
-        query: { q: tag } // Usa 'q' para que lo reconozca SitesView.vue
+        query: { tags: tag } // Usa 'q' para que lo reconozca SitesView.vue
     });
 }
 
