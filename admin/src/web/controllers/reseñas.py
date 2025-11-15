@@ -7,10 +7,13 @@ from src.core.entity.services.__init__ import listar_sitios
 from datetime import date
 from sqlalchemy import or_, asc, desc
 from math import ceil
+from src.web.handlers.auth import login_required, check_permission, check
 
 bp = Blueprint("reseñas", __name__, url_prefix="/reseñas")
 
 @bp.route("/", methods=["GET"])
+@login_required
+@check("review_list")
 def listar_reseñas():
     estado = request.args.get("estado")
     sitio = request.args.get("sitio")
@@ -57,7 +60,7 @@ def listar_reseñas():
     total_pages = (total_results + per_page - 1) // per_page
     resenas = query.offset((page - 1) * per_page).limit(per_page).all()
     
-    args = request.args.to_dict(flat=False)
+    args = request.args.to_dict(flat=True)
     args.pop("page", None)
     sitios = listar_sitios()
     return render_template("reseñas/index.html",resenas=resenas, sitios=sitios,total_results=total_results,date=date,request_args=args,total_pages=total_pages,page=page)
@@ -65,6 +68,8 @@ def listar_reseñas():
 
 
 @bp.route("/<int:resena_id>/aprobar", methods=["POST"])
+@login_required
+@check("review_approve")
 def aprobar_reseña(resena_id):
     reseña = db.session.query(Reseña).get(resena_id)
     if reseña:
@@ -75,6 +80,8 @@ def aprobar_reseña(resena_id):
     return redirect(url_for("reseñas.listar_reseñas"))
 
 @bp.route("/<int:resena_id>/eliminar", methods=["POST"])
+@login_required
+@check("review_delete")
 def eliminar_reseña(resena_id):
     reseña = db.session.query(Reseña).get(resena_id)
     if reseña:
@@ -87,6 +94,8 @@ def eliminar_reseña(resena_id):
 
 
 @bp.route("/<int:resena_id>/rechazar", methods=["POST"])
+@login_required
+@check("review_reject")
 def rechazar_reseña(resena_id):
     motivo = request.form.get("motivo")
     reseña = db.session.query(Reseña).get(resena_id)
@@ -100,6 +109,8 @@ def rechazar_reseña(resena_id):
     return redirect(url_for("reseñas.listar_reseñas"))
 
 @bp.route("/reseña/<int:resena_id>", methods=["GET"])
+@login_required
+@check("review_list")
 def ver_detalles_reseña(resena_id):
     reseña = db.session.query(Reseña).get(resena_id)
     if not reseña:

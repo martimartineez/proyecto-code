@@ -416,6 +416,10 @@ def run():
         "profile_show",
         "profile_update",
         "change_password",
+        "review_approve",
+        "review_reject",
+        "review_list",
+        "review_delete"
     ],
     'admin': [
         "user_index",
@@ -446,6 +450,10 @@ def run():
         "profile_show",
         "profile_update",
         "change_password",
+        "review_aprove",
+        "review_reject",
+        "review_list",
+        "review_delete"
     ]
 }
     auth.crearPermisos(PERMISSIONS)
