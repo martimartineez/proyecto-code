@@ -18,16 +18,6 @@ const router = createRouter({
       component: SitesView,
     },
     {
-      path: '/map',
-      name: 'map',
-      component: MapView,
-    },
-    {
-      path: '/about',
-      name: 'about',
-      component: () => import('../views/AboutView.vue'),
-    },
-    {
       path: '/sitios/:id',
       name: 'detalle-sitio',
       component: DetalleSitioView,
