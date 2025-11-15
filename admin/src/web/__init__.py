@@ -12,6 +12,7 @@ from src.web.controllers.tags import bp as tags_bp
 from src.web.api.sites import bp as sites_api_bp
 from src.core import seeds
 from src.web.controllers.auth import bp as auth_bp
+from src.web.controllers.reseñas import bp as reseñas_bp
 from src.core.bcrypt import bcrypt
 from src.web.handlers.auth import is_autenticated, check_permission, is_system_admin
 from src.core import auth as core_auth
@@ -69,6 +70,7 @@ def create_app(env="development", static_folder="../../static"):
     app.register_blueprint(feature_flags_bp)
     app.register_blueprint(api_bp)
 
+    app.register_blueprint(reseñas_bp)
     app.register_error_handler(403, error.forbidden)
     app.register_error_handler(404, error.not_found)
     app.register_error_handler(401, error.unauthorized)
