@@ -18,9 +18,12 @@
                 <!-- <li class="nav-item">
                     <a class="nav-link text-white" href="/propuestas">Validacion de Propuestas</a>
                 </li>
+                -->
+                {% if check_permission("review_list") %}
                 <li class="nav-item">
                     <a class="nav-link text-white" href="/reseñas">Reseñas</a>
-                </li>-->
+                </li>
+                {% endif %}
                 {% if check_permission("user_index") %}
                 <li class="nav-item">
                     <a class="nav-link text-white" href="/manejo_usuarios/">Usuarios</a>

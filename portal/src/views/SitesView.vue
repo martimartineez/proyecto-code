@@ -367,9 +367,8 @@ async function fetchPage(reset = false) {
       .filter(Boolean);
 
     const params = {
-      // Búsqueda (API separa name/description). Usamos SOLO name para evitar un AND restrictivo.
-      name: state.q || undefined,
-      description: undefined,
+      // Búsqueda unificada: backend acepta 'q' y hace OR entre nombre y descripción
+      q: state.q || undefined,
       
       // Ubicación (API espera km)
       city: cityName || undefined,
