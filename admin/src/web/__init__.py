@@ -36,7 +36,20 @@ def create_app(env="development", static_folder="../../static"):
     database.init_db(app)
     session.init_app(app)
     bcrypt.init_app(app)
-    CORS(app)
+    # CORS explícito para asegurar encabezados en todas las respuestas de /api/*
+    # Incluye respuestas de error (404/500) y evita problemas de "CORS Missing Allow Origin"
+    CORS(
+        app,
+        resources={r"/api/*": {
+            "origins": "*",
+            "allow_headers": "*",
+            "expose_headers": "*",
+            "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        }},
+        supports_credentials=False,
+        send_wildcard=True,
+        always_send=True,
+    )
 
     with app.app_context():
         try:
