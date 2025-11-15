@@ -65,7 +65,7 @@
         </div>
       </div>
 
-      <ReviewList :site-id="site.id" @update-summary="updateReviewSummary" />
+      <ReviewList :site-id="site.id" />
       
     </section>
 
@@ -94,11 +94,6 @@ const router = useRouter();
 const site = ref(null); 
 const isAuthenticated = ref(false); 
 
-// Función para actualizar las propiedades del sitio cuando el hijo (ReviewList) emite el resumen
-const updateReviewSummary = (summary) => {
-    site.value.cantidad_reseñas = summary.count;
-    site.value.calificacion_promedio = summary.average_rating;
-};
 
 // Función para mapear el estado de conservación a una clase CSS
 const getConservationClass = (estado) => {
@@ -112,11 +107,11 @@ const getConservationClass = (estado) => {
     return 'neutral';
 }
 
-// TAGS CLICABLES
+// IMPLEMENTACIÓN DE LA NAVEGACIÓN DE TAGS CLICABLES
 const filterByTag = (tag) => {
     router.push({ 
-        path: '/listado', // cambiar ruta porque no es /listado
-        query: { tags: tag } 
+        path: '/sites', // Asume que la ruta del listado es /sites
+        query: { q: tag } // Usa 'q' para que lo reconozca SitesView.vue
     });
 }
 
@@ -125,8 +120,6 @@ const fetchSiteData = async () => {
     const siteId = route.params.id; 
     const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'; 
     
-    let siteData = null; 
-
     try {
         const siteResponse = await fetch(`${baseUrl}/api/sites/${siteId}`);
         if (!siteResponse.ok) {
@@ -136,11 +129,16 @@ const fetchSiteData = async () => {
             }
             throw new Error(`Error HTTP: ${siteResponse.status}`);
         }
-        siteData = await siteResponse.json();
         
-        // Inicializamos los placeholders que el ReviewList actualizará
-        siteData.cantidad_reseñas = 0;
-        siteData.calificacion_promedio = 'N/A';
+        let siteData = await siteResponse.json();
+        
+        
+        siteData.calificacion_promedio = siteData.rating_avg || 'N/A';
+        siteData.cantidad_reseñas = siteData.reviews_count || 0;
+        
+        // Inicialización de placeholders de frontend
+        siteData.is_favorite = siteData.is_favorite || false;
+        siteData.images = siteData.images || []; 
 
         site.value = siteData; 
 
