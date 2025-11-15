@@ -185,9 +185,6 @@
           ✅ Aprobada
         {% elif resena.estado == 'rechazada' %}
           ❌ Rechazada
-          {% if resena.motivo %}
-            <br><small><strong>Motivo:</strong> {{ resena.motivo }}</small>
-          {% endif %}
         {% else %}
           ⏳ Pendiente
         {% endif %}
