@@ -16,7 +16,7 @@ import { RouterLink, RouterView } from 'vue-router'
             	<span class="navbar-toggler-icon"></span>
           	</button>
 			<div class="collapse navbar-collapse" id="navbarNav">
-				<RouterLink to="/sites" class="nav-link m-2" id="explorar">Explorar!</RouterLink>
+				<RouterLink to="/sitios" class="nav-link m-2" id="explorar">Explorar!</RouterLink>
 				<RouterLink to="" class="nav-link m-2">¿Quienes somos?</RouterLink> 
 				<!-- barra de busqueda  -->
 				<div class="container-fluid p-0 pt-2">
