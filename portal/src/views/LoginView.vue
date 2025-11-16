@@ -37,7 +37,7 @@ const onGoogleResponse = (response) => {
   const credential = response.credential; 
   fetch("http://localhost:5000/api/google", {
     method: "POST",
-    //credentials: "include",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json"
     },

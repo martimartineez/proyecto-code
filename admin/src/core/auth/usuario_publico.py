@@ -27,3 +27,12 @@ class UsuarioPublico(Base):
             f"borradoLogico={self.borradoLogico}, "
             f"fechaCreacion={self.fechaCreacion}>"
         )
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "apellido": self.apellido,
+            "email": self.email,
+            "foto": self.foto
+        }
