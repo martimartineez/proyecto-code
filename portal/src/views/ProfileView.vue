@@ -1,93 +1,78 @@
-```vue
-// filepath: c:\Users\lauti\code\portal\src\views\ProfileView.vue
 <template>
-  <main class="profile-page">
-    <div class="card">
-      <h1>Perfil</h1>
+  <main class="profile">
+    <h1>Mi Perfil</h1>
 
-      <div v-if="!user">
-        <p>No se encontró información de usuario. Por favor inicia sesión.</p>
-        <router-link to="/login" class="btn">Ir a iniciar sesión</router-link>
-      </div>
+    <div v-if="loading">Cargando...</div>
 
-      <div v-else class="profile">
-        <p><strong>Nombre:</strong> {{ user.name || user.given_name }}</p>
-        <p><strong>Email:</strong> {{ user.email }}</p>
-        <pre class="payload">{{ user }}</pre>
-        <button @click="logout" class="btn">Cerrar sesión</button>
-      </div>
+    <div v-else-if="profile" class="card">
+      <img :src="profile.foto" alt="Foto" class="avatar" />
 
-      <router-link to="/" class="back">Volver</router-link>
+      <h2>{{ profile.nombre }} {{ profile.apellido }}</h2>
+      <p>Email: {{ profile.email }}</p>
+    </div>
+
+    <div v-else class="error">
+      {{ error }}
     </div>
   </main>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted } from "vue";
 
-const user = ref(null)
-const router = useRouter()
+const profile = ref(null);
+const loading = ref(true);
+const error = ref("");
 
-onMounted(() => {
-  const raw = localStorage.getItem('user')
-  if (raw) {
-    try {
-      user.value = JSON.parse(raw)
-    } catch {
-      user.value = null
+onMounted(async () => {
+  try {
+    // extraer token de localStorage.profileData (ejemplo)
+    const parsed = JSON.parse(localStorage.getItem('profileData') || '{}')
+    const token = parsed?.access_token || parsed?.token || parsed?.id_token
+
+    const res = await fetch("http://localhost:5000/api/perfil", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Error ${res.status}: no autorizado o sesión expirada`);
     }
-  }
-})
 
-function logout() {
-  localStorage.removeItem('user')
-  router.push({ name: 'login' })
-}
+    profile.value = await res.json();
+  } catch (e) {
+    error.value = e.message;
+  } finally {
+    loading.value = false;
+  }
+});
 </script>
 
 <style scoped>
-.profile-page {
-  min-height: 70vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-}
-.card {
-  width: 100%;
-  max-width: 560px;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-  text-align: center;
-  background: white;
-  color: #000;
-}
-.back, .btn {
-  display: inline-block;
-  margin-top: 1rem;
-  color: #000;
-  background: #eee;
-  padding: .5rem .75rem;
-  border-radius: 6px;
-  text-decoration: none;
-  border: none;
-  cursor: pointer;
-}
 .profile {
-  text-align: left;
-  margin-top: 1rem;
-  background: #f7f7f8;
-  padding: .75rem;
-  border-radius: 6px;
-  color: #000;
+  max-width: 400px;
+  margin: 40px auto;
+  text-align: center;
 }
-.payload {
-  font-size: 0.75rem;
-  white-space: pre-wrap;
-  max-height: 160px;
-  overflow: auto;
+
+.card {
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.error {
+  margin-top: 10px;
+  color: red;
 }
 </style>
-```

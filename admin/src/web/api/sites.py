@@ -558,19 +558,38 @@ def login_google():
     from flask import Blueprint, request, jsonify
     from google.oauth2 import id_token
     from google.auth.transport import requests
+    from flask_jwt_extended import create_access_token, set_access_cookies
+    from src.core.auth import crear_usuario_publico
 
-
+    # Preflight CORS
     if request.method == "OPTIONS":
         return {}, 200
 
     data = request.get_json()
     token = data.get("token")
 
-    try:
-        info = id_token.verify_oauth2_token(token, requests.Request(), "501426149813-3ldbtlaur9oodqe8eq5rhuqrecjn22s7.apps.googleusercontent.com")
+    if not token:
+        return jsonify({"success": False, "error": "No token provided"}), 400
 
-        # info["email"], info["name"], info["sub"], etc.
-        return jsonify({
+    try:
+        # Verificar token de Google
+        info = id_token.verify_oauth2_token(
+            token,
+            requests.Request(),
+            "501426149813-3ldbtlaur9oodqe8eq5rhuqrecjn22s7.apps.googleusercontent.com"
+        )
+
+        # Crear o actualizar usuario en la base de datos
+        crear_usuario_publico(info.get("given_name"),
+                              info.get("family_name"),
+                              info.get("email"),
+                              info.get("picture"))
+        
+        # Crear token propio (sesión)
+        access_token = create_access_token(identity=info["email"])
+
+        # Respuesta con cookie
+        resp = jsonify({
             "success": True,
             "user": {
                 "email": info["email"],
@@ -578,7 +597,25 @@ def login_google():
             }
         })
 
+        # 👉 Guarda la cookie en el navegador automáticamente
+        set_access_cookies(resp, access_token)
+        
+        return resp, 200
+
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 400
     
+
+@bp.get('/perfil')
+@jwt_required()
+def perfil():
+
+    from src.core.auth import devolver_usuario_publico_por_email
+
+    email = get_jwt_identity()
+    usuario = devolver_usuario_publico_por_email(email)
+    return usuario.to_dict(), 200
+    
+
+
     

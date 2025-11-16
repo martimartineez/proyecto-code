@@ -36,17 +36,40 @@ const error = ref(null)
 const onGoogleResponse = (response) => {
   const credential = response.credential; 
   fetch("http://localhost:5000/api/google", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({ token: credential })
-})
-  .then(res => res.json())
-  .then(data => {
-    console.log("Respuesta del backend:", data);
-  });
+    method: "POST",
+    //credentials: "include",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ token: credential })
+  })
+    .then(async res => {
+      const data = await res.json();
+      // Si el backend devuelve un error (status != 200)
+      if (!res.ok) {
+        // intentar mostrar un mensaje útil en la UI
+        error.value = data?.error?.message || data?.message || 'Error en autenticación';
+        return;
+      }
 
+      // Guardar data para que ProfileView la consuma
+      // Puedes usar cualquier key; aqui usamos 'profileData'
+      try {
+        localStorage.setItem('profileData', JSON.stringify(data));
+      } catch (e) {
+        console.error('No se pudo guardar en localStorage', e);
+      }
+
+      // También asignar a la ref local por si quieres mostrar algo antes de redirigir
+      user.value = data.user || data;
+
+      // Redirigir a la vista de perfil (router tiene la ruta con name 'profile')
+      router.push({ name: 'profile' });
+    })
+    .catch(err => {
+      console.error('Error en fetch:', err);
+      error.value = 'Error de red. Intenta nuevamente más tarde.';
+    });
 }
 </script>
 

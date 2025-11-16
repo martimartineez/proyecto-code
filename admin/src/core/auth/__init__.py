@@ -3,6 +3,8 @@ from src.core.auth.usuario import Usuario
 from src.core.entity.rol import Rol
 from src.core.bcrypt import bcrypt
 from src.core.entity import services
+from src.core.auth.usuario_publico import UsuarioPublico
+
 
 
 
@@ -23,7 +25,6 @@ def crearPermisos(permisos):
 
 def permissions(user):
     permisos_usuario = list({permiso.nombre for rol in user.roles for permiso in rol.permisos})
-    #print('👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻',permisos_usuario)
     return permisos_usuario
 
 def listar_roles_usuario(user):
@@ -32,7 +33,6 @@ def listar_roles_usuario(user):
 
 
 def list_usuarios():
-    #return db.session.query(Usuario.nombre, Usuario.email).all()
     return db.session.query(Usuario).all()
     
 def delete_user(user: Usuario):
@@ -103,3 +103,23 @@ def comprobar_bloqueado(user):
     estado = user.activo
     return estado
 
+def crear_usuario_publico(nombre, apellido, email, foto):
+    if not checkear_usuario_publico_existente(email):
+        usuario_publico = UsuarioPublico(
+            nombre=nombre,
+            apellido=apellido,
+            email=email,
+            foto=foto,
+        )
+        db.session.add(usuario_publico)
+        db.session.commit()
+        return usuario_publico
+    
+
+def checkear_usuario_publico_existente(email):
+    usuario = db.session.query(UsuarioPublico).filter(UsuarioPublico.email == email).first()
+    return True if usuario else False
+
+def devolver_usuario_publico_por_email(email):
+    usuario = db.session.query(UsuarioPublico).filter(UsuarioPublico.email == email).first()
+    return usuario
