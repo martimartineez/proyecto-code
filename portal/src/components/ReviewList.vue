@@ -34,14 +34,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, defineEmits } from 'vue'; 
+import { ref, onMounted } from 'vue'; 
+
 
 const props = defineProps({
   siteId: { type: Number, required: true },
 });
-
-// DEFINIMOS EL EVENTO PARA ENVIAR EL RESUMEN AL PADRE
-const emit = defineEmits(['update-summary']); 
 
 const reviews = ref([]);
 const currentPage = ref(1);
@@ -52,34 +50,16 @@ const loading = ref(true);
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'; 
 
-const calculateAndEmitSummary = (reviewsArray, total) => {
-    let average = 'N/A';
-    
-    if (total > 0) {
-        // Cálculo Inexacto del promedio (solo si la página actual tiene el total de reseñas)
-        if (total <= perPage) {
-            const totalScore = reviewsArray.reduce((sum, review) => sum + review.rating, 0);
-            average = (totalScore / total).toFixed(1);
-        } else {
-            // El promedio global debe venir de Flask, por lo que lo dejamos como N/A
-            average = 'N/A';
-        }
-    }
-    
-    // EMITIR el conteo total (que sí es correcto) y el promedio (placeholder)
-    emit('update-summary', {
-        count: total,
-        average_rating: average 
-    });
-};
 
 
 const fetchReviews = async (page) => {
   loading.value = true;
   try {
     const response = await fetch(
+      
       `${baseUrl}/api/sites/${props.siteId}/reviews?page=${page}&per_page=${perPage}`
     );
+    
     
     if (!response.ok) throw new Error("Error al cargar las reseñas");
 
@@ -90,16 +70,13 @@ const fetchReviews = async (page) => {
     totalPages.value = Math.ceil(data.meta.total / perPage);
     currentPage.value = page;
     
-    // LLAMAMOS a la función para actualizar el resumen y emitirlo
-    calculateAndEmitSummary(reviews.value, totalReviews.value); 
-
+    
+    
   } catch (error) {
     console.error("Fallo al obtener reseñas:", error);
     reviews.value = [];
     totalReviews.value = 0;
     
-    // Emitir el fallo al componente padre
-    emit('update-summary', { count: 0, average_rating: 'N/A' }); 
   } finally {
     loading.value = false;
   }
@@ -122,7 +99,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Estilos básicos para el listado de reseñas (Mobile First) */
 .review-item {
   border: 1px solid #eee;
   padding: 1rem;

@@ -13,21 +13,27 @@
 import { computed } from 'vue';
 
 const props = defineProps({
-  // Puede ser 'N/A' o un número (ej. 4.5)
   rating: {
     type: [String, Number],
     required: true
   },
-  // Conteo de reseñas (ej. 155)
   count: {
     type: Number,
     required: true
   }
 });
 
-// Convierte el rating a un número entero para fines de visualización de estrellas.
 const numericRating = computed(() => {
-  return typeof props.rating === 'number' ? Math.round(props.rating) : 0;
+  let num = 0;
+  
+  if (typeof props.rating === 'number') {
+    num = props.rating;
+  } else if (typeof props.rating === 'string' && props.rating !== 'N/A') {
+    num = parseFloat(props.rating);
+  }
+  
+  
+  return Math.round(num) || 0;
 });
 </script>
 
