@@ -7,7 +7,7 @@ from src.core.entity.provincia import Provincia
 from src.core.entity.reseña import Reseña
 from src.core.entity.tag import Tag
 from src.web.controllers.sitios_historicos import filtrar
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from flask import Response
 import json
 from src.core.auth.usuario import favoritos_usuarios_sitios
@@ -67,6 +67,7 @@ def handle_jwt_errors(e):
 def listar_sitios():
     name = request.args.get("name", "").strip()
     description = request.args.get("description", "").strip()
+    q = request.args.get("q", "").strip()
     city = request.args.get("city", "").strip()
     province = request.args.get("province", "").strip()
     tags = request.args.getlist("tags")
@@ -97,10 +98,24 @@ def listar_sitios():
         }, 400
 
     query = db.session.query(SitioHistorico).join(Ciudad).join(Provincia)
-    if name:
-        query = query.filter(SitioHistorico.nombre.ilike(f"%{name}%"))
-    if description:
-        query = query.filter(SitioHistorico.descBreve.ilike(f"%{description}%"))
+    # Solo sitios visibles y no dados de baja
+    query = query.filter(
+        SitioHistorico.visible.is_(True),
+        SitioHistorico.baja.is_(False),
+    )
+    # Texto libre: si viene 'q', buscar por nombre OR descripción breve
+    if q:
+        query = query.filter(
+            or_(
+                SitioHistorico.nombre.ilike(f"%{q}%"),
+                SitioHistorico.descBreve.ilike(f"%{q}%"),
+            )
+        )
+    else:
+        if name:
+            query = query.filter(SitioHistorico.nombre.ilike(f"%{name}%"))
+        if description:
+            query = query.filter(SitioHistorico.descBreve.ilike(f"%{description}%"))
     if city:
         query = query.filter(Ciudad.nombre.ilike(f"%{city}%"))
     if province:
