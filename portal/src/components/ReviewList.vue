@@ -1,5 +1,22 @@
 <template>
   <div class="review-list">
+    <div class="sort-controls">
+      <label for="sort-by">Ordenar por:</label>
+      <select id="sort-by" v-model="sortState.by" @change="handleSortChange">
+        <option value="inserted_at">Fecha</option>
+        <option value="rating">Calificación</option>
+      </select>
+
+      <select v-model="sortState.order" @change="handleSortChange">
+        <option value="desc">
+          {{ sortState.by === 'rating' ? 'Descendente (Mejor)' : 'Descendente (Más Reciente)' }}
+        </option>
+        <option value="asc">
+          {{ sortState.by === 'rating' ? 'Ascendente (Peor)' : 'Ascendente (Más Antiguo)' }}
+        </option>
+      </select>
+    </div>
+    
     <div v-if="loading" class="loading-state">Cargando reseñas...</div>
     
     <ul v-else-if="reviews.length" class="reviews">
@@ -34,13 +51,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'; 
+import { ref, onMounted, reactive } from 'vue'; 
 
 
 const props = defineProps({
   siteId: { type: Number, required: true },
 });
 
+// Estado de la UI y datos
 const reviews = ref([]);
 const currentPage = ref(1);
 const totalPages = ref(1);
@@ -48,16 +66,22 @@ const totalReviews = ref(0);
 const perPage = 25; // Requerimiento: 25 por página
 const loading = ref(true);
 
-const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'; 
+// NUEVO: Estado para el ordenamiento
+const sortState = reactive({
+    by: 'inserted_at', // rating o inserted_at
+    order: 'desc'     // asc o desc
+});
 
+
+const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'; 
 
 
 const fetchReviews = async (page) => {
   loading.value = true;
   try {
+    // 1. Incluir los parámetros de ordenamiento en la solicitud GET
     const response = await fetch(
-      
-      `${baseUrl}/api/sites/${props.siteId}/reviews?page=${page}&per_page=${perPage}`
+      `${baseUrl}/api/sites/${props.siteId}/reviews?page=${page}&per_page=${perPage}&order_by=${sortState.by}&order=${sortState.order}`
     );
     
     
@@ -71,7 +95,6 @@ const fetchReviews = async (page) => {
     currentPage.value = page;
     
     
-    
   } catch (error) {
     console.error("Fallo al obtener reseñas:", error);
     reviews.value = [];
@@ -80,6 +103,12 @@ const fetchReviews = async (page) => {
   } finally {
     loading.value = false;
   }
+};
+
+// NUEVO: Función para manejar el cambio en el select
+const handleSortChange = () => {
+    // Al cambiar el orden, reiniciamos a la página 1 para aplicar el filtro
+    fetchReviews(1); 
 };
 
 const goToPage = (page) => {
@@ -94,11 +123,26 @@ const formatDate = (dateString) => {
 };
 
 onMounted(() => {
-  fetchReviews(1);
+  // Carga inicial usando el orden por defecto (Más reciente/desc)
+  fetchReviews(1); 
 });
 </script>
 
 <style scoped>
+/* Estilos para los controles de ordenamiento */
+.sort-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 0 1rem; 
+}
+.sort-controls select {
+    padding: 8px;
+    border-radius: 4px;
+}
+
+/* El resto de estilos para la lista */
 .review-item {
   border: 1px solid #eee;
   padding: 1rem;
@@ -114,6 +158,9 @@ onMounted(() => {
 .review-text {
   font-size: 1em;
   color: #555;
+  /* Solución para que las palabras largas no rompan el layout en móvil */
+  word-wrap: break-word; 
+  overflow-wrap: break-word; 
 }
 .pagination-controls {
   display: flex;

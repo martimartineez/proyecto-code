@@ -328,6 +328,10 @@ def auth():
 def listar_resenas_sitio(id):
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
+
+    order_by = request.args.get("order_by", "inserted_at") # Valor por defecto: fecha
+    order = request.args.get("order", "desc")              # Valor por defecto: descendente
+
     sitio = obtener_sitio(id)
 
     if not sitio:
@@ -351,6 +355,16 @@ def listar_resenas_sitio(id):
         )
 
     query = db.session.query(Reseña).filter_by(id_sitio=id, estado='aprobada')
+
+    sort_column = Reseña.inserted_at 
+    if order_by == "rating":
+        sort_column = Reseña.puntaje
+    
+    if order == "asc":
+        query = query.order_by(sort_column.asc())
+    else:
+        query = query.order_by(sort_column.desc())
+
     total = query.count()
     offset = (page - 1) * per_page
 
