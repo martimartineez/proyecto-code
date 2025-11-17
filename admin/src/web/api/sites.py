@@ -258,7 +258,26 @@ def obtener_sitio_api(id):
             jsonify({"error": {"code": "not_found", "message": "Site not found"}}),
             404,
         )
-    return jsonify(sitio.to_dict()), 200
+    
+    # calcular promedio y conteo de reseñas aprobadas
+    query_stats = db.session.query(
+        func.avg(Reseña.puntaje).label('rating_avg'),
+        func.count(Reseña.id).label('reviews_count')
+    ).filter(Reseña.id_sitio == id, Reseña.estado == 'aprobada').first() # Solo reseñas aprobadas
+
+    
+    data = sitio.to_dict()
+    
+    # añadir las estadísticas al diccionario
+
+    data['rating_avg'] = round(query_stats.rating_avg, 1) if query_stats.rating_avg else 'N/A'
+    data['reviews_count'] = query_stats.reviews_count if query_stats.reviews_count else 0
+    
+    # inicializar placeholders (CAMBIAR CUANDO SE IMPLEMENTE LA LÓGICA)
+    data['is_favorite'] = False # placeholder
+    data['images'] = []         # placeholder
+
+    return jsonify(data), 200
 
 
 @bp.route("/auth", methods=["POST"])
@@ -320,7 +339,7 @@ def listar_resenas_sitio(id):
             400,
         )
 
-    query = db.session.query(Reseña).filter_by(id_sitio=id)
+    query = db.session.query(Reseña).filter_by(id_sitio=id, estado='aprobada')
     total = query.count()
     offset = (page - 1) * per_page
 

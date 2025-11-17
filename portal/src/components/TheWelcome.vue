@@ -6,7 +6,7 @@
           <RouterLink :to="{ name: 'detalle-sitio', params: { id: ultimosSitios[0].id } }"> 
           <img alt="catedral-ejemplo" src="@/assets/catedral_frente.jpg" class="d-block w-100">     <!-- reemplazar cuando se integren las imagenes -->
           <div class="carousel-caption d-md-block w-100">
-              <h5>{{ ultimosSitios[0].nombre}}</h5>
+              <h5>{{ ultimosSitios[0].name}}</h5>
           </div>
           </RouterLink>
       </div>
@@ -14,7 +14,7 @@
           <RouterLink :to="{ name: 'detalle-sitio', params: { id: sitio.id } }">
           <img alt="museo-ejemplo" src="@/assets/museoLP.jpg" class="d-block w-100">    <!-- reemplazar cuando se integren las imagenes -->
           <div class="carousel-caption d-md-block w-100">
-              <h5> {{sitio.nombre}}</h5>
+              <h5> {{sitio.name}}</h5>
           </div>
           </RouterLink>
       </div>
@@ -42,8 +42,8 @@
                       <template #imagen>
                         <img src="@/assets/museoLP.jpg" class="img-responsive" />
                       </template>
-                      <template #titulo>{{ sitio.nombre }}</template>
-                      <template #desc>{{ sitio.descripcion }}</template>
+                      <template #titulo>{{ sitio.name }}</template>
+                      <template #desc>{{ sitio.short_description }}</template>
                     </SliderHome>
                   </RouterLink>
                 </div>
@@ -57,8 +57,8 @@
                       <template #imagen>
                         <img src="@/assets/museoLP.jpg" class="img-responsive" />
                       </template>
-                      <template #titulo>{{ sitio.nombre }}</template>
-                      <template #desc>{{ sitio.descripcion }}</template>
+                      <template #titulo>{{ sitio.name }}</template>
+                      <template #desc>{{ sitio.short_description }}</template>
                     </SliderHome>
                   </RouterLink>
                 </div>
@@ -93,13 +93,13 @@ onMounted(async () => {
 })
 
 const ultimosSitios = computed(() => {
-  const lista = sitios.value.items || [];
+  const lista = sitios.value.data || [];
   console.log(lista.sort((b,a) => new Date(a.fecha_registro) - new Date(b.fecha_registro)).slice(0,3)); //agarro los 3 sitios mas recientes
   return lista.sort((b,a) => new Date(a.fecha_registro) - new Date(b.fecha_registro)).slice(0,3);
 })
 
 const sitiosPorFila = computed(() => {    //muestra de a 1 elemento en celular y 3 en pc
-  const lista = sitios.value.items || [];
+  const lista = sitios.value.data || [];
   const grupos = [];
   let cant = 0;
   if (window.innerWidth > 767)
