@@ -9,6 +9,7 @@ from src.core.entity.categoria_sitio import CategoriaSitio  # noqa: F401
 from src.core.entity.tag import Tag  # noqa: F401
 from src.core.auth.usuario import Usuario
 from src.core.entity.reseña import Reseña
+from src.core.entity.sitio_imagen import SitioImagen
 import re
 
 #definicion de excepciones personalizadas
@@ -393,6 +394,111 @@ def listar_historial_sitio(
         "per_page": per_page,
         "pages": (total + per_page - 1) // per_page if per_page else 1,
     }
+
+# ==========================
+# Gestión de imágenes sitios
+# ==========================
+
+def listar_imagenes_sitio(id_sitio: int) -> list[SitioImagen]:
+    return (
+        db.session.query(SitioImagen)
+        .filter(SitioImagen.id_sitio == id_sitio)
+        .order_by(SitioImagen.orden.asc(), SitioImagen.id.asc())
+        .all()
+    )
+
+def contar_imagenes_sitio(id_sitio: int) -> int:
+    return db.session.query(SitioImagen).filter(SitioImagen.id_sitio == id_sitio).count()
+
+def obtener_imagen(id_imagen: int) -> SitioImagen | None:
+    return db.session.get(SitioImagen, id_imagen)
+
+def agregar_imagen_sitio(
+    id_sitio: int,
+    url_publica: str,
+    object_name: str,
+    titulo_alt: str,
+    descripcion: str | None,
+    es_portada: bool = False,
+) -> SitioImagen:
+    sitio = obtener_sitio(id_sitio)
+    if not sitio:
+        raise EntityNotFoundError("Sitio Histórico no encontrado.")
+    total = contar_imagenes_sitio(id_sitio)
+    if total >= 10:
+        raise ValueError("Se alcanzó el límite de 10 imágenes por sitio.")
+
+    # Calcular próximo orden
+    ultimo = (
+        db.session.query(SitioImagen)
+        .filter(SitioImagen.id_sitio == id_sitio)
+        .order_by(SitioImagen.orden.desc())
+        .first()
+    )
+    next_order = (ultimo.orden + 1) if ultimo else 1
+
+    nueva = SitioImagen(
+        id_sitio=id_sitio,
+        url_publica=url_publica,
+        object_name=object_name,
+        titulo_alt=titulo_alt,
+        descripcion=descripcion,
+        orden=next_order,
+        portada=False,
+    )
+    db.session.add(nueva)
+    db.session.flush()  # obtener id
+
+    if es_portada:
+        # Limpiar portada previa y setear nueva
+        db.session.query(SitioImagen).filter(
+            SitioImagen.id_sitio == id_sitio, SitioImagen.portada == True
+        ).update({SitioImagen.portada: False})
+        nueva.portada = True
+
+    db.session.commit()
+    return nueva
+
+def set_portada_imagen(id_sitio: int, id_imagen: int) -> SitioImagen:
+    img = obtener_imagen(id_imagen)
+    if not img or img.id_sitio != id_sitio:
+        raise EntityNotFoundError("Imagen no encontrada para el sitio.")
+    db.session.query(SitioImagen).filter(
+        SitioImagen.id_sitio == id_sitio, SitioImagen.portada == True
+    ).update({SitioImagen.portada: False})
+    img.portada = True
+    db.session.commit()
+    return img
+
+def eliminar_imagen_sitio(id_sitio: int, id_imagen: int) -> SitioImagen:
+    img = obtener_imagen(id_imagen)
+    if not img or img.id_sitio != id_sitio:
+        raise EntityNotFoundError("Imagen no encontrada para el sitio.")
+    if img.portada:
+        raise ValueError("No se puede eliminar la imagen de portada. Cambie la portada primero.")
+    db.session.delete(img)
+    db.session.commit()
+    return img
+
+def reordenar_imagenes_sitio(id_sitio: int, ids_en_orden: list[int]) -> None:
+    imgs = listar_imagenes_sitio(id_sitio)
+    ids_existentes = [i.id for i in imgs]
+    # validar que coincidan conjuntos
+    if set(ids_existentes) != set(ids_en_orden):
+        raise ValueError("Lista de orden inválida.")
+    orden_map = {img_id: idx + 1 for idx, img_id in enumerate(ids_en_orden)}
+    for img in imgs:
+        img.orden = orden_map.get(img.id, img.orden)
+    db.session.commit()
+
+def actualizar_data_imagen(id_sitio: int, id_imagen: int, titulo_alt: str, descripcion: str | None) -> SitioImagen:
+    img = obtener_imagen(id_imagen)
+    if not img or img.id_sitio != id_sitio:
+        raise EntityNotFoundError("Imagen no encontrada para el sitio.")
+    img.titulo_alt = titulo_alt
+    img.descripcion = descripcion
+    db.session.commit()
+    return img
 
 def listar_tags(page=1, per_page=25, q=None, sort=None, order="asc"):
     """

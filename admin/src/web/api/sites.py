@@ -72,11 +72,13 @@ def listar_sitios():
     province = request.args.get("province", "").strip()
     tags = request.args.getlist("tags")
     order_by = request.args.get("order_by", "name")
+    order = request.args.get("order", "asc")
     lat = request.args.get("lat", type=float)
     long = request.args.get("long", type=float)
     radius = request.args.get("radius", type=float)
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
+    state = request.args.get("state", "")
 
     if (
         (lat is not None and not (-90 <= lat <= 90))
@@ -137,6 +139,19 @@ def listar_sitios():
         )
 
         query = query.filter(distance <= radius)
+    if state:
+        query = query.filter(SitioHistorico.estadoConservacion.ilike(f"%{state}%"))
+    if order_by:
+        if order_by == "nombre":
+            if order == "asc":
+                query = query.order_by(SitioHistorico.nombre)
+            else:
+                query = query.order_by(SitioHistorico.nombre.desc())
+        elif order_by == "fechaRegistro":
+            if order == "asc":
+                query = query.order_by(SitioHistorico.fechaRegistro)
+            else:
+                query = query.order_by(SitioHistorico.fechaRegistro.desc())
 
     total = query.count()
     offset = (page - 1) * per_page
