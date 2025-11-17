@@ -1,6 +1,6 @@
 from src.core.entity import services
 from src.core.entity.services import EntityNotFoundError
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app, jsonify
 from src.core.auth import Usuario
 from src.core.entity.sitio_historico import SitioHistorico
 from src.core.database import db
@@ -15,6 +15,8 @@ from sqlalchemy import func
 import io, csv
 from flask import Response
 from datetime import date, timezone, timedelta
+import uuid, mimetypes, os
+from werkzeug.utils import secure_filename
 
 
 
@@ -249,9 +251,14 @@ def editar_sitio_get(sitio_id):
     ]
     historial_view = _build_historial_view(historial, ciudades, categorias, usuarios_by_id)
     tags = services.listar_tags()
+    # Cargar las imágenes del sitio
+    imagenes = services.listar_imagenes_sitio(sitio_id)
+    for img in imagenes:
+        print(img.url_publica)
     return render_template(
         "sitios_historicos/formEditar.html",
         sitio=sitio,
+        imagenes=imagenes,  # Pasar las imágenes a la plantilla
         provincias=provincias,
         ciudades=ciudades,
         categorias=categorias,
@@ -389,6 +396,182 @@ def ver_sitio(sitio_id):
         },
         next_url=next_url,
     )
+
+# ==============================
+# Gestión de Imágenes (Privado)
+# ==============================
+
+ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
+
+def _allowed_file(filename: str) -> bool:
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    return ext in ALLOWED_EXTENSIONS
+
+def _build_public_url(app, object_name: str) -> str:
+    server = app.config["MINIO_SERVER"]
+    bucket = app.config["MINIO_BUCKET"]
+    secure = app.config.get("MINIO_SECURE", False)
+    scheme = "https" if secure else "http"
+    return f"{scheme}://{server}/{bucket}/{object_name}"
+
+def _put_object(client, bucket: str, object_name: str, file_storage) -> None:
+    # Reset stream and determine length
+    file_storage.stream.seek(0, os.SEEK_END)
+    size = file_storage.stream.tell()
+    file_storage.stream.seek(0)
+    content_type = file_storage.mimetype or mimetypes.guess_type(file_storage.filename)[0] or "application/octet-stream"
+    client.put_object(
+        bucket,
+        object_name,
+        data=file_storage.stream,
+        length=size,
+        content_type=content_type,
+    )
+
+@bp.post("/<int:sitio_id>/imagenes")
+@login_required
+@check("site_update")
+def subir_imagenes_sitio(sitio_id: int):
+    """Sube múltiples imágenes para un sitio con validaciones y registra en DB."""
+    app = current_app
+    client = app.storage
+    bucket = app.config["MINIO_BUCKET"]
+
+    # Validar cantidad total
+    total_actual = services.contar_imagenes_sitio(sitio_id)
+    files = request.files.getlist("imagenes") or []
+    metas = request.form  # titulo_alt_i, desc_i, portada_index opcional
+    if not files:
+        flash("No se seleccionaron archivos.", "error")
+        return redirect(url_for("sitios_historicos.editar_sitio_get", sitio_id=sitio_id))
+    if total_actual + len(files) > 10:
+        flash("Límite de 10 imágenes por sitio excedido.", "error")
+        return redirect(url_for("sitios_historicos.editar_sitio_get", sitio_id=sitio_id))
+
+    portada_index = metas.get("portada_index")
+    created = 0
+    errors = []
+
+    for idx, f in enumerate(files):
+        if not f or f.filename == "":
+            errors.append(f"Archivo #{idx+1} inválido")
+            continue
+        filename = secure_filename(f.filename)
+        if not _allowed_file(filename):
+            errors.append(f"Formato no permitido para {filename}. Use JPG, PNG o WEBP.")
+            continue
+        # tamaño
+        f.stream.seek(0, os.SEEK_END)
+        size = f.stream.tell()
+        f.stream.seek(0)
+        if size > MAX_FILE_SIZE:
+            errors.append(f"{filename}: supera 5 MB")
+            continue
+
+        ext = filename.rsplit(".", 1)[-1].lower()
+        object_name = f"public/{sitio_id}/{uuid.uuid4().hex}.{ext}"
+        try:
+            _put_object(client, bucket, object_name, f)
+            url_publica = _build_public_url(app, object_name)
+            titulo_alt = metas.get(f"titulo_alt_{idx}") or filename
+            if not titulo_alt:
+                errors.append(f"{filename}: título/alt es obligatorio")
+                continue
+            descripcion = metas.get(f"descripcion_{idx}")
+            es_portada = str(idx) == str(portada_index) if portada_index is not None else False
+            services.agregar_imagen_sitio(
+                id_sitio=sitio_id,
+                url_publica=url_publica,
+                object_name=object_name,
+                titulo_alt=titulo_alt,
+                descripcion=descripcion,
+                es_portada=es_portada,
+            )
+            created += 1
+        except Exception as e:
+            errors.append(f"{filename}: {e}")
+
+    if created:
+        flash(f"{created} imagen(es) subida(s) correctamente.", "success")
+    if errors:
+        flash(" | ".join(errors), "error")
+    return redirect(url_for("sitios_historicos.editar_sitio_get", sitio_id=sitio_id))
+
+# Reemplaza estas rutas en tu sitios_historicos.py
+# Cambia los decoradores @bp.post a @bp.route con methods
+
+@bp.route("/<int:sitio_id>/imagenes/<int:imagen_id>/portada", methods=["GET", "POST"])
+@login_required
+@check("site_update")
+def set_portada(sitio_id: int, imagen_id: int):
+    try:
+        services.set_portada_imagen(sitio_id, imagen_id)
+        flash("Portada actualizada.", "success")
+    except EntityNotFoundError:
+        flash("Imagen no encontrada para el sitio.", "error")
+    except Exception as e:
+        flash(str(e), "error")
+    return redirect(url_for("sitios_historicos.editar_sitio_get", sitio_id=sitio_id))
+
+@bp.route("/<int:sitio_id>/imagenes/<int:imagen_id>/eliminar", methods=["GET", "POST"])
+@login_required
+@check("site_update")
+def eliminar_imagen(sitio_id: int, imagen_id: int):
+    app = current_app
+    client = app.storage
+    bucket = app.config["MINIO_BUCKET"]
+    try:
+        img = services.obtener_imagen(imagen_id)
+        if not img or img.id_sitio != sitio_id:
+            raise EntityNotFoundError("Imagen no encontrada.")
+        object_name = img.object_name
+        services.eliminar_imagen_sitio(sitio_id, imagen_id)
+        # Borrar del storage (ignorar error si no existe)
+        try:
+            client.remove_object(bucket, object_name)
+        except Exception:
+            pass
+        flash("Imagen eliminada.", "success")
+    except ValueError as ve:
+        flash(str(ve), "error")
+    except Exception as e:
+        flash(str(e), "error")
+    return redirect(url_for("sitios_historicos.editar_sitio_get", sitio_id=sitio_id))
+
+# Para actualizar datos, debe ser POST
+@bp.route("/<int:sitio_id>/imagenes/<int:imagen_id>/actualizar", methods=["POST"])
+@login_required
+@check("site_update")
+def actualizar_data_imagen(sitio_id: int, imagen_id: int):
+    try:
+        titulo_alt = request.form.get("titulo_alt", "").strip()
+        descripcion = request.form.get("descripcion", "").strip()
+        
+        if not titulo_alt:
+            return jsonify({"error": "El título/alt es obligatorio."}), 400
+        
+        services.actualizar_data_imagen(sitio_id, imagen_id, titulo_alt, descripcion)
+        return jsonify({"success": True, "message": "Datos actualizados"}), 200
+    except EntityNotFoundError:
+        return jsonify({"error": "Imagen no encontrada."}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@bp.post("/<int:sitio_id>/imagenes/orden")
+@login_required
+@check("site_update")
+def reordenar_imagenes(sitio_id: int):
+    try:
+        ids = request.form.getlist("ids")  # e.g., ["3","1","2"]
+        ids = [int(x) for x in ids]
+        services.reordenar_imagenes_sitio(sitio_id, ids)
+        flash("Orden actualizado.", "success")
+    except Exception as e:
+        flash(str(e), "error")
+    return redirect(url_for("sitios_historicos.editar_sitio_get", sitio_id=sitio_id))
+
+
 
 def filtrar(filtros):
     provincia_id = filtros.get("provincia")

@@ -19,6 +19,7 @@ from src.core.entity.services import feature_flags as ff_service
 from src.core.entity.services.feature_flags import get_flag
 from src.web.controllers.feature_flags import bp as feature_flags_bp
 from flask_jwt_extended import JWTManager
+from src.web.storage import storage
 
 from flask_cors import CORS
 from src.web.api import bp as api_bp
@@ -36,6 +37,7 @@ def create_app(env="development", static_folder="../../static"):
     database.init_db(app)
     session.init_app(app)
     bcrypt.init_app(app)
+    storage.init_app(app)
     # CORS explícito para asegurar encabezados en todas las respuestas de /api/*
     # Incluye respuestas de error (404/500) y evita problemas de "CORS Missing Allow Origin"
     CORS(
