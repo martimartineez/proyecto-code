@@ -12,9 +12,11 @@
     <button type="button" type="button" class="button-18" role="button" style="background-color: green">Agregar sitio histórico</button>
   </a>
   {% if check_permission("site_export") %}
-  <a href="{{ url_for('sitios_historicos.exportar_csv', **request_args) }}" type="button" class="button-18" style="background-color: green">
-    Exportar CSV
-  </a>
+    {% if total_results > 1 %}
+    <a href="{{ url_for('sitios_historicos.exportar_csv', **request_args) }}" type="button" class="button-18" style="background-color: green">
+      Exportar CSV
+    </a>
+    {% endif %}
   {% endif %}
 </div>
 <button id="btnFiltros" type="button" class="button-18" role="button">Mostrar filtros avanzados</button>
