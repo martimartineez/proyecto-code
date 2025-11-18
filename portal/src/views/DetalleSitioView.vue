@@ -109,8 +109,8 @@ const getConservationClass = (estado) => {
 // IMPLEMENTACIÓN DE LA NAVEGACIÓN DE TAGS CLICABLES
 const filterByTag = (tag) => {
     router.push({ 
-        path: '/sites', 
-        query: { q: tag } 
+        path: '/sitios', 
+        query: { tags: tag } 
     });
 }
 
