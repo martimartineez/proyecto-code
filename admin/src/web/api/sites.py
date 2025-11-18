@@ -630,5 +630,33 @@ def logout():
     unset_jwt_cookies(resp)  # 👈 esto borra las cookies access y refresh
     return resp, 200
 
+@bp.route('/reseñas_usuario', methods=['GET'])
+@jwt_required()
+def reseñas_usuario():
+    from src.core.entity.services import listar_reseñas_usuario
+    from src.core.auth import devolver_usuario_publico_por_email
+
+    user_email = get_jwt_identity()
+    user = devolver_usuario_publico_por_email(user_email)
+    if not user:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    reseñas = listar_reseñas_usuario(user.id)
+
+    # Convertir a diccionarios
+    reseñas_json = [
+        {
+            "texto": r.texto,
+            "puntuacion": r.puntaje,
+            "fecha": r.inserted_at.isoformat() if r.inserted_at else None,
+            # agregar lo que necesites
+        }
+        for r in reseñas
+    ]
+
+    print("reseñas_json:", reseñas_json)  # Depuración
+
+    return jsonify({"reseñas": reseñas_json}), 200
+
 
     
