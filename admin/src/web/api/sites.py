@@ -14,6 +14,7 @@ from src.core.auth.usuario import favoritos_usuarios_sitios
 from src.core.entity.services import (
     obtener_sitio,
     registrar_evento_historial,
+    listar_imagenes_sitio
 )
 from flask_jwt_extended import (
     create_access_token,
@@ -265,17 +266,27 @@ def obtener_sitio_api(id):
         func.count(Reseña.id).label('reviews_count')
     ).filter(Reseña.id_sitio == id, Reseña.estado == 'aprobada').first() # Solo reseñas aprobadas
 
-    
+    imagenes = listar_imagenes_sitio(id)
+
+
     data = sitio.to_dict()
     
     # añadir las estadísticas al diccionario
 
     data['rating_avg'] = round(query_stats.rating_avg, 1) if query_stats.rating_avg else 'N/A'
     data['reviews_count'] = query_stats.reviews_count if query_stats.reviews_count else 0
+
+    # añadir las imágenes al diccionario
+    data['images'] = [
+        {
+            "url": img.url_publica,
+            "alt": img.titulo_alt,
+            "portada": img.portada
+        } for img in imagenes
+    ]
     
     # inicializar placeholders (CAMBIAR CUANDO SE IMPLEMENTE LA LÓGICA)
     data['is_favorite'] = False # placeholder
-    data['images'] = []         # placeholder
 
     return jsonify(data), 200
 
@@ -317,6 +328,10 @@ def auth():
 def listar_resenas_sitio(id):
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
+
+    order_by = request.args.get("order_by", "inserted_at") # Valor por defecto: fecha
+    order = request.args.get("order", "desc")              # Valor por defecto: descendente
+
     sitio = obtener_sitio(id)
 
     if not sitio:
@@ -340,6 +355,16 @@ def listar_resenas_sitio(id):
         )
 
     query = db.session.query(Reseña).filter_by(id_sitio=id, estado='aprobada')
+
+    sort_column = Reseña.inserted_at 
+    if order_by == "rating":
+        sort_column = Reseña.puntaje
+    
+    if order == "asc":
+        query = query.order_by(sort_column.asc())
+    else:
+        query = query.order_by(sort_column.desc())
+
     total = query.count()
     offset = (page - 1) * per_page
 
