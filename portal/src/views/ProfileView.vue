@@ -67,7 +67,7 @@
                     <span class="score-stars" aria-hidden="true">{{ stars(reseña.puntuacion) }}</span>
                   </div>
                   <div class="review-meta">
-                    <div class="review-title">{{ reseña.titulo || 'Reseña' }}</div>
+                    <div class="review-title">{{ reseña.sitio || 'Reseña' }}</div>
                     <div class="review-date">{{ formatDate(reseña.fecha) }}</div>
                   </div>
                 </header>

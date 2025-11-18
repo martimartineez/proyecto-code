@@ -646,6 +646,7 @@ def reseñas_usuario():
     # Convertir a diccionarios
     reseñas_json = [
         {
+            "sitio": r.sitio.nombre,
             "texto": r.texto,
             "puntuacion": r.puntaje,
             "fecha": r.inserted_at.isoformat() if r.inserted_at else None,
