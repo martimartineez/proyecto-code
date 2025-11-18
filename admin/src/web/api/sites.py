@@ -14,6 +14,7 @@ from src.core.auth.usuario import favoritos_usuarios_sitios
 from src.core.entity.services import (
     obtener_sitio,
     registrar_evento_historial,
+    listar_imagenes_sitio
 )
 from flask_jwt_extended import (
     create_access_token,
@@ -72,11 +73,13 @@ def listar_sitios():
     province = request.args.get("province", "").strip()
     tags = request.args.getlist("tags")
     order_by = request.args.get("order_by", "name")
+    order = request.args.get("order", "asc")
     lat = request.args.get("lat", type=float)
     long = request.args.get("long", type=float)
     radius = request.args.get("radius", type=float)
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
+    state = request.args.get("state", "")
 
     if (
         (lat is not None and not (-90 <= lat <= 90))
@@ -137,6 +140,19 @@ def listar_sitios():
         )
 
         query = query.filter(distance <= radius)
+    if state:
+        query = query.filter(SitioHistorico.estadoConservacion.ilike(f"%{state}%"))
+    if order_by:
+        if order_by == "nombre":
+            if order == "asc":
+                query = query.order_by(SitioHistorico.nombre)
+            else:
+                query = query.order_by(SitioHistorico.nombre.desc())
+        elif order_by == "fechaRegistro":
+            if order == "asc":
+                query = query.order_by(SitioHistorico.fechaRegistro)
+            else:
+                query = query.order_by(SitioHistorico.fechaRegistro.desc())
 
     total = query.count()
     offset = (page - 1) * per_page
@@ -243,7 +259,36 @@ def obtener_sitio_api(id):
             jsonify({"error": {"code": "not_found", "message": "Site not found"}}),
             404,
         )
-    return jsonify(sitio.to_dict()), 200
+    
+    # calcular promedio y conteo de reseñas aprobadas
+    query_stats = db.session.query(
+        func.avg(Reseña.puntaje).label('rating_avg'),
+        func.count(Reseña.id).label('reviews_count')
+    ).filter(Reseña.id_sitio == id, Reseña.estado == 'aprobada').first() # Solo reseñas aprobadas
+
+    imagenes = listar_imagenes_sitio(id)
+
+
+    data = sitio.to_dict()
+    
+    # añadir las estadísticas al diccionario
+
+    data['rating_avg'] = round(query_stats.rating_avg, 1) if query_stats.rating_avg else 'N/A'
+    data['reviews_count'] = query_stats.reviews_count if query_stats.reviews_count else 0
+
+    # añadir las imágenes al diccionario
+    data['images'] = [
+        {
+            "url": img.url_publica,
+            "alt": img.titulo_alt,
+            "portada": img.portada
+        } for img in imagenes
+    ]
+    
+    # inicializar placeholders (CAMBIAR CUANDO SE IMPLEMENTE LA LÓGICA)
+    data['is_favorite'] = False # placeholder
+
+    return jsonify(data), 200
 
 
 @bp.route("/auth", methods=["POST"])
@@ -283,6 +328,10 @@ def auth():
 def listar_resenas_sitio(id):
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
+
+    order_by = request.args.get("order_by", "inserted_at") # Valor por defecto: fecha
+    order = request.args.get("order", "desc")              # Valor por defecto: descendente
+
     sitio = obtener_sitio(id)
 
     if not sitio:
@@ -305,7 +354,17 @@ def listar_resenas_sitio(id):
             400,
         )
 
-    query = db.session.query(Reseña).filter_by(id_sitio=id)
+    query = db.session.query(Reseña).filter_by(id_sitio=id, estado='aprobada')
+
+    sort_column = Reseña.inserted_at 
+    if order_by == "rating":
+        sort_column = Reseña.puntaje
+    
+    if order == "asc":
+        query = query.order_by(sort_column.asc())
+    else:
+        query = query.order_by(sort_column.desc())
+
     total = query.count()
     offset = (page - 1) * per_page
 

@@ -363,13 +363,12 @@ async function fetchPage(reset = false) {
       ? (cities.value.find(c => String(c.id) === String(state.city))?.nombre)
       : undefined;
     const tagNames = (state.tags || [])
-      .map(tid => tags.value.find(t => String(t.id) === String(tid))?.nombre)
+      .map(id => tags.value.find(t => String(t.id) === String(id))?.nombre)
       .filter(Boolean);
 
     const params = {
-      // Búsqueda unificada: backend acepta 'q' y hace OR entre nombre y descripción
+      // Búsqueda: usar 'q' para que el backend busque por nombre OR descripción
       q: state.q || undefined,
-      
       // Ubicación (API espera km)
       city: cityName || undefined,
       province: provinceName || undefined,

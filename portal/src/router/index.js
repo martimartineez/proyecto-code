@@ -13,7 +13,7 @@ const router = createRouter({
       component: HomeView,
     },
     {
-      path: '/sites',
+      path: '/sitios',
       name: 'sites',
       component: SitesView,
     },
