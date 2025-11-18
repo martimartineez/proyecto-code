@@ -43,6 +43,7 @@
           Favoritos
         </button>
       </div>
+
       <div class="tab-content">
         <div v-if="activeTab === 'reseñas'">
           <!-- Botón de recarga -->
@@ -54,18 +55,24 @@
           </div>
 
           <div v-if="loadingReseñas" class="loading">Cargando reseñas...</div>
+
           <div v-else-if="reseñas.length > 0">
             <div class="review-list">
               <article
-                v-for="(reseña, idx) in reseñas"
+                v-for="(reseña, idx) in paginatedResenas"
                 :key="reseña.id || idx"
                 class="review-card"
               >
                 <header class="review-header">
-                  <div class="score-badge" :aria-label="`Puntuación: ${reseña.puntuacion}`">
-                    <strong class="score-number">{{ reseña.puntuacion }}</strong>
-                    <span class="score-stars" aria-hidden="true">{{ stars(reseña.puntuacion) }}</span>
+                  <!-- Nuevo estilo: badge circular con color según puntuación -->
+                  <div
+                    :class="['score-badge', scoreClass(reseña.puntuacion)]"
+                    :aria-label="`Puntuación: ${reseña.puntuacion}`"
+                  >
+                    <div class="score-number">{{ reseña.puntuacion }}</div>
+                    <div class="score-label">pts</div>
                   </div>
+
                   <div class="review-meta">
                     <div class="review-title">{{ reseña.sitio || 'Reseña' }}</div>
                     <div class="review-date">{{ formatDate(reseña.fecha) }}</div>
@@ -75,11 +82,36 @@
                 <p class="review-text">{{ reseña.texto }}</p>
               </article>
             </div>
+
+            <!-- Pagination info & controls -->
+            <div class="pagination-wrap">
+              <div class="pagination-info">
+                Mostrando {{ startIndex }}–{{ endIndex }} de {{ reseñas.length }} reseñas
+              </div>
+
+              <nav class="pagination">
+                <button class="page-btn" @click="prevPage" :disabled="currentPage === 1">‹</button>
+
+                <button
+                  v-for="p in pagesToShow"
+                  :key="p"
+                  class="page-btn"
+                  :class="{ active: p === currentPage }"
+                  @click="goToPage(p)"
+                >
+                  {{ p }}
+                </button>
+
+                <button class="page-btn" @click="nextPage" :disabled="currentPage === totalPages">›</button>
+              </nav>
+            </div>
           </div>
+
           <div v-else class="empty-state">
             <p>Aún no escribiste reseñas.</p>
           </div>
         </div>
+
         <div v-else-if="activeTab === 'favoritos'">
           <p>Aquí se mostrarán los favoritos del usuario.</p>
         </div>
@@ -89,7 +121,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, computed } from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
@@ -100,6 +132,79 @@ const error = ref("");
 const activeTab = ref("reseñas");
 const reseñas = ref([]);
 const loadingReseñas = ref(false);
+
+// Pagination
+const pageSize = 25;
+const currentPage = ref(1);
+
+const totalPages = computed(() => {
+  return Math.max(1, Math.ceil(reseñas.value.length / pageSize));
+});
+
+const paginatedResenas = computed(() => {
+  const start = (currentPage.value - 1) * pageSize;
+  return reseñas.value.slice(start, start + pageSize);
+});
+
+const startIndex = computed(() => {
+  if (reseñas.value.length === 0) return 0;
+  return (currentPage.value - 1) * pageSize + 1;
+});
+
+const endIndex = computed(() => {
+  return Math.min(reseñas.value.length, currentPage.value * pageSize);
+});
+
+// Generate pages to show (compact when many pages)
+const pagesToShow = computed(() => {
+  const total = totalPages.value;
+  const cur = currentPage.value;
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  const pages = [];
+  const left = Math.max(1, cur - 2);
+  const right = Math.min(total, cur + 2);
+
+  if (left > 1) {
+    pages.push(1);
+    if (left > 2) pages.push(-1); // -1 will represent ellipsis
+  }
+
+  for (let p = left; p <= right; p++) pages.push(p);
+
+  if (right < total) {
+    if (right < total - 1) pages.push(-1);
+    pages.push(total);
+  }
+
+  return pages;
+});
+
+// Replace -1 with ellipsis in template via a small helper
+function isEllipsis(p) {
+  return p === -1;
+}
+
+function goToPage(n) {
+  if (n === -1) return;
+  currentPage.value = Math.min(Math.max(1, n), totalPages.value);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function prevPage() {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+}
+
+function nextPage() {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+}
 
 // Cerrar sesión
 async function logout() {
@@ -163,9 +268,11 @@ async function loadResenas() {
 
     const data = await res.json();
     reseñas.value = Array.isArray(data.reseñas) ? data.reseñas : [];
+    currentPage.value = 1; // reset to first page whenever reviews load
   } catch (e) {
     console.error(e.message || e);
     reseñas.value = [];
+    currentPage.value = 1;
   } finally {
     loadingReseñas.value = false;
   }
@@ -200,6 +307,15 @@ function formatDate(dateStr) {
 function stars(puntuacion) {
   const n = Math.max(0, Math.min(5, Math.round(Number(puntuacion) || 0)));
   return "★".repeat(n) + "☆".repeat(5 - n);
+}
+
+// Nueva helper para asignar clase de color según la puntuación
+function scoreClass(p) {
+  const n = Number(p);
+  if (Number.isNaN(n)) return "score-neutral";
+  if (n >= 4.0) return "score-high";      // verde/azulado
+  if (n >= 2.5) return "score-medium";    // amarillo/naranja
+  return "score-low";                     // rojo
 }
 </script>
 
@@ -367,19 +483,25 @@ function stars(puntuacion) {
   gap: 12px;
 }
 
-/* Score badge */
+/* Nuevo: Score badge base */
 .score-badge {
-  min-width: 64px;
+  width: 64px;
   height: 64px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #06b6d4, #7c3aed);
-  color: white;
+  border-radius: 50%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 16px rgba(99,102,241,0.12);
-  font-weight: 700;
+  color: white;
+  font-weight: 800;
+  box-shadow: 0 8px 18px rgba(2,6,23,0.08);
+  border: 2px solid rgba(255,255,255,0.12);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.score-badge:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 28px rgba(2,6,23,0.12);
 }
 
 .score-number {
@@ -387,11 +509,33 @@ function stars(puntuacion) {
   line-height: 1;
 }
 
-.score-stars {
-  margin-top: 2px;
-  font-size: 0.82rem;
+/* etiqueta pequeña "pts" */
+.score-label {
+  font-size: 0.68rem;
   opacity: 0.95;
-  letter-spacing: 1px;
+  margin-top: 2px;
+  font-weight: 700;
+}
+
+/* Variantes por rango */
+.score-high {
+  background: linear-gradient(135deg, #10b981, #06b6d4); /* verde -> cyan */
+  border-color: rgba(16,185,129,0.18);
+}
+
+.score-medium {
+  background: linear-gradient(135deg, #f59e0b, #f97316); /* amarillo -> naranja */
+  border-color: rgba(245,158,11,0.18);
+}
+
+.score-low {
+  background: linear-gradient(135deg, #ef4444, #dc2626); /* rojos */
+  border-color: rgba(239,68,68,0.18);
+}
+
+.score-neutral {
+  background: linear-gradient(135deg, #64748b, #475569);
+  border-color: rgba(71,85,105,0.18);
 }
 
 /* Meta (title + date) */
@@ -420,6 +564,71 @@ function stars(puntuacion) {
   font-size: 0.95rem;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+/* Pagination */
+.pagination-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.pagination-info {
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.pagination {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.page-btn {
+  min-width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid rgba(15,23,42,0.06);
+  background: #f8fafc;
+  color: #0f172a;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 120ms ease, transform 80ms ease;
+}
+
+.page-btn:hover:not(:disabled) {
+  background: #eef2ff;
+  transform: translateY(-2px);
+}
+
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.page-btn.active {
+  background: #3b82f6;
+  color: white;
+  border-color: rgba(59,130,246,0.12);
+}
+
+/* Ellipsis button look (non-clickable) */
+.page-btn.ellipsis {
+  background: transparent;
+  border: none;
+  cursor: default;
+  transform: none;
+  padding: 0 6px;
+  font-weight: 700;
+  color: #6b7280;
 }
 
 /* Empty state for reviews */
