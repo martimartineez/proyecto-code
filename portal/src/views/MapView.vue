@@ -1,5 +1,6 @@
 <template>
     <div class="map-search-container">
+      <h6>Hacé clic en el mapa para buscar sitios</h6>
       <div class="map-controls">
         <button
           v-if="selectedLocation"

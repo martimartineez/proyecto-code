@@ -169,13 +169,15 @@
 
 <script setup>
 // Vue y Vue Router
-import { onMounted, ref, reactive, watch } from 'vue';
+import { onMounted, ref, reactive, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 // API y componentes
 import { api } from '@/api/client';
 import SiteCard from '@/components/SiteCard.vue';
 import MapView from './MapView.vue';
+
+const restoreScroll = ref(false);
 
 // Constantes
 const per_page = 12;
@@ -329,7 +331,7 @@ async function fetchCities() {
     console.warn('Fallo /filters/cities, derivando ciudades desde /api/sites:', err);
     try {
       const provinceName = provinces.value.find(p => String(p.id) === String(state.province))?.nombre || state.province;
-      const res = await api.listSites({ province: provinceName, page: 1, per_page: 500 });
+      const res = await api.listSites({ province: provinceName, page: 1, per_page: 25 });
       const raw = res?.data ?? res?.items ?? [];
       const citySet = new Set(
         raw.map(it => (
@@ -534,7 +536,7 @@ function setupInfiniteScroll() {
 
 // Recargar ciudades cuando cambia la provincia
 watch(() => state.province, async (newVal) => {
-  state.city = undefined; // Limpiar ciudad seleccionada
+  state.city = undefined; 
   
   if (newVal) {
     await fetchCities();
@@ -546,32 +548,53 @@ watch(() => state.province, async (newVal) => {
 });
 
 // Configurar scroll infinito cuando cambian los items
-watch(items, () => {
+watch(items, async () => {
   if (infiniteEl.value) setupInfiniteScroll();
 });
 
-// Cargar filtros y la primera página al montar el componente
+
+
+// Función para restaurar el scroll
+const restoreScrollPosition = () => {
+  const savedPosition = sessionStorage.getItem('list-scroll');
+  if (savedPosition) {
+    nextTick(() => {
+      window.scrollTo({ top: Number(savedPosition), behavior: 'auto' });
+      // Limpiar la posición guardada después de restaurarla
+      sessionStorage.removeItem('list-scroll');
+    });
+  }
+};
 
 onMounted(async () => {
   state.latitude = undefined;
   state.longitude = undefined;
   searchLocation.value = null;
 
+  // Limpiar parámetros de ubicación de la URL
   const cleaned = { ...route.query };
   delete cleaned.latitude;
   delete cleaned.longitude;
   delete cleaned.radius;
-  router.replace({ query: cleaned });
+  
+  // Solo actualizar la URL si hay parámetros para limpiar
+  if (Object.keys(cleaned).length !== Object.keys(route.query).length) {
+    router.replace({ query: cleaned });
+  }
 
   try {
     await fetchFilters();
     await fetchPage(true);
     setupInfiniteScroll();
+    
+    // Restaurar el scroll después de cargar los datos
+    restoreScrollPosition();
   } catch (err) {
     console.error('Error al inicializar el componente:', err);
     error.value = 'Error al cargar la página';
   }
 });
+
 </script>
 
 <style scoped>

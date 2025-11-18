@@ -1,5 +1,5 @@
 <template>
-  <article class="card">
+  <article class="card" @click="goToDetail">
     <div class="cover" :style="coverStyle">
       <span v-if="!site.cover_image" class="placeholder">📍</span>
     </div>
@@ -9,36 +9,109 @@
         <span v-if="site.ciudad">{{ site.ciudad }}</span>
         <span v-if="site.provincia">, {{ site.provincia }}</span>
       </p>
-      <p v-if="site.estado" class="state"> Estado de conservación: {{ site.estado }}</p>
+      <p v-if="site.estado" class="state">Estado: {{ site.estado }}</p>
       <ul class="tags">
         <li v-for="t in site.tags" :key="t" class="tag">{{ t }}</li>
       </ul>
     </div>
   </article>
-  
 </template>
 
 <script setup>
 import { computed } from 'vue';
+import { useRouter } from 'vue-router';
+const router = useRouter();
 const props = defineProps({
   site: { type: Object, required: true },
 });
 
+function goToDetail() {
+  sessionStorage.setItem("list-scroll", String(window.scrollY));
+  router.push({ name: 'detalle-sitio', params: { id: props.site.id } });
+}
+
 const coverStyle = computed(() => ({
-  backgroundImage: props.site.cover_image ? `url(${props.site.cover_image})` : 'none',
+  backgroundImage: props.site.cover_url ? `url(${props.site.cover_url})` : 'none',
 }));
 </script>
 
 <style scoped>
-.card { display: flex; flex-direction: column; border: 1px solid #e5e7eb; border-radius: 14px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
-.cover { aspect-ratio: 16/9; background: #f3f4f6 center/cover no-repeat; display: grid; place-items: center; }
-.placeholder { font-size: 2rem; color: #9ca3af; }
-.body { padding: 14px; display: grid; gap: 8px; }
-.title { margin: 0; font-size: 1.05rem; line-height: 1.35rem; color: #111827; font-weight: 600; }
-.meta { margin: 0; color: #374151; font-size: 0.9rem; }
-.state { margin: 0; font-size: 0.85rem; color: #0f766e; font-weight: 600; }
-.tags { display: flex; gap: 8px; flex-wrap: wrap; list-style: none; padding: 0; margin: 0; }
-.tag { background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; padding: 4px 10px; border-radius: 999px; font-size: 12px; }
-</style>
+.card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  /* Transición suave para efectos hover */
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
 
+/* Efecto hover con zoom y sombra */
+.card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.cover {
+  aspect-ratio: 16/9;
+  background: #f3f4f6 center/cover no-repeat;
+  display: grid;
+  place-items: center;
+  /* Para que el zoom no afecte los bordes redondeados */
+  transform: translateZ(0);
+}
+
+.placeholder {
+  font-size: 2rem;
+  color: #9ca3af;
+}
+
+.body {
+  padding: 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.35rem;
+  color: #111827;
+  font-weight: 600;
+}
+
+.meta {
+  margin: 0;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.state {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #0f766e;
+  font-weight: 600;
+}
+
+.tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tag {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+</style>
 

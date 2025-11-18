@@ -78,7 +78,7 @@ def listar_sitios():
     long = request.args.get("long", type=float)
     radius = request.args.get("radius", type=float)
     page = request.args.get("page", 1, type=int)
-    per_page = request.args.get("per_page", 10, type=int)
+    per_page = request.args.get("per_page", 25, type=int)
     state = request.args.get("state", "")
 
     if (
