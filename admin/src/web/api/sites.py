@@ -615,7 +615,20 @@ def perfil():
     email = get_jwt_identity()
     usuario = devolver_usuario_publico_por_email(email)
     return usuario.to_dict(), 200
-    
+
+@bp.route('/boton', methods=['GET'])
+@jwt_required()
+def boton():
+    return jsonify({"message": "¡La ruta de prueba funciona correctamente!"}), 200
+
+@bp.route("/logout", methods=["POST"])
+def logout():
+    from flask import jsonify
+    from flask_jwt_extended import unset_jwt_cookies
+
+    resp = jsonify({"msg": "logout exitoso"})
+    unset_jwt_cookies(resp)  # 👈 esto borra las cookies access y refresh
+    return resp, 200
 
 
     

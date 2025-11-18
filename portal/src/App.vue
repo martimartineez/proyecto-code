@@ -34,7 +34,7 @@ import { RouterLink, RouterView } from 'vue-router'
 						</div>
 					</form>
 				</div>
-				<RouterLink to="" class="nav-link d-none d-lg-flex me-5">Mi perfil</RouterLink>
+				<RouterLink to="/profile" class="nav-link d-none d-lg-flex me-5">Mi perfil</RouterLink>
 			</div>
       </div>
     </nav>
