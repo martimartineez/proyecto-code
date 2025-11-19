@@ -39,7 +39,8 @@
 import 'font-awesome/css/font-awesome.min.css';
 import { ref } from 'vue';
 
-const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'; 
+//const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'; 
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 const formulario = ref();
 
 const props = defineProps({
@@ -54,7 +55,7 @@ async function postReview(){
   console.log(data)
 
   try {
-      const respuesta = await fetch(`${baseUrl}/api/sites/${props.siteId}/reviews`, {
+      const respuesta = await fetch(`${API_URL}/api/sites/${props.siteId}/reviews`, {
         method: "POST",
         credentials: "include",
         headers: {
