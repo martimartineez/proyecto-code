@@ -21,17 +21,11 @@
     
     <ul v-else-if="reviews.length" class="reviews">
       <li v-for="review in reviews" :key="review.id" class="review-item">
-        <review>
-          <template #id>
-            {{ review.id_usuario }}
-          </template>
-          <template #puntuaciom>
-            {{ review.rating }}
-          </template>
-          <template #fecha>
-            {{ formatDate(review.inserted_at) }}
-          </template>
-        </review>
+        <div class="review-header">
+          <strong class="user-alias">Usuario #{{ review.user_alias }}</strong>
+          <span class="rating">Puntuación: {{ review.rating }} / 5</span>
+          <span class="date">{{ formatDate(review.updated_at) }}</span>
+        </div>
         <p class="review-text">{{ review.comment }}</p>
       </li>
     </ul>

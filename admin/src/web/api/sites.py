@@ -6,6 +6,7 @@ from src.core.auth import Usuario
 from src.core.entity.provincia import Provincia
 from src.core.entity.reseña import Reseña
 from src.core.entity.tag import Tag
+from sqlalchemy.orm import joinedload
 from src.web.controllers.sitios_historicos import filtrar
 from src.core.auth import devolver_usuario_publico_por_email
 
@@ -255,6 +256,35 @@ def crear_sitio():
     return jsonify(sitio.to_dict()), 201
 
 
+@bp.route("/sites/<int:id>/is_favorite", methods=["GET"])
+@jwt_required()
+def check_favorite_status(id):
+    sitio = obtener_sitio(id)
+    if not sitio:
+        return (
+            jsonify({"error": {"code": "not_found", "message": "Site not found"}}),
+            404,
+        )
+
+    # El usuario está logueado (garantizado por @jwt_required)
+    user_email = get_jwt_identity() 
+    user = db.session.query(Usuario).filter_by(email=user_email).first()
+    
+    is_favorite = False
+    
+    if user:
+        # Consulta directa a la tabla de asociación para verificar el estado
+        is_favorite_record = db.session.query(favoritos_usuarios_sitios).filter_by(
+            usuarioId=user.id,
+            sitioId=sitio.id
+        ).first()
+        
+        if is_favorite_record:
+            is_favorite = True
+            
+    # Devolver un JSON simple con el estado
+    return jsonify({"is_favorite": is_favorite}), 200
+
 @bp.route("/sites/<int:id>", methods=["GET"])
 def obtener_sitio_api(id):
     sitio = obtener_sitio(id)
@@ -273,6 +303,7 @@ def obtener_sitio_api(id):
     imagenes = listar_imagenes_sitio(id)
 
 
+
     data = sitio.to_dict()
     
     # añadir las estadísticas al diccionario
@@ -288,9 +319,6 @@ def obtener_sitio_api(id):
             "portada": img.portada
         } for img in imagenes
     ]
-    
-    # inicializar placeholders (CAMBIAR CUANDO SE IMPLEMENTE LA LÓGICA)
-    data['is_favorite'] = False # placeholder
 
     return jsonify(data), 200
 
@@ -360,6 +388,8 @@ def listar_resenas_sitio(id):
 
     query = db.session.query(Reseña).filter_by(id_sitio=id, estado='aprobada')
 
+    query = query.options(joinedload(Reseña.usuario))
+
     sort_column = Reseña.inserted_at 
     if order_by == "rating":
         sort_column = Reseña.puntaje
@@ -379,6 +409,7 @@ def listar_resenas_sitio(id):
             "site_id": r.id_sitio,
             "rating": r.puntaje,
             "comment": r.texto,
+            "user_alias": r.usuario.nombre if r.usuario else "Usuario Anónimo",
             "inserted_at": r.inserted_at.isoformat() + "Z" if r.inserted_at else None,
             "updated_at": r.updated_at.isoformat() + "Z" if r.updated_at else None,
         }
