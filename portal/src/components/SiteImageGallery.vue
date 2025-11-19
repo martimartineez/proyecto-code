@@ -70,10 +70,9 @@ const mainImage = computed(() => {
             alt: imageObject.alt || 'Sitio histórico, foto principal', 
         };
     }
-    // Placeholder si no hay imágenes
+    // si no hay imágenes
     return { 
-        url: 'https://via.placeholder.com/600x250?text=IMAGEN+PENDIENTE', 
-        alt: 'Imagen de sitio no disponible' 
+        alt: 'Este sitio no tiene imágenes disponibles.', 
     };
 });
 
