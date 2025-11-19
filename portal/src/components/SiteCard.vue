@@ -9,6 +9,9 @@
         <span v-if="site.ciudad">{{ site.ciudad }}</span>
         <span v-if="site.provincia">, {{ site.provincia }}</span>
       </p>
+      <p v-if="site.fechaRegistro" class="meta">
+        Fecha de registro: {{ formatDate(site.fechaRegistro) }}
+      </p>
       <p v-if="site.estado" class="state">Estado: {{ site.estado }}</p>
       <ul class="tags">
         <li v-for="t in site.tags" :key="t" class="tag">{{ t }}</li>
@@ -20,7 +23,23 @@
 <script setup>
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
+
 const router = useRouter();
+
+function formatDate(dateString) {
+  if (!dateString) return '';
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-AR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  } catch (e) {
+    console.error('Error formatting date:', e);
+    return dateString;
+  }
+}
 const props = defineProps({
   site: { type: Object, required: true },
 });

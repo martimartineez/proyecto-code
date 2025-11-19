@@ -7,11 +7,7 @@ import MapView from '../views/MapView.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: HomeView,
-    },
+    { path: '/', name: 'home', component: HomeView },
     {
       path: '/sitios',
       name: 'sites',
@@ -22,6 +18,21 @@ const router = createRouter({
       name: 'detalle-sitio',
       component: DetalleSitioView,
     }
+    , {
+      path: '/login',
+      name: 'login',
+      component: () => import('../views/LoginView.vue')
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: () => import('../views/ProfileView.vue')
+    },
+    {
+      path: '/prueba',
+      name: 'prueba',
+      component: () => import('../views/prueba.vue')
+    },
   ],
 })
 

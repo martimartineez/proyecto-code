@@ -610,3 +610,119 @@ def validar_datos_sitio(data):
             errores[field] = [msg]
 
     return errores
+
+@bp.route('/google', methods=['POST', 'OPTIONS'])
+def login_google():
+
+    from flask import Blueprint, request, jsonify
+    from google.oauth2 import id_token
+    from google.auth.transport import requests
+    from flask_jwt_extended import create_access_token, set_access_cookies
+    from src.core.auth import checkear_usuario_publico_existente, create_user, actualizar_usuario_publico
+
+    # Preflight CORS
+    if request.method == "OPTIONS":
+        return {}, 200
+
+    data = request.get_json()
+    token = data.get("token")
+
+    if not token:
+        return jsonify({"success": False, "error": "No token provided"}), 400
+
+    try:
+        # Verificar token de Google
+        info = id_token.verify_oauth2_token(
+            token,
+            requests.Request(),
+            "501426149813-3ldbtlaur9oodqe8eq5rhuqrecjn22s7.apps.googleusercontent.com"
+        )
+
+        # Crear o actualizar usuario en la base de datos
+        if (checkear_usuario_publico_existente(info["email"]) == False):
+            create_user(
+                nombre=info.get("given_name"),
+                email=info.get("email"),
+                apellido=info.get("family_name"),
+                activo=True,
+                esAdmin=False,
+                foto=info.get("picture"),
+                publico = True
+            )
+        else:
+            actualizar_usuario_publico(info["email"], info)
+            
+        
+        # Crear token propio (sesión)
+        access_token = create_access_token(identity=info["email"])
+
+        # Respuesta con cookie
+        resp = jsonify({
+            "success": True,
+            }
+        )
+
+        # 👉 Guarda la cookie en el navegador automáticamente
+        set_access_cookies(resp, access_token)
+        
+        return resp, 200
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 400
+    
+
+@bp.get('/perfil')
+@jwt_required()
+def perfil():
+
+    from src.core.auth import devolver_usuario_publico_por_email
+
+    email = get_jwt_identity()
+    usuario = devolver_usuario_publico_por_email(email)
+    return usuario.to_dict(), 200
+
+@bp.route('/boton', methods=['GET'])
+@jwt_required()
+def boton():
+    return jsonify({"message": "¡La ruta de prueba funciona correctamente!"}), 200
+
+@bp.route("/logout", methods=["POST"])
+def logout():
+    from flask import jsonify
+    from flask_jwt_extended import unset_jwt_cookies
+
+    resp = jsonify({"msg": "logout exitoso"})
+    unset_jwt_cookies(resp)  # 👈 esto borra las cookies access y refresh
+    return resp, 200
+
+@bp.route('/reseñas_usuario', methods=['GET'])
+@jwt_required()
+def reseñas_usuario():
+    from src.core.entity.services import listar_reseñas_usuario
+    from src.core.auth import devolver_usuario_publico_por_email
+
+
+    user_email = get_jwt_identity()
+    user = devolver_usuario_publico_por_email(user_email)
+    if not user:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    reseñas = listar_reseñas_usuario(user.id)
+    # Convertir a diccionarios
+    reseñas_json = [
+        {
+            "sitio": r.sitio.nombre,
+            "texto": r.texto,
+            "puntuacion": r.puntaje,
+            "fecha": r.inserted_at.isoformat() if r.inserted_at else None,
+            # agregar lo que necesites
+        }
+        for r in reseñas
+    ]
+
+    #print("reseñas_json:", reseñas_json)  # Depuración
+
+    return jsonify({"reseñas": reseñas_json}), 200
+
+
+    
