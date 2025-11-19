@@ -34,12 +34,12 @@
      <div>
   <label for="sitioSelect">Sitio:</label>
 <select id="sitioSelect" name="sitio" class="form-control">
-  <option value="">-- Seleccione un sitio </option>
+  <option value="">Seleccione un sitio </option>
   {% for sitio in sitios %}
     <option value="{{ sitio.id }}"
         {% if request_args.get('sitio') == sitio.id|string %}selected{% endif %}
     >
-      {{ sitio.nombre }} (ID: {{ sitio.id }})
+      {{ sitio.nombre }}
     </option>
   {% endfor %}
 </select>
@@ -172,7 +172,7 @@
     <tr>
       <td>
         {% if resena.sitio %}
-          {{ resena.sitio.nombre }} (ID: {{ resena.sitio.id }})
+          {{ resena.sitio.nombre }}
         {% else %}
           —
         {% endif %}
@@ -395,7 +395,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (sortBy) sortBy.value = "";
     if (order) order.value = "";
 
-    filtros.style.display = "none";
     btnFiltros.textContent = "Mostrar filtros avanzados";
 
   });
