@@ -63,6 +63,10 @@
         </div>
       </div>
 
+      <ReviewForm :site-id="site.id">
+
+      </ReviewForm>
+
       <ReviewList :site-id="site.id" />
       
     </section>
@@ -86,6 +90,7 @@ import CollapsibleDescription from '@/components/CollapsibleDescription.vue';
 import ReviewList from '@/components/ReviewList.vue'; 
 import RatingSummary from '@/components/RatingSummary.vue';
 import SiteImageGallery from '@/components/SiteImageGallery.vue'; 
+import ReviewForm from '../components/ReviewForm.vue';
 
 
 const route = useRoute();

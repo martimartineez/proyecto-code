@@ -14,10 +14,11 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
-    "bootstrap": "^5.3.8",
-    "vue": "^3.5.22",
     "@vue-leaflet/vue-leaflet": "^0.10.1",
+    "bootstrap": "^5.3.8",
+    "font-awesome": "^4.7.0",
     "leaflet": "^1.9.4",
+    "vue": "^3.5.22",
     "vue-router": "^4.6.3"
   },
   "devDependencies": {

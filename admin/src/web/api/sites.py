@@ -324,7 +324,7 @@ def auth():
 
 
 @bp.route("/sites/<int:id>/reviews", methods=["GET"])
-@jwt_required()
+# @jwt_required()
 def listar_resenas_sitio(id):
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
@@ -402,7 +402,7 @@ def crear_resena_sitio(id_sitio):
             404,
         )
 
-    if not texto or puntaje is None or puntaje < 1 or puntaje > 5 or len(texto) < 20:
+    if not texto or puntaje is None or float(puntaje) < 1 or float(puntaje) > 5 or len(texto) < 20:
         return (
             jsonify(
                 {
