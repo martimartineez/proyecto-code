@@ -30,22 +30,18 @@
   </div>
 
   <div id="sliders">
-    <div id="slide-destacados"><p class="slider-title"> Novedades </p>
+    <div id="slide-destacados"><RouterLink :to="{name: 'sites', query: { order_by: 'fecha_registro', order: 'asc'}}"> <p class="slider-title"> Novedades </p> </RouterLink>
         <div class="row">
             <div id="Destacados" class="carousel slide" data-ride="carousel" data-interval="0">
               <!-- slides -->
               <div class="carousel-item active">
               <div class="row">
-                <div class="col-md-4" v-for="sitio in ultimosSitios[1]" :key="sitio.id">
+                <div class="col-md-4" v-for="sitio in ultimosSitios[0]" :key="sitio.id">
                   <RouterLink :to="{ name: 'detalle-sitio', params: { id: sitio.id } }">
                     <SliderHome>
                       <template #imagen>
-                        <div v-if="sitio.cover_url">
-                          <img :src="sitio.cover_url" class="img-responsive" />
-                        </div>
-                        <div v-else>  
-                          <img src="@/assets/Placeholder.svg" class="img-responsive" />
-                        </div>
+                          <img v-if="sitio.cover_url" :src="sitio.cover_url" class="img-responsive" />  
+                          <img v-else src="@/assets/Placeholder.png" class="img-responsive" />
                       </template>
                       <template #titulo>{{ sitio.name }}</template>
                       <template #desc>{{ sitio.short_description }}</template>
@@ -54,18 +50,14 @@
                 </div>
               </div>
             </div>
-            <div v-for="(fila, index) in ultimosSitios.slice(2)" :key="index" class="carousel-item">
+            <div v-for="(fila, index) in ultimosSitios.slice(1)" :key="index" class="carousel-item">
               <div class="row">
                 <div class="col-md-4" v-for="sitio in fila" :key="sitio.id">
                   <RouterLink :to="{ name: 'detalle-sitio', params: { id: sitio.id } }">
                     <SliderHome>
                       <template #imagen>
-                        <div v-if="sitio.cover_url">
-                          <img :src="sitio.cover_url" class="img-responsive" />
-                        </div>
-                        <div v-else>  
-                          <img src="@/assets/Placeholder.svg" class="img-responsive" />
-                        </div>
+                        <img v-if="sitio.cover_url" :src="sitio.cover_url" class="img-responsive" />  
+                        <img v-else src="@/assets/Placeholder.png" class="img-responsive" />
                       </template>
                       <template #titulo>{{ sitio.name }}</template>
                       <template #desc>{{ sitio.short_description }}</template>
@@ -85,7 +77,7 @@
           </div>
       </div>
     </div>
-    <div id="slide-favoritos"><p class="slider-title"> Favoritos </p>
+    <div id="slide-favoritos"><a href="/"> <p class="slider-title"> Favoritos </p> </a>
         <div class="row">
             <div id="favoritos" class="carousel slide" data-ride="carousel" data-interval="0">
               <!-- slides -->
@@ -95,12 +87,8 @@
                   <RouterLink :to="{ name: 'detalle-sitio', params: { id: sitio.id } }">
                     <SliderHome>
                       <template #imagen>
-                        <div v-if="sitio.cover_url">
-                          <img :src="sitio.cover_url" class="img-responsive" />
-                        </div>
-                        <div v-else>  
-                          <img src="@/assets/Placeholder.svg" class="img-responsive" />
-                        </div>
+                          <img v-if="sitio.cover_url" :src="sitio.cover_url" class="img-responsive" />  
+                          <img v-else src="@/assets/Placeholder.png" class="img-responsive" />
                       </template>
                       <template #titulo>{{ sitio.name }}</template>
                       <template #desc>{{ sitio.short_description }}</template>
@@ -164,7 +152,7 @@ const sitiosHero = computed(() => {
 const ultimosSitios = computed(() => {
   var lista = sitios.value.data || [];
   lista = lista.sort((b,a) => new Date(a.fecha_registro) - new Date(b.fecha_registro));
-  console.log (sitiosPorFila(lista));
+  lista = lista.slice(3);     //borro los 3 primeros que uso en el hero
   return sitiosPorFila(lista);
 })
 
@@ -178,7 +166,7 @@ function sitiosPorFila(lista) {    //muestra de a 1 elemento en celular y 3 en p
   else
     cant = 1;
   for (let i = 0; i < lista.length & grupos.length < 3; i += cant) {
-      if(lista.length - i >2)          //se asegura que la lista sea multiplo de 3
+      if(lista.length - i >= i)          //se asegura que la lista sea multiplo de 3
         grupos.push(lista.slice(i, i + cant))
     }
     return grupos;

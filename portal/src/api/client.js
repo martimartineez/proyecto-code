@@ -28,9 +28,6 @@ export const api = {
   listTags() {
     return httpGet('/filters/tags');
   },
-  listFavorites(params){
-    return httpGet('/me/favorites',params)
-  },
 };
 
 
