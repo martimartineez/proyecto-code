@@ -46,28 +46,45 @@ const props = defineProps({
   siteId: { type: Number, required: true },
 });
 
-async function postReview(){
+async function postReview() {
   const formData = new FormData(formulario.value);
-  console.log(formData);
-  const data = Object.fromEntries(formData.entries())
+  const data = Object.fromEntries(formData.entries());
   data.site_id = props.siteId;
-  console.log(data)
 
   try {
-      const respuesta = await fetch(`${baseUrl}/api/sites/${props.siteId}/reviews`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-      })
+    const respuesta = await fetch(`${baseUrl}/api/sites/${props.siteId}/reviews`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data)
+    });
 
-  }
-  catch (e) {
-      console.error(e)
+    // --- AUTENTICACIÓN / REDIRECCIÓN ---
+    if (respuesta.status === 401 || respuesta.status === 403) {
+      // Guardamos la URL actual para volver después de loguearse
+      localStorage.setItem('redirectAfterLogin', window.location.pathname);
+
+      // Redirigir al login
+      window.location.href = '/login';
+      return;
     }
+    // -----------------------------------
+
+    if (!respuesta.ok) {
+      console.error("Error al publicar la reseña:", respuesta.statusText);
+      return;
+    }
+
+    // Si todo salió bien, recargar reseñas o lo que necesites
+    console.log("Reseña enviada correctamente");
+
+  } catch (e) {
+    console.error("Error en postReview:", e);
+  }
 }
+
 </script>
 
 
