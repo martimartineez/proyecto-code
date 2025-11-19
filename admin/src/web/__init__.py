@@ -35,7 +35,7 @@ def create_app(env="development", static_folder="../../static"):
     app.config['JSON_SORT_KEYS'] = False
     app.config["JWT-SECRET-KEY"] = "miClaveJWTSecreta12345678"
 
-    app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
+    app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
     app.config["JWT_COOKIE_SECURE"] = False          # en local cambiar a true para produccion
     app.config["JWT_COOKIE_SAMESITE"] = "Lax"       # IMPORTANTE cambiar a none para produccion
     app.config["JWT_COOKIE_HTTPONLY"] = True
