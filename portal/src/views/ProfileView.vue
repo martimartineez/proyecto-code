@@ -178,6 +178,8 @@ const reseñas = ref([]);
 const loadingReseñas = ref(false);
 const favoritos = ref([]);
 const loadingFavoritos = ref(false);
+const API_URL = import.meta.env.VITE_API_BASE_URL;
+
 
 // Pagination
 const pageSize = 25;
@@ -279,7 +281,7 @@ function toggleSort() {
 // Cerrar sesión
 async function logout() {
   try {
-    await fetch("http://localhost:5000/api/logout", {
+    await fetch(`${API_URL}/api/logout`, {
       method: "POST",
       credentials: "include",
       headers: {
@@ -300,7 +302,7 @@ function irALogin() {
 
 onMounted(async () => {
   try {
-    const res = await fetch("http://localhost:5000/api/perfil", {
+    const res = await fetch(`${API_URL}/api/perfil`, {
       method: "GET",
       credentials: "include",
       headers: {
@@ -324,7 +326,7 @@ onMounted(async () => {
 async function loadResenas() {
   loadingReseñas.value = true;
   try {
-    const res = await fetch("http://localhost:5000/api/reseñas_usuario", {
+    const res = await fetch(`${API_URL}/api/reseñas_usuario`, {
       method: "GET",
       credentials: "include",
       headers: {
@@ -357,7 +359,7 @@ function reloadReseñas() {
 async function loadFavoritos() {
   loadingFavoritos.value = true;
   try {
-    const res = await fetch("http://localhost:5000/api/favoritos_usuario", {
+    const res = await fetch(`${API_URL}/api/favoritos_usuario`, {
       method: "GET",
       credentials: "include",
       headers: {

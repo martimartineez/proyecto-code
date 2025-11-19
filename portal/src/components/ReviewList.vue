@@ -73,7 +73,9 @@ const sortState = reactive({
 });
 
 
-const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'; 
+//const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'; 
+const API_URL = import.meta.env.VITE_API_BASE_URL;
+
 
 
 const fetchReviews = async (page) => {
@@ -81,7 +83,7 @@ const fetchReviews = async (page) => {
   try {
     // 1. Incluir los parámetros de ordenamiento en la solicitud GET
     const response = await fetch(
-      `${baseUrl}/api/sites/${props.siteId}/reviews?page=${page}&per_page=${perPage}&order_by=${sortState.by}&order=${sortState.order}`
+      `${API_URL}/api/sites/${props.siteId}/reviews?page=${page}&per_page=${perPage}&order_by=${sortState.by}&order=${sortState.order}`
     );
     
     

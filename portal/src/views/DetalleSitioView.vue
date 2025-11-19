@@ -114,6 +114,8 @@ const router = useRouter();
 const { callProtectedApi } = useApi(); // Inicializamos el composable para llamadas protegidas
 const site = ref(null); 
 const isActionLoading = ref(false); // Deshabilita botones durante el fetch
+const API_URL = import.meta.env.VITE_API_BASE_URL;
+
 
 
 // *** IMPLEMENTACIÓN FINAL DE LA ACCIÓN DE FAVORITOS (PUT/DELETE) ***
@@ -198,13 +200,17 @@ const filterByTag = (tag) => {
     });
 }
 
+//const API_URL = import.meta.env.VITE_API_BASE_URL;
+
 
 const fetchSiteData = async () => {
     const siteId = route.params.id; 
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'; 
+    //const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'; 
+    //const API_URL = import.meta.env.VITE_API_BASE_URL;
+
     
     try {
-        const siteResponse = await fetch(`${baseUrl}/api/sites/${siteId}`);
+        const siteResponse = await fetch(`${API_URL}/api/sites/${siteId}`);
         if (!siteResponse.ok) {
             if (siteResponse.status === 404) {
                  site.value = { error: 'El sitio no existe (Error 404).' };
