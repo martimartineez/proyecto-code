@@ -22,9 +22,9 @@
     <ul v-else-if="reviews.length" class="reviews">
       <li v-for="review in reviews" :key="review.id" class="review-item">
         <div class="review-header">
-          <strong class="user-alias">Usuario #{{ review.id_usuario }}</strong>
+          <strong class="user-alias">Usuario #{{ review.user_alias }}</strong>
           <span class="rating">Puntuación: {{ review.rating }} / 5</span>
-          <span class="date">{{ formatDate(review.inserted_at) }}</span>
+          <span class="date">{{ formatDate(review.updated_at) }}</span>
         </div>
         <p class="review-text">{{ review.comment }}</p>
       </li>

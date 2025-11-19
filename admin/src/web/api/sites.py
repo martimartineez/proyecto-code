@@ -6,6 +6,7 @@ from src.core.auth import Usuario
 from src.core.entity.provincia import Provincia
 from src.core.entity.reseña import Reseña
 from src.core.entity.tag import Tag
+from sqlalchemy.orm import joinedload
 from src.web.controllers.sitios_historicos import filtrar
 from sqlalchemy import func, or_
 from flask import Response
@@ -268,6 +269,15 @@ def obtener_sitio_api(id):
 
     imagenes = listar_imagenes_sitio(id)
 
+    user_id_identity = get_jwt_identity(optional=True) # Obtiene el email (identity) si está logueado
+    is_favorite = False
+
+    if user_id_identity:
+        # El user_id_identity es el email (configurado en tu login de Google/auth)
+        user = db.session.query(Usuario).filter_by(email=user_id_identity).first()
+        if user and sitio in user.favoritos:
+            is_favorite = True
+
 
     data = sitio.to_dict()
     
@@ -286,7 +296,7 @@ def obtener_sitio_api(id):
     ]
     
     # inicializar placeholders (CAMBIAR CUANDO SE IMPLEMENTE LA LÓGICA)
-    data['is_favorite'] = False # placeholder
+    data['is_favorite'] = is_favorite
 
     return jsonify(data), 200
 
@@ -356,6 +366,8 @@ def listar_resenas_sitio(id):
 
     query = db.session.query(Reseña).filter_by(id_sitio=id, estado='aprobada')
 
+    query = query.options(joinedload(Reseña.usuario))
+
     sort_column = Reseña.inserted_at 
     if order_by == "rating":
         sort_column = Reseña.puntaje
@@ -375,6 +387,7 @@ def listar_resenas_sitio(id):
             "site_id": r.id_sitio,
             "rating": r.puntaje,
             "comment": r.texto,
+            "user_alias": r.usuario.nombre if r.usuario else "Usuario Anónimo",
             "inserted_at": r.inserted_at.isoformat() + "Z" if r.inserted_at else None,
             "updated_at": r.updated_at.isoformat() + "Z" if r.updated_at else None,
         }
