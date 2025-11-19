@@ -16,6 +16,7 @@
   "dependencies": {
     "@vue-leaflet/vue-leaflet": "^0.10.1",
     "bootstrap": "^5.3.8",
+    "bootstrap": "^5.3.8",
     "leaflet": "^1.9.4",
     "font-awesome": "^4.7.0",
     "vue": "^3.5.22",
@@ -35,3 +36,4 @@
     "vite-plugin-vue-devtools": "^8.0.3"
   }
 }
+
