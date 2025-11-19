@@ -73,7 +73,11 @@
               <article
                 v-for="(reseña, idx) in paginatedResenas"
                 :key="reseña.id || idx"
-                class="review-card"
+                class="review-card clickable"
+                @click="openResena(reseña)"
+                role="link"
+                tabindex="0"
+                @keydown.enter="openResena(reseña)"
               >
                 <header class="review-header">
                   <!-- Nuevo estilo: badge circular con color según puntuación -->
@@ -135,6 +139,7 @@
 <script setup>
 import { ref, onMounted, watch, computed } from "vue";
 import { useRouter } from "vue-router";
+import { API_BASE_URL } from '@/config';
 
 const router = useRouter();
 
@@ -353,6 +358,48 @@ function scoreClass(p) {
   if (n >= 2.5) return "score-medium";    // amarillo/naranja
   return "score-low";                     // rojo
 }
+
+// Helper para extraer posible id del objeto reseña
+function extractSiteIdFromResena(r) {
+  return r?.sitio_id ?? r?.sitioId ?? r?.id_sitio ?? r?.idSitio ?? r?.site_id ?? r?.siteId ?? null;
+}
+
+async function openResena(reseña) {
+  if (!reseña) return;
+  // 1) Si la API ya devuelve un id, navegar directo
+  const sitioId = extractSiteIdFromResena(reseña);
+  if (sitioId) {
+    router.push({ name: 'detalle-sitio', params: { id: String(sitioId) } });
+    return;
+  }
+
+  // 2) Fallback: buscar por nombre del sitio (reseña.sitio)
+  const q = reseña.sitio || reseña.sitio_nombre || reseña.sitioNombre;
+  if (!q) return;
+
+  try {
+    const url = new URL(`${API_BASE_URL}/sites`, window.location.origin);
+    url.searchParams.set('q', q);
+    url.searchParams.set('per_page', '1'); // solo necesitamos el primer match
+    const res = await fetch(url.toString());
+    if (!res.ok) {
+      console.warn('No se pudo buscar el sitio para la reseña', res.status);
+      return;
+    }
+    const data = await res.json();
+    // el client puede devolver { data: [...], meta: ... } o un array directo
+    const items = data?.data ?? data?.items ?? data;
+    const first = Array.isArray(items) && items.length ? items[0] : null;
+    const id = first?.id ?? first?.ID ?? first?._id;
+    if (id) {
+      router.push({ name: 'detalle-sitio', params: { id: String(id) } });
+    } else {
+      console.warn('No se encontró un sitio coincidente para:', q);
+    }
+  } catch (err) {
+    console.error('Error buscando sitio para reseña:', err);
+  }
+}
 </script>
 
 <style scoped>
@@ -530,6 +577,20 @@ function scoreClass(p) {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  cursor: pointer; /* Cambiar el cursor a pointer */
+}
+
+/* Hacer la tarjeta visualmente clicable */
+.review-card.clickable {
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.review-card.clickable:hover,
+.review-card.clickable:focus {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(2,6,23,0.12);
+  outline: none;
 }
 
 /* Header of the review card */
