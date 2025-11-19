@@ -1,18 +1,18 @@
 <template>
   <div id="Main-carrousel" class="carousel carousel-dark slide">
     <div class="carousel-inner">
-      <div class="carousel-item active" v-if="ultimosSitios[0]">
+      <div class="carousel-item active" v-if="sitiosHero[0]">
       <!-- aca deberia sacar informacion usando la api. Hardcodeo un ejemplo-->
-          <RouterLink :to="{ name: 'detalle-sitio', params: { id: ultimosSitios[0].id } }"> 
-          <img alt="catedral-ejemplo" src="@/assets/catedral_frente.jpg" class="d-block w-100">     <!-- reemplazar cuando se integren las imagenes -->
+          <RouterLink :to="{ name: 'detalle-sitio', params: { id: sitiosHero[0].id } }"> 
+          <img alt="catedral-ejemplo" :src=" sitiosHero[0].cover_url " class="d-block w-100">    
           <div class="carousel-caption d-md-block w-100">
-              <h5>{{ ultimosSitios[0].name}}</h5>
+              <h5>{{ sitiosHero[0].name}}</h5>
           </div>
           </RouterLink>
       </div>
-      <div v-for="sitio in ultimosSitios.slice(1)" :key="sitio.id" class="carousel-item">
+      <div v-for="sitio in sitiosHero.slice(1)" :key="sitio.id" class="carousel-item">
           <RouterLink :to="{ name: 'detalle-sitio', params: { id: sitio.id } }">
-          <img alt="museo-ejemplo" src="@/assets/museoLP.jpg" class="d-block w-100">    <!-- reemplazar cuando se integren las imagenes -->
+          <img alt="museo-ejemplo" :src="sitio.cover_url" class="d-block w-100">    
           <div class="carousel-caption d-md-block w-100">
               <h5> {{sitio.name}}</h5>
           </div>
@@ -30,17 +30,22 @@
   </div>
 
   <div id="sliders">
-    <p class="slider-title"> Destacados </p>
+    <div id="slide-destacados"><p class="slider-title"> Novedades </p>
         <div class="row">
-            <div id="myCarousel" class="carousel slide" data-ride="carousel" data-interval="0">
+            <div id="Destacados" class="carousel slide" data-ride="carousel" data-interval="0">
               <!-- slides -->
               <div class="carousel-item active">
               <div class="row">
-                <div class="col-md-4" v-for="sitio in sitiosPorFila[0]" :key="sitio.id">
+                <div class="col-md-4" v-for="sitio in ultimosSitios[1]" :key="sitio.id">
                   <RouterLink :to="{ name: 'detalle-sitio', params: { id: sitio.id } }">
                     <SliderHome>
                       <template #imagen>
-                        <img src="@/assets/museoLP.jpg" class="img-responsive" />
+                        <div v-if="sitio.cover_url">
+                          <img :src="sitio.cover_url" class="img-responsive" />
+                        </div>
+                        <div v-else>  
+                          <img src="@/assets/Placeholder.svg" class="img-responsive" />
+                        </div>
                       </template>
                       <template #titulo>{{ sitio.name }}</template>
                       <template #desc>{{ sitio.short_description }}</template>
@@ -49,13 +54,18 @@
                 </div>
               </div>
             </div>
-            <div v-for="(fila, index) in sitiosPorFila.slice(1)" :key="index" class="carousel-item">
+            <div v-for="(fila, index) in ultimosSitios.slice(2)" :key="index" class="carousel-item">
               <div class="row">
                 <div class="col-md-4" v-for="sitio in fila" :key="sitio.id">
                   <RouterLink :to="{ name: 'detalle-sitio', params: { id: sitio.id } }">
                     <SliderHome>
                       <template #imagen>
-                        <img src="@/assets/museoLP.jpg" class="img-responsive" />
+                        <div v-if="sitio.cover_url">
+                          <img :src="sitio.cover_url" class="img-responsive" />
+                        </div>
+                        <div v-else>  
+                          <img src="@/assets/Placeholder.svg" class="img-responsive" />
+                        </div>
                       </template>
                       <template #titulo>{{ sitio.name }}</template>
                       <template #desc>{{ sitio.short_description }}</template>
@@ -64,16 +74,68 @@
                 </div>
               </div>
             </div>
-          <button class="carousel-control-prev" type="button" data-bs-target="#myCarousel" data-bs-slide="prev">
+          <button class="carousel-control-prev" type="button" data-bs-target="#Destacados" data-bs-slide="prev">
             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
             <span class="visually-hidden">Previous</span>
           </button>
-          <button class="carousel-control-next" type="button" data-bs-target="#myCarousel" data-bs-slide="next">
+          <button class="carousel-control-next" type="button" data-bs-target="#Destacados" data-bs-slide="next">
             <span class="carousel-control-next-icon" aria-hidden="true"></span>
             <span class="visually-hidden">Next</span>
           </button>
           </div>
       </div>
+    </div>
+    <div id="slide-favoritos"><p class="slider-title"> Favoritos </p>
+        <div class="row">
+            <div id="favoritos" class="carousel slide" data-ride="carousel" data-interval="0">
+              <!-- slides -->
+              <div class="carousel-item active">
+              <div class="row">
+                <div class="col-md-4" v-for="sitio in ultimosSitios[0]" :key="sitio.id">
+                  <RouterLink :to="{ name: 'detalle-sitio', params: { id: sitio.id } }">
+                    <SliderHome>
+                      <template #imagen>
+                        <div v-if="sitio.cover_url">
+                          <img :src="sitio.cover_url" class="img-responsive" />
+                        </div>
+                        <div v-else>  
+                          <img src="@/assets/Placeholder.svg" class="img-responsive" />
+                        </div>
+                      </template>
+                      <template #titulo>{{ sitio.name }}</template>
+                      <template #desc>{{ sitio.short_description }}</template>
+                    </SliderHome>
+                  </RouterLink>
+                </div>
+              </div>
+            </div>
+            <div v-for="(fila, index) in ultimosSitios.slice(1)" :key="index" class="carousel-item">
+              <div class="row">
+                <div class="col-md-4" v-for="sitio in fila" :key="sitio.id">
+                  <RouterLink :to="{ name: 'detalle-sitio', params: { id: sitio.id } }">
+                    <SliderHome>
+                      <template #imagen>
+                          <img v-if="sitio.cover_url" :src="sitio.cover_url" class="img-responsive" />  
+                          <img v-else src="@/assets/Placeholder.png" class="img-responsive" />
+                      </template>
+                      <template #titulo>{{ sitio.name }}</template>
+                      <template #desc>{{ sitio.short_description }}</template>
+                    </SliderHome>
+                  </RouterLink>
+                </div>
+              </div>
+            </div>
+          <button class="carousel-control-prev" type="button" data-bs-target="#favoritos" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#favoritos" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+          </button>
+          </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -92,25 +154,37 @@ onMounted(async () => {
      sitios.value  = await api.listSites();
 })
 
-const ultimosSitios = computed(() => {
+
+
+const sitiosHero = computed(() => {
   const lista = sitios.value.data || [];
-  console.log(lista.sort((b,a) => new Date(a.fecha_registro) - new Date(b.fecha_registro)).slice(0,3)); //agarro los 3 sitios mas recientes
-  return lista.sort((b,a) => new Date(a.fecha_registro) - new Date(b.fecha_registro)).slice(0,3);
+  return lista.sort((b,a) => new Date(a.fecha_registro) - new Date(b.fecha_registro)).slice(0,3);  //agarro los 3 sitios mas recientes
 })
 
-const sitiosPorFila = computed(() => {    //muestra de a 1 elemento en celular y 3 en pc
-  const lista = sitios.value.data || [];
+const ultimosSitios = computed(() => {
+  var lista = sitios.value.data || [];
+  lista = lista.sort((b,a) => new Date(a.fecha_registro) - new Date(b.fecha_registro));
+  console.log (sitiosPorFila(lista));
+  return sitiosPorFila(lista);
+})
+
+
+
+function sitiosPorFila(lista) {    //muestra de a 1 elemento en celular y 3 en pc
   const grupos = [];
   let cant = 0;
   if (window.innerWidth > 767)
     cant = 3;
   else
     cant = 1;
-  for (let i = 0; i < lista.length; i += cant) {
+  for (let i = 0; i < lista.length & grupos.length < 3; i += cant) {
+      if(lista.length - i >2)          //se asegura que la lista sea multiplo de 3
         grupos.push(lista.slice(i, i + cant))
     }
-  return grupos
-})
+    return grupos;
+}
+
+
 
 
 </script>
@@ -184,16 +258,24 @@ const sitiosPorFila = computed(() => {    //muestra de a 1 elemento en celular y
 
 /* sliders */
   #sliders{
-
+  
     margin-top: 1.5em;
-    
+
+    .row{
+      overflow: hidden;
+    }
+
     a{
       text-decoration: none;
       color: black;
     }
 
     h4{
-      font-size: 28px;
+      font-size: 1.2rem;
+    }
+
+    .col-md{
+      width: 20rem;
     }
 
     .col-center {
@@ -202,12 +284,12 @@ const sitiosPorFila = computed(() => {    //muestra de a 1 elemento en celular y
     }
     .carousel {
       margin: 15px auto 60px;
-      padding: 0 80px;
       overflow: visible;
     }
     .carousel-item {
       text-align: center;
       overflow: hidden;
+      padding: 0 20px;
     }
     .carousel-item h4 {
       font-family: 'Varela Round', sans-serif;
@@ -216,6 +298,19 @@ const sitiosPorFila = computed(() => {    //muestra de a 1 elemento en celular y
       max-width: 100%;
       display: inline-block;
     }
+
+    .img-box{
+      height: 25vh;
+      width: auto;
+      overflow: hidden;
+    }
+
+    .img-box img{
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+    }
+
     .btn {
       border-radius: 0;
       font-size: 12px;
@@ -240,6 +335,8 @@ const sitiosPorFila = computed(() => {    //muestra de a 1 elemento en celular y
       background: var(--pri-color);
       box-shadow: 0px 2px 2px rgba(0,0,0,0.1);
       height: 100%;
+      width: 90%;
+      justify-self: center;
     }
     .thumb-content {
       display: flex;
