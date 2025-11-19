@@ -125,14 +125,31 @@ const toggleFavorite = async () => {
     
     try {
         const url = `/api/sites/${site.value.id}/favorite`;
-        // callProtectedApi se encarga de añadir el JWT y manejar el 401
-        const data = await callProtectedApi(url, { method: method });
 
-        // Si data NO es null (no hubo redirección), la acción fue exitosa (204 No Content)
-        if (data !== null) { 
-            // Actualizamos el estado visualmente
-            site.value.is_favorite = !isCurrentlyFavorited;
+        const respuesta = await fetch(url, {
+            method: method,
+            credentials: "include"
+        });
+
+        // --- AUTENTICACIÓN / REDIRECCIÓN ---
+        if (respuesta.status === 401 || respuesta.status === 403) {
+
+            // Guardamos la URL actual para volver después del login
+            localStorage.setItem('redirectAfterLogin', window.location.pathname);
+
+            // Redirigimos al login
+            window.location.href = '/login';
+            return;
         }
+        // -----------------------------------
+
+        if (!respuesta.ok) {
+            console.error("Error marcando favorito:", respuesta.status);
+            return;
+        }
+
+        // Si todo OK → actualizamos visualmente
+        site.value.is_favorite = !isCurrentlyFavorited;
 
     } catch (error) {
         console.error("Error de red al marcar favorito:", error);
