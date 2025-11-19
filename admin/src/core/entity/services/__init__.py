@@ -744,3 +744,9 @@ def listar_reseñas_usuario(id_usuario: int):
         .order_by(Reseña.inserted_at.desc())
         .all()
     )
+
+def listar_favoritos_usuario(user):
+    """
+    Lista los sitios marcados como favoritos por un usuario público específico.
+    """
+    return user.favoritos

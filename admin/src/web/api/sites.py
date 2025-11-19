@@ -762,5 +762,40 @@ def reseñas_usuario():
 
     return jsonify({"reseñas": reseñas_json}), 200
 
+@bp.route('/favoritos_usuario', methods=['GET'])
+@jwt_required()
+def favoritos_usuario():
+    from src.core.entity.services import listar_favoritos_usuario
+    from src.core.auth import devolver_usuario_publico_por_email
+
+
+    print("Entrando en favoritos_usuario")  # Depuración
+    user_email = get_jwt_identity()
+    user = devolver_usuario_publico_por_email(user_email)
+    if not user:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    favoritos = listar_favoritos_usuario(user)
+    print("favoritos:", favoritos)  # Depuración    
+    favoritos_json = [
+        {
+            "id": s.id,
+            "nombre": s.nombre,
+            "descBreve": s.descBreve,
+            "latitud": s.latitud,
+            "longitud": s.longitud,
+            # agregar lo que necesites
+        }
+        for s in favoritos
+    ]
+
+    
+    # Convertir a diccionarios
+
+
+    #print("reseñas_json:", reseñas_json)  # Depuración
+
+    return jsonify({"favoritos": favoritos_json}), 200
+
 
     

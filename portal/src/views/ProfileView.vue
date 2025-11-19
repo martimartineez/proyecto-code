@@ -73,7 +73,11 @@
               <article
                 v-for="(reseña, idx) in paginatedResenas"
                 :key="reseña.id || idx"
-                class="review-card"
+                class="review-card clickable"
+                @click="openResena(reseña)"
+                role="link"
+                tabindex="0"
+                @keydown.enter="openResena(reseña)"
               >
                 <header class="review-header">
                   <!-- Nuevo estilo: badge circular con color según puntuación -->
@@ -125,7 +129,34 @@
         </div>
 
         <div v-else-if="activeTab === 'favoritos'">
-          <p>Aquí se mostrarán los favoritos del usuario.</p>
+          <div v-if="loadingFavoritos" class="loading">Cargando favoritos...</div>
+          <div v-else-if="favoritos.length > 0">
+            <div class="review-list">
+              <article
+                v-for="(fav, idx) in favoritos"
+                :key="fav.id || idx"
+                class="review-card clickable"
+                @click="openResena(fav)"
+                role="link"
+                tabindex="0"
+                @keydown.enter="openResena(fav)"
+              >
+                <header class="review-header">
+                  <div class="score-badge score-high" aria-label="Favorito">
+                    <div class="score-number">★</div>
+                    <div class="score-label">Fav</div>
+                  </div>
+                  <div class="review-meta">
+                    <div class="review-title">{{ fav.sitio || fav.nombre || fav.titulo || 'Favorito' }}</div>
+                  </div>
+                </header>
+                <p class="review-text">{{ fav.descripcion || fav.descripcion_corta || '' }}</p>
+              </article>
+            </div>
+          </div>
+          <div v-else class="empty-state">
+            <p>No tienes sitios favoritos aún.</p>
+          </div>
         </div>
       </div>
     </div>
@@ -135,6 +166,7 @@
 <script setup>
 import { ref, onMounted, watch, computed } from "vue";
 import { useRouter } from "vue-router";
+import { API_BASE_URL } from '@/config';
 
 const router = useRouter();
 
@@ -144,6 +176,8 @@ const error = ref("");
 const activeTab = ref("reseñas");
 const reseñas = ref([]);
 const loadingReseñas = ref(false);
+const favoritos = ref([]);
+const loadingFavoritos = ref(false);
 
 // Pagination
 const pageSize = 25;
@@ -319,11 +353,40 @@ function reloadReseñas() {
   loadResenas();
 }
 
+// Función reutilizable para cargar favoritos
+async function loadFavoritos() {
+  loadingFavoritos.value = true;
+  try {
+    const res = await fetch("http://localhost:5000/api/favoritos_usuario", {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error("Error al cargar los favoritos.");
+    }
+
+    const data = await res.json();
+    favoritos.value = Array.isArray(data.favoritos) ? data.favoritos : [];
+  } catch (e) {
+    console.error(e.message || e);
+    favoritos.value = [];
+  } finally {
+    loadingFavoritos.value = false;
+  }
+}
+
 watch(
   () => activeTab.value,
   (newTab) => {
     if (newTab === "reseñas") {
       loadResenas();
+    }
+    if (newTab === "favoritos") {
+      loadFavoritos();
     }
   },
   { immediate: true }
@@ -352,6 +415,67 @@ function scoreClass(p) {
   if (n >= 4.0) return "score-high";      // verde/azulado
   if (n >= 2.5) return "score-medium";    // amarillo/naranja
   return "score-low";                     // rojo
+}
+
+// Helper para extraer posible id del objeto reseña/favorito
+function extractSiteIdFromResena(r) {
+  return (
+    r?.sitio_id ??
+    r?.sitioId ??
+    r?.id_sitio ??
+    r?.idSitio ??
+    r?.site_id ??
+    r?.siteId ??
+    r?.id ?? // <-- ahora también acepta 'id'
+    r?.ID ??
+    null
+  );
+}
+
+async function openResena(reseña) {
+  if (!reseña) return;
+
+  // 1) Si tenemos id directo, navegar al detalle
+  const sitioId = extractSiteIdFromResena(reseña);
+  if (sitioId) {
+    router.push({ name: "detalle-sitio", params: { id: String(sitioId) } });
+    return;
+  }
+
+  // 2) Fallback: intentar buscar por nombre/nombre de sitio
+  const q =
+    reseña.sitio ||
+    reseña.sitio_nombre ||
+    reseña.sitioNombre ||
+    reseña.nombre ||      // <-- favorito devuelve 'nombre'
+    reseña.name ||
+    reseña.titulo ||
+    null;
+
+  if (!q) return;
+
+  try {
+    const url = new URL(`${API_BASE_URL}/sites`, window.location.origin);
+    url.searchParams.set("q", q);
+    url.searchParams.set("per_page", "1"); // solo necesitamos el primer match
+    const res = await fetch(url.toString());
+    if (!res.ok) {
+      console.warn("No se pudo buscar el sitio para la reseña/favorito", res.status);
+      return;
+    }
+    const data = await res.json();
+    const items = data?.data ?? data?.items ?? data;
+    const first = Array.isArray(items) && items.length ? items[0] : null;
+    const id = first?.id ?? first?.ID ?? first?._id;
+    if (id) {
+      router.push({ name: "detalle-sitio", params: { id: String(id) } });
+    } else {
+      // Último recurso: navegar a la página de búsqueda con el query
+      router.push({ name: "sites", query: { q } });
+    }
+  } catch (err) {
+    console.error("Error buscando sitio para reseña/favorito:", err);
+  }
 }
 </script>
 
@@ -530,6 +654,20 @@ function scoreClass(p) {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  cursor: pointer; /* Cambiar el cursor a pointer */
+}
+
+/* Hacer la tarjeta visualmente clicable */
+.review-card.clickable {
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.review-card.clickable:hover,
+.review-card.clickable:focus {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(2,6,23,0.12);
+  outline: none;
 }
 
 /* Header of the review card */
