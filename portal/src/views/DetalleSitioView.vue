@@ -120,10 +120,10 @@ const toggleFavorite = async () => {
     
     try {
         const url = `/api/sites/${site.value.id}/favorite`;
-        // callProtectedApi maneja el fetch, el 401, y la redirección
+        // callProtectedApi se encarga de añadir el JWT y manejar el 401
         const data = await callProtectedApi(url, { method: method });
 
-        // Si data NO es null (no hubo redirección), la acción fue exitosa
+        // Si data NO es null (no hubo redirección), la acción fue exitosa (204 No Content)
         if (data !== null) { 
             // Actualizamos el estado visualmente
             site.value.is_favorite = !isCurrentlyFavorited;
@@ -141,6 +141,7 @@ const handleRestrictedAction = async (actionType) => {
     isActionLoading.value = true;
     
     // Llamamos a una ruta protegida simple (/api/perfil) para forzar la verificación del JWT
+    // Si el usuario no está logueado, useApi.js lo redirigirá a /login.
     const isAuthenticatedCheck = await callProtectedApi('/api/perfil', { method: 'GET' });
     
     isActionLoading.value = false;
@@ -152,7 +153,6 @@ const handleRestrictedAction = async (actionType) => {
             // Aquí iría el router.push o la apertura del modal del formulario de reseña
         }
     }
-    // Si la llamada falló (401), useApi.js ya redirigió al login, cumpliendo el requisito.
 };
 
 
@@ -262,7 +262,7 @@ hr {
     padding: 3px 8px;
     margin-right: 5px;
     border-radius: 12px;
-    cursor: pointer; 
+    cursor: pointer; /* Indica que es clicable */
     transition: background-color 0.2s;
 }
 

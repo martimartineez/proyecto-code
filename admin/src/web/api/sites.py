@@ -252,6 +252,35 @@ def crear_sitio():
     return jsonify(sitio.to_dict()), 201
 
 
+@bp.route("/sites/<int:id>/is_favorite", methods=["GET"])
+@jwt_required()
+def check_favorite_status(id):
+    sitio = obtener_sitio(id)
+    if not sitio:
+        return (
+            jsonify({"error": {"code": "not_found", "message": "Site not found"}}),
+            404,
+        )
+
+    # El usuario está logueado (garantizado por @jwt_required)
+    user_email = get_jwt_identity() 
+    user = db.session.query(Usuario).filter_by(email=user_email).first()
+    
+    is_favorite = False
+    
+    if user:
+        # Consulta directa a la tabla de asociación para verificar el estado
+        is_favorite_record = db.session.query(favoritos_usuarios_sitios).filter_by(
+            usuarioId=user.id,
+            sitioId=sitio.id
+        ).first()
+        
+        if is_favorite_record:
+            is_favorite = True
+            
+    # Devolver un JSON simple con el estado
+    return jsonify({"is_favorite": is_favorite}), 200
+
 @bp.route("/sites/<int:id>", methods=["GET"])
 def obtener_sitio_api(id):
     sitio = obtener_sitio(id)
@@ -269,14 +298,6 @@ def obtener_sitio_api(id):
 
     imagenes = listar_imagenes_sitio(id)
 
-    user_id_identity = get_jwt_identity(optional=True) # Obtiene el email (identity) si está logueado
-    is_favorite = False
-
-    if user_id_identity:
-        # El user_id_identity es el email (configurado en tu login de Google/auth)
-        user = db.session.query(Usuario).filter_by(email=user_id_identity).first()
-        if user and sitio in user.favoritos:
-            is_favorite = True
 
 
     data = sitio.to_dict()
@@ -294,9 +315,6 @@ def obtener_sitio_api(id):
             "portada": img.portada
         } for img in imagenes
     ]
-    
-    # inicializar placeholders (CAMBIAR CUANDO SE IMPLEMENTE LA LÓGICA)
-    data['is_favorite'] = is_favorite
 
     return jsonify(data), 200
 
