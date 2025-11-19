@@ -31,8 +31,8 @@ class Usuario(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     nombre: Mapped[str] = mapped_column(String(100), nullable=False)
-    apellido: Mapped[str] = mapped_column(String(100), nullable=False)
-    password: Mapped[str] = mapped_column(String(100), nullable=False)
+    apellido: Mapped[str] = mapped_column(String(100), nullable=True)
+    password: Mapped[str] = mapped_column(String(100), nullable=True) #puse nullable true para usuarios publicos
     email: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
     activo: Mapped[bool] = mapped_column(Boolean, default=True)
     esAdmin: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -46,6 +46,10 @@ class Usuario(Base):
         secondary=favoritos_usuarios_sitios,
         back_populates="favorited_by"
     )
+    foto: Mapped[str] = mapped_column(String(255), nullable=True)
+    publico: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
 
 
     def __repr__(self):
@@ -59,4 +63,13 @@ class Usuario(Base):
             f"borradoLogico={self.borradoLogico}, "
             f"fechaCreacion={self.fechaCreacion}, idRol={getattr(self, 'idRol', None)})>"
         )
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "apellido": self.apellido,
+            "email": self.email,
+            "foto": self.foto
+        }
     

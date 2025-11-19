@@ -57,11 +57,28 @@
         />
         
         <div class="action-buttons">
-            <button class="action-btn">Escribir Reseña (Login requerido)</button>
+            <button 
+                class="action-btn" 
+                @click="handleRestrictedAction('REVIEW')" 
+                :disabled="isActionLoading"
+            >
+                Escribir Reseña (Login requerido)
+            </button>
             
-            <button class="action-btn">Marcar Favorito</button>
+            <button 
+                class="action-btn" 
+                :class="{ 'btn-favorited': site.is_favorite }"
+                @click="toggleFavorite"
+                :disabled="isActionLoading"
+            >
+              {{ site.is_favorite ? '★ Favorito' : '☆ Marcar Favorito' }}
+            </button>
         </div>
       </div>
+
+      <ReviewForm :site-id="site.id">
+
+      </ReviewForm>
 
       <ReviewList :site-id="site.id" />
       
@@ -81,17 +98,84 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+// Importamos el composable de tu compañero para JWT
+import { useApi } from '@/script/useApi'; 
+// Importaciones de Componentes
 import SiteMap from '@/components/SiteMap.vue';
 import CollapsibleDescription from '@/components/CollapsibleDescription.vue';
 import ReviewList from '@/components/ReviewList.vue'; 
 import RatingSummary from '@/components/RatingSummary.vue';
 import SiteImageGallery from '@/components/SiteImageGallery.vue'; 
+import ReviewForm from '../components/ReviewForm.vue';
 
 
 const route = useRoute();
 const router = useRouter();
+const { callProtectedApi } = useApi(); // Inicializamos el composable para llamadas protegidas
 const site = ref(null); 
-const isAuthenticated = ref(false); 
+const isActionLoading = ref(false); // Deshabilita botones durante el fetch
+
+
+// *** IMPLEMENTACIÓN FINAL DE LA ACCIÓN DE FAVORITOS (PUT/DELETE) ***
+const toggleFavorite = async () => {
+    isActionLoading.value = true;
+    
+    const isCurrentlyFavorited = site.value.is_favorite;
+    const method = isCurrentlyFavorited ? 'DELETE' : 'PUT';
+    
+    try {
+        const url = `/api/sites/${site.value.id}/favorite`;
+
+        const respuesta = await fetch(url, {
+            method: method,
+            credentials: "include"
+        });
+
+        // --- AUTENTICACIÓN / REDIRECCIÓN ---
+        if (respuesta.status === 401 || respuesta.status === 403) {
+
+            // Guardamos la URL actual para volver después del login
+            localStorage.setItem('redirectAfterLogin', window.location.pathname);
+
+            // Redirigimos al login
+            window.location.href = '/login';
+            return;
+        }
+        // -----------------------------------
+
+        if (!respuesta.ok) {
+            console.error("Error marcando favorito:", respuesta.status);
+            return;
+        }
+
+        // Si todo OK → actualizamos visualmente
+        site.value.is_favorite = !isCurrentlyFavorited;
+
+    } catch (error) {
+        console.error("Error de red al marcar favorito:", error);
+    } finally {
+        isActionLoading.value = false;
+    }
+};
+
+// *** LÓGICA DE REDIRECCIÓN CONDICIONAL PARA ESCRIBIR RESEÑA ***
+const handleRestrictedAction = async (actionType) => {
+    isActionLoading.value = true;
+    
+    // Llamamos a una ruta protegida simple (/api/perfil) para forzar la verificación del JWT
+    // Si el usuario no está logueado, useApi.js lo redirigirá a /login.
+    const isAuthenticatedCheck = await callProtectedApi('/api/perfil', { method: 'GET' });
+    
+    isActionLoading.value = false;
+
+    // Si la llamada fue exitosa (no hubo redirección por 401)
+    if (isAuthenticatedCheck !== null) {
+        if (actionType === 'REVIEW') {
+            console.log("Abrir modal/formulario para crear reseña.");
+            // Aquí iría el router.push o la apertura del modal del formulario de reseña
+        }
+    }
+};
 
 
 // Función para mapear el estado de conservación a una clase CSS
@@ -106,11 +190,11 @@ const getConservationClass = (estado) => {
     return 'neutral';
 }
 
-// IMPLEMENTACIÓN DE LA NAVEGACIÓN DE TAGS CLICABLES
+// IMPLEMENTACIÓN FINAL DE LA NAVEGACIÓN DE TAGS CLICABLES
 const filterByTag = (tag) => {
     router.push({ 
-        path: '/sites', 
-        query: { q: tag } 
+        path: '/sitios', // RUTA FINAL CORREGIDA
+        query: { tags: tag } 
     });
 }
 
@@ -137,7 +221,7 @@ const fetchSiteData = async () => {
         
         // Inicialización de placeholders de frontend
         siteData.is_favorite = siteData.is_favorite || false;
-        siteData.images = siteData.images || []; // Ya viene de la API, pero nos aseguramos del array vacío si es null
+        siteData.images = siteData.images || []; 
 
         site.value = siteData; 
 
@@ -151,7 +235,7 @@ onMounted(fetchSiteData);
 </script>
 
 <style scoped>
-/* Estilos Mobile First */
+/* Estilos Mobile First (manteniendo los esenciales) */
 .site-detail-container {
   padding: 1rem;
   max-width: 100%;
@@ -180,14 +264,14 @@ hr {
   font-size: 0.8rem;
   font-weight: bold;
   margin-top: 0.5rem;
-  
+  /* Estilos para las clases generadas por getConservationClass */
   &.good { background-color: #d4edda; color: #155724; } 
   &.fair { background-color: #fff3cd; color: #856404; } 
   &.poor { background-color: #f8d7da; color: #721c24; } 
   &.neutral { background-color: #f1f1f1; color: #333; } 
 }
 
-
+/* --- ESTILOS DE TAGS CLICABLES --- */
 .tag-list {
     margin-top: 1rem;
     font-size: 0.9em;
@@ -200,7 +284,7 @@ hr {
     padding: 3px 8px;
     margin-right: 5px;
     border-radius: 12px;
-    cursor: pointer; 
+    cursor: pointer; /* Indica que es clicable */
     transition: background-color 0.2s;
 }
 
@@ -208,8 +292,8 @@ hr {
     background-color: #c0c0c0;
 }
 
-
-.tag-placeholder, .action-btn {
+/* Estilos base para simulación */
+.action-btn {
     border: 1px solid #ccc;
     padding: 8px;
     border-radius: 4px;
@@ -223,8 +307,15 @@ hr {
     flex-wrap: wrap;
 }
 
+/* Estilo para botón favorito marcado */
+.btn-favorited {
+    background-color: gold !important;
+    color: black !important;
+    border-color: #ffc107 !important;
+}
 
 
+/* Media Query para Tablet/Escritorio */
 @media (min-width: 768px) {
   .site-detail-container {
     max-width: 1200px;

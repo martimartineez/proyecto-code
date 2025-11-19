@@ -6,7 +6,10 @@ from src.core.auth import Usuario
 from src.core.entity.provincia import Provincia
 from src.core.entity.reseña import Reseña
 from src.core.entity.tag import Tag
+from sqlalchemy.orm import joinedload
 from src.web.controllers.sitios_historicos import filtrar
+from src.core.auth import devolver_usuario_publico_por_email
+
 from sqlalchemy import func, or_
 from flask import Response
 import json
@@ -56,6 +59,7 @@ def handle_api_errors(error):
 @bp.errorhandler(InvalidHeaderError)
 @bp.errorhandler(JWTExtendedException)
 def handle_jwt_errors(e):
+    print(e)
     return (
         jsonify(
             {"error": {"code": "unauthorized", "message": "Authentication required"}}
@@ -78,7 +82,7 @@ def listar_sitios():
     long = request.args.get("long", type=float)
     radius = request.args.get("radius", type=float)
     page = request.args.get("page", 1, type=int)
-    per_page = request.args.get("per_page", 10, type=int)
+    per_page = request.args.get("per_page", 25, type=int)
     state = request.args.get("state", "")
 
     if (
@@ -230,8 +234,9 @@ def crear_sitio():
             db.session.flush()
         sitio.tags.append(tag)
     db.session.commit()
-    user_id = get_jwt_identity()
-    user = db.session.query(Usuario).get(user_id)
+    mail = get_jwt_identity()
+    user = devolver_usuario_publico_por_email(mail)
+    
     registrar_evento_historial(
         id_sitio=sitio.id,
         id_usuario=user.id,
@@ -251,6 +256,35 @@ def crear_sitio():
     return jsonify(sitio.to_dict()), 201
 
 
+@bp.route("/sites/<int:id>/is_favorite", methods=["GET"])
+@jwt_required()
+def check_favorite_status(id):
+    sitio = obtener_sitio(id)
+    if not sitio:
+        return (
+            jsonify({"error": {"code": "not_found", "message": "Site not found"}}),
+            404,
+        )
+
+    # El usuario está logueado (garantizado por @jwt_required)
+    user_email = get_jwt_identity() 
+    user = db.session.query(Usuario).filter_by(email=user_email).first()
+    
+    is_favorite = False
+    
+    if user:
+        # Consulta directa a la tabla de asociación para verificar el estado
+        is_favorite_record = db.session.query(favoritos_usuarios_sitios).filter_by(
+            usuarioId=user.id,
+            sitioId=sitio.id
+        ).first()
+        
+        if is_favorite_record:
+            is_favorite = True
+            
+    # Devolver un JSON simple con el estado
+    return jsonify({"is_favorite": is_favorite}), 200
+
 @bp.route("/sites/<int:id>", methods=["GET"])
 def obtener_sitio_api(id):
     sitio = obtener_sitio(id)
@@ -269,6 +303,7 @@ def obtener_sitio_api(id):
     imagenes = listar_imagenes_sitio(id)
 
 
+
     data = sitio.to_dict()
     
     # añadir las estadísticas al diccionario
@@ -284,9 +319,6 @@ def obtener_sitio_api(id):
             "portada": img.portada
         } for img in imagenes
     ]
-    
-    # inicializar placeholders (CAMBIAR CUANDO SE IMPLEMENTE LA LÓGICA)
-    data['is_favorite'] = False # placeholder
 
     return jsonify(data), 200
 
@@ -300,7 +332,7 @@ def auth():
     user = db.session.query(Usuario).filter_by(email=email).first()
     if user and bcrypt.check_password_hash(user.password, password):
         access_token = create_access_token(
-            identity=str(user.id), expires_delta=timedelta(hours=1)
+            identity=str(user.email), expires_delta=timedelta(hours=1)
         )
         expires = timedelta(hours=1)
         return (
@@ -324,7 +356,7 @@ def auth():
 
 
 @bp.route("/sites/<int:id>/reviews", methods=["GET"])
-@jwt_required()
+# @jwt_required()
 def listar_resenas_sitio(id):
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
@@ -356,6 +388,8 @@ def listar_resenas_sitio(id):
 
     query = db.session.query(Reseña).filter_by(id_sitio=id, estado='aprobada')
 
+    query = query.options(joinedload(Reseña.usuario))
+
     sort_column = Reseña.inserted_at 
     if order_by == "rating":
         sort_column = Reseña.puntaje
@@ -375,6 +409,7 @@ def listar_resenas_sitio(id):
             "site_id": r.id_sitio,
             "rating": r.puntaje,
             "comment": r.texto,
+            "user_alias": r.usuario.nombre if r.usuario else "Usuario Anónimo",
             "inserted_at": r.inserted_at.isoformat() + "Z" if r.inserted_at else None,
             "updated_at": r.updated_at.isoformat() + "Z" if r.updated_at else None,
         }
@@ -402,7 +437,7 @@ def crear_resena_sitio(id_sitio):
             404,
         )
 
-    if not texto or puntaje is None or puntaje < 1 or puntaje > 5 or len(texto) < 20:
+    if not texto or puntaje is None or float(puntaje) < 1 or float(puntaje) > 5 or len(texto) < 20:
         return (
             jsonify(
                 {
@@ -416,7 +451,8 @@ def crear_resena_sitio(id_sitio):
             400,
         )
 
-    user = int(get_jwt_identity())
+    email = get_jwt_identity()
+    user = devolver_usuario_publico_por_email(email).id
     nueva_resena = Reseña(
         texto=texto, puntaje=puntaje, id_usuario=user, id_sitio=id_sitio
     )
@@ -493,8 +529,9 @@ def eliminar_reseña_poridSitio(id_sitio, id_resena):
             404,
         )
 
-    user_id = int(get_jwt_identity())
-
+    email = get_jwt_identity()
+    user = devolver_usuario_publico_por_email(email)
+    user_id = user.id
     if resena.id_usuario != user_id:
         return (
             jsonify(
@@ -524,8 +561,8 @@ def marcar_sitio_como_favorito(id_sitio):
             404,
         )
 
-    user_id = int(get_jwt_identity())
-    user = db.session.query(Usuario).get(user_id)
+    email = get_jwt_identity()
+    user = devolver_usuario_publico_por_email(email)
     if sitio in user.favoritos:
         return "", 204
     user.favoritos.append(sitio)
@@ -543,8 +580,8 @@ def desmarcar_sitio_como_favorito(id_sitio):
             404,
         )
 
-    user_id = int(get_jwt_identity())
-    user = db.session.query(Usuario).get(user_id)
+    email = get_jwt_identity()
+    user = devolver_usuario_publico_por_email(email)
     if sitio not in user.favoritos:
         return "", 204
     user.favoritos.remove(sitio)
@@ -571,12 +608,13 @@ def mostrar_todos_favoritos():
             400,
         )
 
-    user_id = int(get_jwt_identity())
-
+    email = get_jwt_identity()
+    user = devolver_usuario_publico_por_email(email)
+    user_id = user.id
     query = (
         db.session.query(SitioHistorico)
         .join(favoritos_usuarios_sitios)
-        .filter(favoritos_usuarios_sitios.c.usuarioId == user_id)
+        .filter(favoritos_usuarios_sitios.c.usuario_id == user_id)
     )
 
     total = query.count()
@@ -610,3 +648,154 @@ def validar_datos_sitio(data):
             errores[field] = [msg]
 
     return errores
+
+@bp.route('/google', methods=['POST', 'OPTIONS'])
+def login_google():
+
+    from flask import Blueprint, request, jsonify
+    from google.oauth2 import id_token
+    from google.auth.transport import requests
+    from flask_jwt_extended import create_access_token, set_access_cookies
+    from src.core.auth import checkear_usuario_publico_existente, create_user, actualizar_usuario_publico
+
+    # Preflight CORS
+    if request.method == "OPTIONS":
+        return {}, 200
+
+    data = request.get_json()
+    token = data.get("token")
+
+    if not token:
+        return jsonify({"success": False, "error": "No token provided"}), 400
+
+    try:
+        # Verificar token de Google
+        info = id_token.verify_oauth2_token(
+            token,
+            requests.Request(),
+            "501426149813-3ldbtlaur9oodqe8eq5rhuqrecjn22s7.apps.googleusercontent.com"
+        )
+        print(info)
+
+        # Crear o actualizar usuario en la base de datos
+        if (checkear_usuario_publico_existente(info["email"]) == False):
+            create_user(
+                nombre=info.get("given_name"),
+                email=info.get("email"),
+                apellido=info.get("family_name"),
+                activo=True,
+                esAdmin=False,
+                foto=info.get("picture"),
+                publico = True
+            )
+        else:
+            actualizar_usuario_publico(info["email"], info)
+            
+        
+        # Crear token propio (sesión)
+        access_token = create_access_token(identity=info["email"])
+        # Respuesta con cookie
+        resp = jsonify({
+            "success": True,
+            }
+        )
+
+        # 👉 Guarda la cookie en el navegador automáticamente
+        set_access_cookies(resp, access_token)
+        
+        return resp, 200
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 400
+    
+
+@bp.get('/perfil')
+@jwt_required()
+def perfil():
+
+    from src.core.auth import devolver_usuario_publico_por_email
+
+    email = get_jwt_identity()
+    usuario = devolver_usuario_publico_por_email(email)
+    return usuario.to_dict(), 200
+
+@bp.route('/boton', methods=['GET'])
+@jwt_required()
+def boton():
+    return jsonify({"message": "¡La ruta de prueba funciona correctamente!"}), 200
+
+@bp.route("/logout", methods=["POST"])
+def logout():
+    from flask import jsonify
+    from flask_jwt_extended import unset_jwt_cookies
+
+    resp = jsonify({"msg": "logout exitoso"})
+    unset_jwt_cookies(resp)  # 👈 esto borra las cookies access y refresh
+    return resp, 200
+
+@bp.route('/reseñas_usuario', methods=['GET'])
+@jwt_required()
+def reseñas_usuario():
+    from src.core.entity.services import listar_reseñas_usuario
+    from src.core.auth import devolver_usuario_publico_por_email
+
+
+    user_email = get_jwt_identity()
+    user = devolver_usuario_publico_por_email(user_email)
+    if not user:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    reseñas = listar_reseñas_usuario(user.id)
+    # Convertir a diccionarios
+    reseñas_json = [
+        {
+            "sitio": r.sitio.nombre,
+            "texto": r.texto,
+            "puntuacion": r.puntaje,
+            "fecha": r.inserted_at.isoformat() if r.inserted_at else None,
+            # agregar lo que necesites
+        }
+        for r in reseñas
+    ]
+
+    #print("reseñas_json:", reseñas_json)  # Depuración
+
+    return jsonify({"reseñas": reseñas_json}), 200
+
+@bp.route('/favoritos_usuario', methods=['GET'])
+@jwt_required()
+def favoritos_usuario():
+    from src.core.entity.services import listar_favoritos_usuario
+    from src.core.auth import devolver_usuario_publico_por_email
+
+
+    print("Entrando en favoritos_usuario")  # Depuración
+    user_email = get_jwt_identity()
+    user = devolver_usuario_publico_por_email(user_email)
+    if not user:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    favoritos = listar_favoritos_usuario(user)
+    print("favoritos:", favoritos)  # Depuración    
+    favoritos_json = [
+        {
+            "id": s.id,
+            "nombre": s.nombre,
+            "descBreve": s.descBreve,
+            "latitud": s.latitud,
+            "longitud": s.longitud,
+            # agregar lo que necesites
+        }
+        for s in favoritos
+    ]
+
+    
+    # Convertir a diccionarios
+
+
+    #print("reseñas_json:", reseñas_json)  # Depuración
+
+    return jsonify({"favoritos": favoritos_json}), 200
+
+
+    

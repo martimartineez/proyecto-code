@@ -732,3 +732,21 @@ def listar_historial_sitio(
         "per_page": per_page,
         "pages": (total + per_page - 1) // per_page if per_page else 1,
     }
+
+
+def listar_reseñas_usuario(id_usuario: int):
+    """
+    Lista las reseñas realizadas por un usuario público específico.
+    """
+    return (
+        db.session.query(Reseña)
+        .filter(Reseña.id_usuario == id_usuario)
+        .order_by(Reseña.inserted_at.desc())
+        .all()
+    )
+
+def listar_favoritos_usuario(user):
+    """
+    Lista los sitios marcados como favoritos por un usuario público específico.
+    """
+    return user.favoritos

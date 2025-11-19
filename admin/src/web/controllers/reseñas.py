@@ -115,4 +115,8 @@ def ver_detalles_reseña(resena_id):
     reseña = db.session.query(Reseña).get(resena_id)
     if not reseña:
         return "Reseña no encontrada", 404
-    return render_template("reseñas/detalles.html", resena=reseña)
+    usuario = db.session.query(Usuario).get(reseña.id_usuario)
+    email = usuario.email if usuario else "Desconocido"
+    sitio = db.session.query(SitioHistorico).get(reseña.id_sitio)
+    nombre = sitio.nombre if sitio else "Desconocido"
+    return render_template("reseñas/detalles.html", resena=reseña,email=email,nombre=nombre)

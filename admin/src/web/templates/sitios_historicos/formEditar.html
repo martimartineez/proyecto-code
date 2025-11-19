@@ -6,6 +6,10 @@
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@shopify/draggable/lib/swap/sortable.swap-plugin.umd.js"></script>
+
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
 <style>
@@ -25,19 +29,16 @@
 
 
   #imgGrid {
-    display: grid !important; 
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
-    gap: 24px !important;
-    margin: 30px 0 !important;
-    
-    width: 100vw !important;
-    max-width: 100vw !important;
-    margin-left: calc(-50vw + 50%) !important;
-    
-    padding: 0 30px !important;
-    box-sizing: border-box !important;
-    justify-content: center !important;
-  }
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  width: 100%;
+  max-width: 1800px;
+  margin: 30px auto; /* centrado sin hacks */
+  padding: 0 30px;
+  box-sizing: border-box;
+}
+
 
   #imgGrid .img-card { 
     border: none !important;
@@ -357,6 +358,9 @@
 {% set imagenes = sitio.imagenes or [] %}
 {% if imagenes %}
   <div>
+    {% if imagenes|length > 1 %}
+      <h5>Arrastre las imágenes para ordenarlas</h5>
+    {% endif %}
     <!-- Estructura de cards mejorada con Bootstrap -->
     <div class="img-grid" id="imgGrid">
       {% for img in imagenes %}
@@ -792,5 +796,43 @@ document.addEventListener('click', async (e) => {
         }
     }
 });
+
+
+// ============================================
+// REORDENAR IMÁGENES con SortableJS (FUNCIONA EN GRID)
+// ============================================
+
+document.addEventListener("DOMContentLoaded", () => {
+    const grid = document.getElementById("imgGrid");
+    if (!grid) return;
+
+    const sitioId = Number("{{ sitio.id }}");
+
+    new Sortable(grid, {
+    animation: 150,
+    swap: true,
+    swapClass: "drag-swap",
+    handle: ".card-img-wrapper", 
+    forceFallback: true,
+    fallbackOnBody: true,
+    fallbackTolerance: 3,
+    dragoverBubble: false,
+    ghostClass: "dragging",
+
+    onEnd: () => {
+        const ids = [...grid.querySelectorAll(".img-card")].map(c => c.dataset.id);
+        const form = new FormData();
+        ids.forEach(id => form.append("ids", id));
+
+        fetch(`/sitioshistoricos/${sitioId}/imagenes/orden`, {
+            method: "POST",
+            body: form
+        });
+    }
+});
+
+});
+
+
 </script>
 {% endblock %}

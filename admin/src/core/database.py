@@ -6,7 +6,7 @@ db = SQLAlchemy()
 
 def init_db(app):
 
-    db.init_app(app)
+    db.init_app(app) 
 
     return db
 
@@ -14,7 +14,7 @@ def init_db(app):
 def reset_db():
     from src.core.entity.permiso import Permiso
     from src.core.entity.rol import Rol, roles_permisos  # noqa: F401
-    from src.core.auth.usuario import Usuario  # noqa: F401
+    from src.core.auth.usuario import Usuario  # noqa: F401 # noqa: F401
     from src.core.entity.sitio_historico import SitioHistorico  # noqa: F401
     from src.core.entity.sitio_imagen import SitioImagen  # noqa: F401
     from src.core.entity.tag import Tag, tags_sitios  # noqa: F401
