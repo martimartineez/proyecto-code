@@ -559,7 +559,7 @@ def login_google():
     from google.oauth2 import id_token
     from google.auth.transport import requests
     from flask_jwt_extended import create_access_token, set_access_cookies
-    from src.core.auth import crear_usuario_publico
+    from src.core.auth import checkear_usuario_publico_existente, create_user, actualizar_usuario_publico
 
     # Preflight CORS
     if request.method == "OPTIONS":
@@ -580,10 +580,19 @@ def login_google():
         )
 
         # Crear o actualizar usuario en la base de datos
-        crear_usuario_publico(info.get("given_name"),
-                              info.get("family_name"),
-                              info.get("email"),
-                              info.get("picture"))
+        if (checkear_usuario_publico_existente(info["email"]) == False):
+            create_user(
+                nombre=info.get("given_name"),
+                email=info.get("email"),
+                apellido=info.get("family_name"),
+                activo=True,
+                esAdmin=False,
+                foto=info.get("picture"),
+                publico = True
+            )
+        else:
+            actualizar_usuario_publico(info["email"], info)
+            
         
         # Crear token propio (sesión)
         access_token = create_access_token(identity=info["email"])
@@ -591,11 +600,8 @@ def login_google():
         # Respuesta con cookie
         resp = jsonify({
             "success": True,
-            "user": {
-                "email": info["email"],
-                "name": info.get("name")
             }
-        })
+        )
 
         # 👉 Guarda la cookie en el navegador automáticamente
         set_access_cookies(resp, access_token)
@@ -636,13 +642,13 @@ def reseñas_usuario():
     from src.core.entity.services import listar_reseñas_usuario
     from src.core.auth import devolver_usuario_publico_por_email
 
+
     user_email = get_jwt_identity()
     user = devolver_usuario_publico_por_email(user_email)
     if not user:
         return jsonify({"error": "Usuario no encontrado"}), 404
 
     reseñas = listar_reseñas_usuario(user.id)
-
     # Convertir a diccionarios
     reseñas_json = [
         {
@@ -655,7 +661,7 @@ def reseñas_usuario():
         for r in reseñas
     ]
 
-    print("reseñas_json:", reseñas_json)  # Depuración
+    #print("reseñas_json:", reseñas_json)  # Depuración
 
     return jsonify({"reseñas": reseñas_json}), 200
 

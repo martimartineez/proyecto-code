@@ -50,9 +50,10 @@ def create_user(**kwargs):
             nombre_rol = kwargs.pop('idRol')
             rol = db.session.query(Rol).filter(Rol.nombre == nombre_rol).first()
             rol_id = rol.id if rol else None
-
-    hash_password = bcrypt.generate_password_hash(kwargs['password']).decode('utf-8')
-    kwargs['password'] = hash_password
+    
+    if 'password' in kwargs and kwargs['password'] is not None:
+        hash_password = bcrypt.generate_password_hash(kwargs['password']).decode('utf-8')
+        kwargs['password'] = hash_password
 
     user = Usuario(**kwargs)
     db.session.add(user)
@@ -117,9 +118,20 @@ def crear_usuario_publico(nombre, apellido, email, foto):
     
 
 def checkear_usuario_publico_existente(email):
-    usuario = db.session.query(UsuarioPublico).filter(UsuarioPublico.email == email).first()
+    usuario = db.session.query(Usuario).filter(Usuario.email == email).first()
     return True if usuario else False
 
 def devolver_usuario_publico_por_email(email):
-    usuario = db.session.query(UsuarioPublico).filter(UsuarioPublico.email == email).first()
+    usuario = db.session.query(Usuario).filter(Usuario.email == email).first()
+    return usuario
+
+def actualizar_usuario_publico(email, info):   
+    usuario = devolver_usuario_publico_por_email(email)
+    if info.get("given_name") != usuario.nombre:
+        usuario.nombre = info.get("given_name")
+    if info.get("family_name") != usuario.apellido:
+        usuario.apellido = info.get("family_name")
+    if info.get("picture") != usuario.foto:
+        usuario.foto = info.get("picture")
+    db.session.commit()
     return usuario
