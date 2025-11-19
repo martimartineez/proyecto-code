@@ -3,6 +3,8 @@ from src.core.auth.usuario import Usuario
 from src.core.entity.rol import Rol
 from src.core.bcrypt import bcrypt
 from src.core.entity import services
+from src.core.auth.usuario_publico import UsuarioPublico
+
 
 
 
@@ -23,7 +25,6 @@ def crearPermisos(permisos):
 
 def permissions(user):
     permisos_usuario = list({permiso.nombre for rol in user.roles for permiso in rol.permisos})
-    #print('👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻👍🏻',permisos_usuario)
     return permisos_usuario
 
 def listar_roles_usuario(user):
@@ -32,7 +33,6 @@ def listar_roles_usuario(user):
 
 
 def list_usuarios():
-    #return db.session.query(Usuario.nombre, Usuario.email).all()
     return db.session.query(Usuario).all()
     
 def delete_user(user: Usuario):
@@ -50,9 +50,10 @@ def create_user(**kwargs):
             nombre_rol = kwargs.pop('idRol')
             rol = db.session.query(Rol).filter(Rol.nombre == nombre_rol).first()
             rol_id = rol.id if rol else None
-
-    hash_password = bcrypt.generate_password_hash(kwargs['password']).decode('utf-8')
-    kwargs['password'] = hash_password
+    
+    if 'password' in kwargs and kwargs['password'] is not None:
+        hash_password = bcrypt.generate_password_hash(kwargs['password']).decode('utf-8')
+        kwargs['password'] = hash_password
 
     user = Usuario(**kwargs)
     db.session.add(user)
@@ -103,4 +104,34 @@ def comprobar_bloqueado(user):
     estado = user.activo
     return estado
 
+def crear_usuario_publico(nombre, apellido, email, foto):
+    if not checkear_usuario_publico_existente(email):
+        usuario_publico = UsuarioPublico(
+            nombre=nombre,
+            apellido=apellido,
+            email=email,
+            foto=foto,
+        )
+        db.session.add(usuario_publico)
+        db.session.commit()
+        return usuario_publico
+    
 
+def checkear_usuario_publico_existente(email):
+    usuario = db.session.query(Usuario).filter(Usuario.email == email).first()
+    return True if usuario else False
+
+def devolver_usuario_publico_por_email(email):
+    usuario = db.session.query(Usuario).filter(Usuario.email == email).first()
+    return usuario
+
+def actualizar_usuario_publico(email, info):   
+    usuario = devolver_usuario_publico_por_email(email)
+    if info.get("given_name") != usuario.nombre:
+        usuario.nombre = info.get("given_name")
+    if info.get("family_name") != usuario.apellido:
+        usuario.apellido = info.get("family_name")
+    if info.get("picture") != usuario.foto:
+        usuario.foto = info.get("picture")
+    db.session.commit()
+    return usuario
