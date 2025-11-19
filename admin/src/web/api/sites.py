@@ -7,6 +7,8 @@ from src.core.entity.provincia import Provincia
 from src.core.entity.reseña import Reseña
 from src.core.entity.tag import Tag
 from src.web.controllers.sitios_historicos import filtrar
+from src.core.auth import devolver_usuario_publico_por_email
+
 from sqlalchemy import func, or_
 from flask import Response
 import json
@@ -56,6 +58,7 @@ def handle_api_errors(error):
 @bp.errorhandler(InvalidHeaderError)
 @bp.errorhandler(JWTExtendedException)
 def handle_jwt_errors(e):
+    print(e)
     return (
         jsonify(
             {"error": {"code": "unauthorized", "message": "Authentication required"}}
@@ -416,7 +419,8 @@ def crear_resena_sitio(id_sitio):
             400,
         )
 
-    user = int(get_jwt_identity())
+    email = get_jwt_identity()
+    user = devolver_usuario_publico_por_email(email).id
     nueva_resena = Reseña(
         texto=texto, puntaje=puntaje, id_usuario=user, id_sitio=id_sitio
     )

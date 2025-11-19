@@ -56,6 +56,7 @@ async function postReview(){
   try {
       const respuesta = await fetch(`${baseUrl}/api/sites/${props.siteId}/reviews`, {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json"
         },

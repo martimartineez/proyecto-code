@@ -39,6 +39,8 @@ def create_app(env="development", static_folder="../../static"):
     app.config["JWT_COOKIE_SECURE"] = False          # en local cambiar a true para produccion
     app.config["JWT_COOKIE_SAMESITE"] = "Lax"       # IMPORTANTE cambiar a none para produccion
     app.config["JWT_COOKIE_HTTPONLY"] = True
+    app.config["JWT_COOKIE_CSRF_PROTECT"] = False
+
     jwt = JWTManager(app)
     
 
