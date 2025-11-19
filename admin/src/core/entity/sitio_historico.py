@@ -96,6 +96,7 @@ class SitioHistorico(Base):
         except Exception:
             d["cover_url"] = None
         d["state_of_conservation"] = self.estadoConservacion
+        d["fechaRegistro"] = self.fechaRegistro.isoformat() if self.fechaRegistro else None
         d["inserted_at"] = self.inserted_at.isoformat() if self.inserted_at else None
         d["updated_at"] = self.updated_at.isoformat() if self.updated_at else None
         return d

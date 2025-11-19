@@ -30,10 +30,17 @@ session = Session()
 
 def create_app(env="development", static_folder="../../static"):
     app = Flask(__name__, static_folder=static_folder)
+    #app.run(ssl_context="adhoc") # Habilitar HTTPS para desarrollo local
     app.config.from_object(config[env])
     app.config['JSON_SORT_KEYS'] = False
     app.config["JWT-SECRET-KEY"] = "miClaveJWTSecreta12345678"
+
+    app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
+    app.config["JWT_COOKIE_SECURE"] = False          # en local cambiar a true para produccion
+    app.config["JWT_COOKIE_SAMESITE"] = "Lax"       # IMPORTANTE cambiar a none para produccion
+    app.config["JWT_COOKIE_HTTPONLY"] = True
     jwt = JWTManager(app)
+    
 
     database.init_db(app)
     session.init_app(app)
@@ -42,17 +49,15 @@ def create_app(env="development", static_folder="../../static"):
     # CORS explícito para asegurar encabezados en todas las respuestas de /api/*
     # Incluye respuestas de error (404/500) y evita problemas de "CORS Missing Allow Origin"
     CORS(
-        app,
-        resources={r"/api/*": {
-            "origins": "*",
-            "allow_headers": "*",
-            "expose_headers": "*",
-            "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        }},
-        supports_credentials=False,
-        send_wildcard=True,
-        always_send=True,
-    )
+    app,
+    resources={r"/api/*": {
+        "origins": ["http://localhost:5173"],  # El frontend
+        "allow_headers": ["Content-Type", "Authorization"],
+        "expose_headers": ["Content-Type"],
+        "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    }},
+    supports_credentials=True,   # IMPORTANTÍSIMO
+)
 
     with app.app_context():
         try:

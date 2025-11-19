@@ -1,6 +1,6 @@
 <template>
     <div class="map-search-container">
-      <h6>Hacé clic en el mapa para buscar sitios</h6>
+      <h6>Hacé clic en algún punto del mapa para encontrar sitios cercanos</h6>
       <div class="map-controls">
         <button
           v-if="selectedLocation"
@@ -137,6 +137,30 @@
       }
     },
 
+    watch: {
+    initialLocation: {
+      immediate: true, // para que se ejecute apenas se monta el componente
+      deep: true,
+      handler(newVal) {
+        if (newVal && newVal.lat && newVal.lng) {
+          //restaurar el punto seleccionado
+          this.selectedLocation = { 
+            lat: Number(newVal.lat), 
+            lng: Number(newVal.lng) 
+          };
+
+          //centrar el mapa en ese punto
+          this.center = [newVal.lat, newVal.lng];
+
+          //restaurar el radio
+          if (newVal.radius) {
+            this.searchRadius = Number(newVal.radius) / 1000;
+          }
+        }
+      }
+    }
+  },
+
     methods: {
       
       handleMapClick(event) {
@@ -149,7 +173,6 @@
       updateSearch() {
         if (!this.selectedLocation) return;
         
-        // Emitir radius en metros (backend espera metros). Antes se emitía en kilómetros.
         const radiusMeters = this.searchRadius * 1000;
 
         this.$emit('location-updated', {
