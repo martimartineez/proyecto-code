@@ -637,6 +637,7 @@ def login_google():
             requests.Request(),
             "501426149813-3ldbtlaur9oodqe8eq5rhuqrecjn22s7.apps.googleusercontent.com"
         )
+        print(info)
 
         # Crear o actualizar usuario en la base de datos
         if (checkear_usuario_publico_existente(info["email"]) == False):
@@ -655,7 +656,6 @@ def login_google():
         
         # Crear token propio (sesión)
         access_token = create_access_token(identity=info["email"])
-
         # Respuesta con cookie
         resp = jsonify({
             "success": True,
