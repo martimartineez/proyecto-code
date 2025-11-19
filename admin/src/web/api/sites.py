@@ -8,6 +8,8 @@ from src.core.entity.reseña import Reseña
 from src.core.entity.tag import Tag
 from sqlalchemy.orm import joinedload
 from src.web.controllers.sitios_historicos import filtrar
+from src.core.auth import devolver_usuario_publico_por_email
+
 from sqlalchemy import func, or_
 from flask import Response
 import json
@@ -57,6 +59,7 @@ def handle_api_errors(error):
 @bp.errorhandler(InvalidHeaderError)
 @bp.errorhandler(JWTExtendedException)
 def handle_jwt_errors(e):
+    print(e)
     return (
         jsonify(
             {"error": {"code": "unauthorized", "message": "Authentication required"}}
@@ -231,8 +234,9 @@ def crear_sitio():
             db.session.flush()
         sitio.tags.append(tag)
     db.session.commit()
-    user_id = get_jwt_identity()
-    user = db.session.query(Usuario).get(user_id)
+    mail = get_jwt_identity()
+    user = devolver_usuario_publico_por_email(mail)
+    
     registrar_evento_historial(
         id_sitio=sitio.id,
         id_usuario=user.id,
@@ -328,7 +332,7 @@ def auth():
     user = db.session.query(Usuario).filter_by(email=email).first()
     if user and bcrypt.check_password_hash(user.password, password):
         access_token = create_access_token(
-            identity=str(user.id), expires_delta=timedelta(hours=1)
+            identity=str(user.email), expires_delta=timedelta(hours=1)
         )
         expires = timedelta(hours=1)
         return (
@@ -352,7 +356,7 @@ def auth():
 
 
 @bp.route("/sites/<int:id>/reviews", methods=["GET"])
-@jwt_required()
+# @jwt_required()
 def listar_resenas_sitio(id):
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
@@ -433,7 +437,7 @@ def crear_resena_sitio(id_sitio):
             404,
         )
 
-    if not texto or puntaje is None or puntaje < 1 or puntaje > 5 or len(texto) < 20:
+    if not texto or puntaje is None or float(puntaje) < 1 or float(puntaje) > 5 or len(texto) < 20:
         return (
             jsonify(
                 {
@@ -447,7 +451,8 @@ def crear_resena_sitio(id_sitio):
             400,
         )
 
-    user = int(get_jwt_identity())
+    email = get_jwt_identity()
+    user = devolver_usuario_publico_por_email(email).id
     nueva_resena = Reseña(
         texto=texto, puntaje=puntaje, id_usuario=user, id_sitio=id_sitio
     )
@@ -524,8 +529,9 @@ def eliminar_reseña_poridSitio(id_sitio, id_resena):
             404,
         )
 
-    user_id = int(get_jwt_identity())
-
+    email = get_jwt_identity()
+    user = devolver_usuario_publico_por_email(email)
+    user_id = user.id
     if resena.id_usuario != user_id:
         return (
             jsonify(
@@ -555,8 +561,8 @@ def marcar_sitio_como_favorito(id_sitio):
             404,
         )
 
-    user_id = int(get_jwt_identity())
-    user = db.session.query(Usuario).get(user_id)
+    email = get_jwt_identity()
+    user = devolver_usuario_publico_por_email(email)
     if sitio in user.favoritos:
         return "", 204
     user.favoritos.append(sitio)
@@ -574,8 +580,8 @@ def desmarcar_sitio_como_favorito(id_sitio):
             404,
         )
 
-    user_id = int(get_jwt_identity())
-    user = db.session.query(Usuario).get(user_id)
+    email = get_jwt_identity()
+    user = devolver_usuario_publico_por_email(email)
     if sitio not in user.favoritos:
         return "", 204
     user.favoritos.remove(sitio)
@@ -602,12 +608,13 @@ def mostrar_todos_favoritos():
             400,
         )
 
-    user_id = int(get_jwt_identity())
-
+    email = get_jwt_identity()
+    user = devolver_usuario_publico_por_email(email)
+    user_id = user.id
     query = (
         db.session.query(SitioHistorico)
         .join(favoritos_usuarios_sitios)
-        .filter(favoritos_usuarios_sitios.c.usuarioId == user_id)
+        .filter(favoritos_usuarios_sitios.c.usuario_id == user_id)
     )
 
     total = query.count()
@@ -668,6 +675,7 @@ def login_google():
             requests.Request(),
             "501426149813-3ldbtlaur9oodqe8eq5rhuqrecjn22s7.apps.googleusercontent.com"
         )
+        print(info)
 
         # Crear o actualizar usuario en la base de datos
         if (checkear_usuario_publico_existente(info["email"]) == False):
@@ -686,7 +694,6 @@ def login_google():
         
         # Crear token propio (sesión)
         access_token = create_access_token(identity=info["email"])
-
         # Respuesta con cookie
         resp = jsonify({
             "success": True,

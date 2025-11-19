@@ -48,10 +48,22 @@
         <div v-if="activeTab === 'reseñas'">
           <!-- Botón de recarga -->
           <div class="reload-row">
-            <button class="reload-btn" @click="reloadReseñas" :disabled="loadingReseñas">
-              <span v-if="!loadingReseñas">Recargar reseñas</span>
-              <span v-else>Cargando...</span>
-            </button>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button class="reload-btn" @click="reloadReseñas" :disabled="loadingReseñas">
+                <span v-if="!loadingReseñas">Recargar reseñas</span>
+                <span v-else>Cargando...</span>
+              </button>
+
+              <button
+                class="sort-btn"
+                @click="toggleSort"
+                :aria-pressed="sortOrder === 'desc' ? 'true' : 'false'"
+                :title="sortOrder === 'desc' ? 'Ordenar por fecha: más recientes primero' : 'Ordenar por fecha: más antiguas primero'"
+              >
+                <span v-if="sortOrder === 'desc'">Orden: ↓ Fecha</span>
+                <span v-else>Orden: ↑ Fecha</span>
+              </button>
+            </div>
           </div>
 
           <div v-if="loadingReseñas" class="loading">Cargando reseñas...</div>
@@ -137,13 +149,30 @@ const loadingReseñas = ref(false);
 const pageSize = 25;
 const currentPage = ref(1);
 
+// Ordenamiento de reseñas
+const sortOrder = ref("desc"); // 'desc' (más recientes primero) o 'asc' (más antiguas primero)
+
 const totalPages = computed(() => {
   return Math.max(1, Math.ceil(reseñas.value.length / pageSize));
 });
 
+// Resenas ordenadas según fecha (segura ante fechas faltantes)
+const sortedResenas = computed(() => {
+  return reseñas.value.slice().sort((a, b) => {
+    const da = a && a.fecha ? new Date(a.fecha) : new Date(0);
+    const db = b && b.fecha ? new Date(b.fecha) : new Date(0);
+    // Para evitar NaN, si la fecha no es válida se usa epoch
+    if (sortOrder.value === "asc") {
+      return da - db;
+    } else {
+      return db - da;
+    }
+  });
+});
+
 const paginatedResenas = computed(() => {
   const start = (currentPage.value - 1) * pageSize;
-  return reseñas.value.slice(start, start + pageSize);
+  return sortedResenas.value.slice(start, start + pageSize);
 });
 
 const startIndex = computed(() => {
@@ -204,6 +233,13 @@ function nextPage() {
     currentPage.value++;
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
+}
+
+// Toggle de orden (alternar asc/desc)
+function toggleSort() {
+  sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc";
+  currentPage.value = 1;
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 // Cerrar sesión
@@ -454,6 +490,26 @@ function scoreClass(p) {
 .reload-btn:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+/* Sort button */
+.sort-btn {
+  background: #f8fafc;
+  border: 1px solid rgba(15,23,42,0.06);
+  color: #0f172a;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: background 0.14s ease, transform 0.08s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.sort-btn:hover {
+  background: #eef2ff;
+  transform: translateY(-1px);
 }
 
 /* Review list and cards */

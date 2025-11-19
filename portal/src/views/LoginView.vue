@@ -31,12 +31,14 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const user = ref(null)
 const error = ref(null)
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 
 const onGoogleResponse = (response) => {
   const credential = response.credential; 
 
-  fetch("http://localhost:5000/api/google", {
+
+  fetch(`${API_URL}/api/google`, {
     method: "POST",
     credentials: "include",
     headers: {

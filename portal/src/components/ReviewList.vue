@@ -52,7 +52,7 @@
 
 <script setup>
 import { ref, onMounted, reactive } from 'vue'; 
-
+import Review from './Review.vue';
 
 const props = defineProps({
   siteId: { type: Number, required: true },

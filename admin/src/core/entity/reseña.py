@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Text, CheckConstraint, ForeignKey, DateTime, func, String
+from sqlalchemy import Column, Integer, Text, CheckConstraint, ForeignKey, DateTime, func, String, Float
 from sqlalchemy.orm import relationship
 from src.core.database import Base
 
@@ -7,7 +7,7 @@ class Reseña(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     texto = Column(Text, nullable=False)
-    puntaje = Column(Integer, nullable=False)
+    puntaje = Column(Float, nullable=False)
 
     inserted_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)

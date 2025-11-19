@@ -3,7 +3,6 @@ from src.core.auth.usuario import Usuario
 from src.core.entity.rol import Rol
 from src.core.bcrypt import bcrypt
 from src.core.entity import services
-from src.core.auth.usuario_publico import UsuarioPublico
 
 
 
@@ -42,6 +41,8 @@ def delete_user(user: Usuario):
 def create_user(**kwargs):
     # Soporte idRol (legacy) para asignar un único rol inicial
     rol_id = None
+    if(kwargs['apellido'] == None):
+        kwargs['apellido'] = ""
     if 'idRol' in kwargs and kwargs['idRol'] is not None:
         try:
             rol_id = int(kwargs.pop('idRol'))
