@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+
+{% block title %}Reseñas{% endblock %}
+
+{% block content %}
+<h1>Reseñas</h1>
+<div class="site-detail-card">
+  <h2>Detalles de la Reseña #{{ resena.id }}</h2>
+
+  <div class="detail-grid">
+
+    <!-- Texto y puntaje -->
+    <div class="detail-item full-width">
+      <label>Texto de la reseña:</label>
+      <p>{{ resena.texto }}</p>
+    </div>
+
+    <div class="detail-item">
+      <label>Puntaje:</label>
+      <span>{{ resena.puntaje }}/5</span>
+    </div>
+
+    <div class="detail-item">
+      <label>Estado:</label>
+      <span>
+        {% if resena.estado == 'aprobada' %}
+          ✅ Aprobada
+        {% elif resena.estado == 'rechazada' %}
+          ❌ Rechazada
+        {% else %}
+          ⏳ Pendiente
+        {% endif %}
+      </span>
+    </div>
+
+    {% if resena.estado == 'rechazada' %}
+    <div class="detail-item full-width">
+      <label>Motivo del rechazo:</label>
+      <p>{{ resena.motivo if resena.motivo else '—' }}</p>
+    </div>
+    {% endif %}
+
+    <hr class="full-width">
+
+    <!-- Fechas -->
+    <div class="detail-item">
+      <label>Fecha de creación:</label>
+      <span>{{ resena.inserted_at.strftime('%Y-%m-%d %H:%M') if resena.inserted_at else 'N/A' }}</span>
+    </div>
+
+    <div class="detail-item">
+      <label>Última actualización:</label>
+      <span>{{ resena.updated_at.strftime('%Y-%m-%d %H:%M') if resena.updated_at else 'N/A' }}</span>
+    </div>
+
+    <hr class="full-width">
+
+    <!-- IDs relacionados -->
+    <div class="detail-item">
+      <label>Email del Usuario:</label>
+      <span>{{ email}}</span>
+    </div>
+
+    <div class="detail-item">
+      <label>Nombre del Sitio:</label>
+      <span>{{ nombre}}</span>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

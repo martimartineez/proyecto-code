@@ -12,6 +12,7 @@ from src.web.controllers.tags import bp as tags_bp
 from src.web.api.sites import bp as sites_api_bp
 from src.core import seeds
 from src.web.controllers.auth import bp as auth_bp
+from src.web.controllers.reseñas import bp as reseñas_bp
 from src.core.bcrypt import bcrypt
 from src.web.handlers.auth import is_autenticated, check_permission, is_system_admin
 from src.core import auth as core_auth
@@ -19,6 +20,7 @@ from src.core.entity.services import feature_flags as ff_service
 from src.core.entity.services.feature_flags import get_flag
 from src.web.controllers.feature_flags import bp as feature_flags_bp
 from flask_jwt_extended import JWTManager
+from src.web.storage import storage
 
 from flask_cors import CORS
 from src.web.api import bp as api_bp
@@ -33,7 +35,7 @@ def create_app(env="development", static_folder="../../static"):
     app.config['JSON_SORT_KEYS'] = False
     app.config["JWT-SECRET-KEY"] = "miClaveJWTSecreta12345678"
 
-    app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
+    app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
     app.config["JWT_COOKIE_SECURE"] = False          # en local cambiar a true para produccion
     app.config["JWT_COOKIE_SAMESITE"] = "Lax"       # IMPORTANTE cambiar a none para produccion
     app.config["JWT_COOKIE_HTTPONLY"] = True
@@ -43,6 +45,7 @@ def create_app(env="development", static_folder="../../static"):
     database.init_db(app)
     session.init_app(app)
     bcrypt.init_app(app)
+    storage.init_app(app)
     # CORS explícito para asegurar encabezados en todas las respuestas de /api/*
     # Incluye respuestas de error (404/500) y evita problemas de "CORS Missing Allow Origin"
     CORS(
@@ -74,6 +77,7 @@ def create_app(env="development", static_folder="../../static"):
     app.register_blueprint(feature_flags_bp)
     app.register_blueprint(api_bp)
 
+    app.register_blueprint(reseñas_bp)
     app.register_error_handler(403, error.forbidden)
     app.register_error_handler(404, error.not_found)
     app.register_error_handler(401, error.unauthorized)

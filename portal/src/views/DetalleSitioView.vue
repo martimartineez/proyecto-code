@@ -5,9 +5,7 @@
     </button>
     
     <section class="info-and-media">
-      <div style="height: 200px; background-color: #f0f0f0; display: grid; place-items: center;">
-        [Galería de Imágenes]
-      </div>
+      <SiteImageGallery :images="site.images || []" />
       
       <div class="header-info">
         <h1>{{ site.name }}</h1>
@@ -65,7 +63,7 @@
         </div>
       </div>
 
-      <ReviewList :site-id="site.id" @update-summary="updateReviewSummary" />
+      <ReviewList :site-id="site.id" />
       
     </section>
 
@@ -87,6 +85,7 @@ import SiteMap from '@/components/SiteMap.vue';
 import CollapsibleDescription from '@/components/CollapsibleDescription.vue';
 import ReviewList from '@/components/ReviewList.vue'; 
 import RatingSummary from '@/components/RatingSummary.vue';
+import SiteImageGallery from '@/components/SiteImageGallery.vue'; 
 
 
 const route = useRoute();
@@ -94,11 +93,6 @@ const router = useRouter();
 const site = ref(null); 
 const isAuthenticated = ref(false); 
 
-// Función para actualizar las propiedades del sitio cuando el hijo (ReviewList) emite el resumen
-const updateReviewSummary = (summary) => {
-    site.value.cantidad_reseñas = summary.count;
-    site.value.calificacion_promedio = summary.average_rating;
-};
 
 // Función para mapear el estado de conservación a una clase CSS
 const getConservationClass = (estado) => {
@@ -112,11 +106,11 @@ const getConservationClass = (estado) => {
     return 'neutral';
 }
 
-// TAGS CLICABLES
+// IMPLEMENTACIÓN DE LA NAVEGACIÓN DE TAGS CLICABLES
 const filterByTag = (tag) => {
     router.push({ 
-        path: '/listado', // cambiar ruta porque no es /listado
-        query: { tags: tag } 
+        path: '/sites', 
+        query: { q: tag } 
     });
 }
 
@@ -125,8 +119,6 @@ const fetchSiteData = async () => {
     const siteId = route.params.id; 
     const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'; 
     
-    let siteData = null; 
-
     try {
         const siteResponse = await fetch(`${baseUrl}/api/sites/${siteId}`);
         if (!siteResponse.ok) {
@@ -136,11 +128,16 @@ const fetchSiteData = async () => {
             }
             throw new Error(`Error HTTP: ${siteResponse.status}`);
         }
-        siteData = await siteResponse.json();
         
-        // Inicializamos los placeholders que el ReviewList actualizará
-        siteData.cantidad_reseñas = 0;
-        siteData.calificacion_promedio = 'N/A';
+        let siteData = await siteResponse.json();
+        
+        // Asignamos las claves del backend al frontend.
+        siteData.calificacion_promedio = siteData.rating_avg || 'N/A';
+        siteData.cantidad_reseñas = siteData.reviews_count || 0;
+        
+        // Inicialización de placeholders de frontend
+        siteData.is_favorite = siteData.is_favorite || false;
+        siteData.images = siteData.images || []; // Ya viene de la API, pero nos aseguramos del array vacío si es null
 
         site.value = siteData; 
 
@@ -154,7 +151,7 @@ onMounted(fetchSiteData);
 </script>
 
 <style scoped>
-/* Estilos Mobile First (manteniendo los esenciales) */
+/* Estilos Mobile First */
 .site-detail-container {
   padding: 1rem;
   max-width: 100%;
@@ -183,14 +180,14 @@ hr {
   font-size: 0.8rem;
   font-weight: bold;
   margin-top: 0.5rem;
-  /* Estilos para las clases generadas por getConservationClass */
+  
   &.good { background-color: #d4edda; color: #155724; } 
   &.fair { background-color: #fff3cd; color: #856404; } 
   &.poor { background-color: #f8d7da; color: #721c24; } 
   &.neutral { background-color: #f1f1f1; color: #333; } 
 }
 
-/* --- ESTILOS DE TAGS CLICABLES --- */
+
 .tag-list {
     margin-top: 1rem;
     font-size: 0.9em;
@@ -203,7 +200,7 @@ hr {
     padding: 3px 8px;
     margin-right: 5px;
     border-radius: 12px;
-    cursor: pointer; /* Indica que es clicable */
+    cursor: pointer; 
     transition: background-color 0.2s;
 }
 
@@ -211,7 +208,7 @@ hr {
     background-color: #c0c0c0;
 }
 
-/* Estilos base para simulación */
+
 .tag-placeholder, .action-btn {
     border: 1px solid #ccc;
     padding: 8px;
@@ -227,7 +224,7 @@ hr {
 }
 
 
-/* Media Query para Tablet/Escritorio */
+
 @media (min-width: 768px) {
   .site-detail-container {
     max-width: 1200px;

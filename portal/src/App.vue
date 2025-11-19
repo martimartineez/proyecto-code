@@ -1,10 +1,3 @@
-<script setup>
-import { ref } from 'vue'
-import { RouterLink, RouterView } from 'vue-router'
-
-</script>
-
-
 <template>
   <header>
       <nav class="navbar navbar-expand-lg">
@@ -17,11 +10,11 @@ import { RouterLink, RouterView } from 'vue-router'
             	<span class="navbar-toggler-icon"></span>
           	</button>
 			<div class="collapse navbar-collapse" id="navbarNav">
-				<RouterLink to="/sites" class="nav-link m-2" id="explorar">Explorar!</RouterLink>
+				<RouterLink to="/sitios" class="nav-link m-2" id="explorar">Explorar!</RouterLink>
 				<RouterLink to="" class="nav-link m-2">¿Quienes somos?</RouterLink> 
 				<!-- barra de busqueda  -->
 				<div class="container-fluid p-0 pt-2">
-					<form class="d-flex" role="search">
+					<form class="d-flex" role="search" action="/sitios">
 						<div id="search">
 						<svg viewBox="0 0 420 60" xmlns="http://www.w3.org/2000/svg">
 							<rect class="bar"/>
@@ -30,7 +23,7 @@ import { RouterLink, RouterView } from 'vue-router'
 								<line class="handle" x1="32" y1="32" x2="44" y2="44"></line>
 							</g>
 						</svg>
-						<input type=search name=q aria-label="Search for inspiration"/>
+						<input id="busqueda" type=search name=q aria-label="Search for inspiration"/>
 						</div>
 					</form>
 				</div>
@@ -44,6 +37,14 @@ import { RouterLink, RouterView } from 'vue-router'
 </div>
   
 </template>
+
+<script setup>
+import { RouterLink, RouterView } from 'vue-router'
+
+
+
+</script>
+
 
 <style scoped>
 

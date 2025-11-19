@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from src.core.entity.tag import Tag
     from src.core.entity.categoria_sitio import CategoriaSitio
     from src.core.entity.ciudad import Ciudad
+    from src.core.entity.sitio_imagen import SitioImagen
 
 class SitioHistorico(Base):
     __tablename__ = "sitios_historicos"
@@ -49,6 +50,14 @@ class SitioHistorico(Base):
         back_populates="sitios",
     )
 
+    # Relación con imágenes del sitio
+    imagenes: Mapped[List["SitioImagen"]] = relationship(
+        "SitioImagen",
+        back_populates="sitio",
+        cascade="all, delete-orphan",
+        order_by="SitioImagen.orden",
+    )
+
     inserted_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
@@ -80,7 +89,15 @@ class SitioHistorico(Base):
         d["lat"] = self.latitud
         d["long"] = self.longitud
         d["tags"] = [t.nombre for t in self.tags]
+        # URL de portada si existe
+        try:
+            portada = next((img for img in getattr(self, "imagenes", []) if getattr(img, "portada", False)), None)
+            d["cover_url"] = portada.url_publica if portada else None
+        except Exception:
+            d["cover_url"] = None
         d["state_of_conservation"] = self.estadoConservacion
+        d["fechaRegistro"] = self.fechaRegistro.isoformat() if self.fechaRegistro else None
         d["inserted_at"] = self.inserted_at.isoformat() if self.inserted_at else None
         d["updated_at"] = self.updated_at.isoformat() if self.updated_at else None
         return d
+

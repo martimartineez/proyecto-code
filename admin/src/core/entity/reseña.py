@@ -34,6 +34,7 @@ class Reseña(Base):
         server_default="pendiente",
     )
 
+    motivo = Column(Text, nullable=True)
     def to_dict(self):
         return {
             "id": self.id,

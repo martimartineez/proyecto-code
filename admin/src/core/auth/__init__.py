@@ -42,6 +42,8 @@ def delete_user(user: Usuario):
 def create_user(**kwargs):
     # Soporte idRol (legacy) para asignar un único rol inicial
     rol_id = None
+    if(kwargs['apellido'] == None):
+        kwargs['apellido'] = ""
     if 'idRol' in kwargs and kwargs['idRol'] is not None:
         try:
             rol_id = int(kwargs.pop('idRol'))
