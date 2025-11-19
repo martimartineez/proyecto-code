@@ -3,7 +3,6 @@ from src.core.auth.usuario import Usuario
 from src.core.entity.rol import Rol
 from src.core.bcrypt import bcrypt
 from src.core.entity import services
-from src.core.auth.usuario_publico import UsuarioPublico
 
 
 
