@@ -6,20 +6,16 @@
 </template>
 
 <script>
+import { useApi } from '@/script/useApi';
+
 export default {
   methods: {
     async llamarApiBoton() {
-      try {
-        const response = await fetch('/api/boton');
-        if (response.status !== 200) {
-          window.location.href = '/login';
-          return;
-        }
-        const data = await response.json();
+      const { callProtectedApi } = useApi();
+
+      const data = await callProtectedApi('/api/boton');
+      if (data) {
         console.log('Respuesta de /api/boton:', data);
-      } catch (error) {
-        console.error('Error al llamar a /api/boton:', error);
-        window.location.href = '/login';
       }
     }
   }

@@ -35,6 +35,7 @@ const error = ref(null)
 
 const onGoogleResponse = (response) => {
   const credential = response.credential; 
+
   fetch("http://localhost:5000/api/google", {
     method: "POST",
     credentials: "include",
@@ -45,32 +46,33 @@ const onGoogleResponse = (response) => {
   })
     .then(async res => {
       const data = await res.json();
-      // Si el backend devuelve un error (status != 200)
+
+      // Si el backend devuelve un error
       if (!res.ok) {
-        // intentar mostrar un mensaje útil en la UI
         error.value = data?.error?.message || data?.message || 'Error en autenticación';
         return;
       }
 
-      // Guardar data para que ProfileView la consuma
-      // Puedes usar cualquier key; aqui usamos 'profileData'
-      try {
-        localStorage.setItem('profileData', JSON.stringify(data));
-      } catch (e) {
-        console.error('No se pudo guardar en localStorage', e);
+      // ===============================
+      //   REDIRECCIÓN DESPUÉS DEL LOGIN
+      // ===============================
+      const redirect = localStorage.getItem('redirectAfterLogin');
+
+      if (redirect) {
+        localStorage.removeItem('redirectAfterLogin');
+        router.push(redirect);
+      } else {
+        router.push({ name: 'profile' });
       }
+      // ===============================
 
-      // También asignar a la ref local por si quieres mostrar algo antes de redirigir
-      user.value = data.user || data;
-
-      // Redirigir a la vista de perfil (router tiene la ruta con name 'profile')
-      router.push({ name: 'profile' });
     })
     .catch(err => {
       console.error('Error en fetch:', err);
       error.value = 'Error de red. Intenta nuevamente más tarde.';
     });
 }
+
 </script>
 
 <style scoped>
