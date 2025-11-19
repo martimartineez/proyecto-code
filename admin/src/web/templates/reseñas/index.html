@@ -191,24 +191,34 @@
       </td>
       <td>{{ resena.inserted_at.strftime('%Y-%m-%d %H:%M') if resena.inserted_at else '' }}</td>
       <td>
-        <form action="/reseñas/{{ resena.id }}/aprobar" method="POST" style="display:inline;">
-          <button type="submit" class="button-approve">Aprobar</button>
-        </form>
-        <form action="/reseñas/{{ resena.id }}/rechazar" method="POST" 
-            class="form-rechazo" data-id="{{ resena.id }}" style="display:inline;">
-            <button type="button" class="button-reject btnAbrirRechazo">Rechazar</button>
-            <input type="hidden" name="motivo">
-        </form>
-        <form action="/reseñas/{{ resena.id }}/eliminar" 
-            method="POST" 
-            style="display:inline;"
-            onsubmit="return confirm('¿Seguro que querés eliminar esta reseña? Esta acción no se puede deshacer.');">
-            <button type="submit" class="button-delete">Eliminar</button>
-        </form>
-        <form action="/reseñas/reseña/{{ resena.id }}" method="GET" style="display:inline;">
-          <button type="submit" class="button-18">Ver detalles</button>
-        </form>
-      </td>
+    {# Mostrar botón APROBAR solo si NO está aprobada #}
+    {% if resena.estado != 'aprobada' %}
+    <form action="/reseñas/{{ resena.id }}/aprobar" method="POST" style="display:inline;">
+      <button type="submit" class="button-approve">Aprobar</button>
+    </form>
+    {% endif %}
+
+    {# Mostrar botón RECHAZAR solo si NO está rechazada #}
+    {% if resena.estado != 'rechazada' %}
+    <form action="/reseñas/{{ resena.id }}/rechazar" method="POST" 
+        class="form-rechazo" data-id="{{ resena.id }}" style="display:inline;">
+        <button type="button" class="button-reject btnAbrirRechazo">Rechazar</button>
+        <input type="hidden" name="motivo">
+    </form>
+    {% endif %}
+
+    <form action="/reseñas/{{ resena.id }}/eliminar" 
+        method="POST" 
+        style="display:inline;"
+        onsubmit="return confirm('¿Seguro que querés eliminar esta reseña? Esta acción no se puede deshacer.');">
+        <button type="submit" class="button-delete">Eliminar</button>
+    </form>
+
+    <form action="/reseñas/reseña/{{ resena.id }}" method="GET" style="display:inline;">
+      <button type="submit" class="button-18">Ver detalles</button>
+    </form>
+</td>
+
     </tr>
     {% endfor %}
   </tbody>
