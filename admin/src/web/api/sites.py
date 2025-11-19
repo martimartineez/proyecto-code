@@ -233,8 +233,9 @@ def crear_sitio():
             db.session.flush()
         sitio.tags.append(tag)
     db.session.commit()
-    user_id = get_jwt_identity()
-    user = db.session.query(Usuario).get(user_id)
+    mail = get_jwt_identity()
+    user = devolver_usuario_publico_por_email(mail)
+    
     registrar_evento_historial(
         id_sitio=sitio.id,
         id_usuario=user.id,
@@ -303,7 +304,7 @@ def auth():
     user = db.session.query(Usuario).filter_by(email=email).first()
     if user and bcrypt.check_password_hash(user.password, password):
         access_token = create_access_token(
-            identity=str(user.id), expires_delta=timedelta(hours=1)
+            identity=str(user.email), expires_delta=timedelta(hours=1)
         )
         expires = timedelta(hours=1)
         return (
@@ -497,8 +498,9 @@ def eliminar_reseña_poridSitio(id_sitio, id_resena):
             404,
         )
 
-    user_id = int(get_jwt_identity())
-
+    email = get_jwt_identity()
+    user = devolver_usuario_publico_por_email(email)
+    user_id = user.id
     if resena.id_usuario != user_id:
         return (
             jsonify(
@@ -528,8 +530,8 @@ def marcar_sitio_como_favorito(id_sitio):
             404,
         )
 
-    user_id = int(get_jwt_identity())
-    user = db.session.query(Usuario).get(user_id)
+    email = get_jwt_identity()
+    user = devolver_usuario_publico_por_email(email)
     if sitio in user.favoritos:
         return "", 204
     user.favoritos.append(sitio)
@@ -547,8 +549,8 @@ def desmarcar_sitio_como_favorito(id_sitio):
             404,
         )
 
-    user_id = int(get_jwt_identity())
-    user = db.session.query(Usuario).get(user_id)
+    email = get_jwt_identity()
+    user = devolver_usuario_publico_por_email(email)
     if sitio not in user.favoritos:
         return "", 204
     user.favoritos.remove(sitio)
@@ -575,12 +577,13 @@ def mostrar_todos_favoritos():
             400,
         )
 
-    user_id = int(get_jwt_identity())
-
+    email = get_jwt_identity()
+    user = devolver_usuario_publico_por_email(email)
+    user_id = user.id
     query = (
         db.session.query(SitioHistorico)
         .join(favoritos_usuarios_sitios)
-        .filter(favoritos_usuarios_sitios.c.usuarioId == user_id)
+        .filter(favoritos_usuarios_sitios.c.usuario_id == user_id)
     )
 
     total = query.count()
