@@ -1,9 +1,3 @@
-<script setup>
-import { RouterLink, RouterView } from 'vue-router'
-
-</script>
-
-
 <template>
   <header>
       <nav class="navbar navbar-expand-lg">
@@ -20,7 +14,7 @@ import { RouterLink, RouterView } from 'vue-router'
 				<RouterLink to="" class="nav-link m-2">¿Quienes somos?</RouterLink> 
 				<!-- barra de busqueda  -->
 				<div class="container-fluid p-0 pt-2">
-					<form class="d-flex" role="search">
+					<form class="d-flex" role="search" action="/sitios">
 						<div id="search">
 						<svg viewBox="0 0 420 60" xmlns="http://www.w3.org/2000/svg">
 							<rect class="bar"/>
@@ -29,11 +23,11 @@ import { RouterLink, RouterView } from 'vue-router'
 								<line class="handle" x1="32" y1="32" x2="44" y2="44"></line>
 							</g>
 						</svg>
-						<input type=search name=q aria-label="Search for inspiration"/>
+						<input id="busqueda" type=search name=q aria-label="Search for inspiration"/>
 						</div>
 					</form>
 				</div>
-				<RouterLink to="" class="nav-link d-none d-lg-flex me-5">Mi perfil</RouterLink>
+				<RouterLink to="/profile" class="nav-link d-none d-lg-flex me-5">Mi perfil</RouterLink>
 			</div>
       </div>
     </nav>
@@ -43,6 +37,14 @@ import { RouterLink, RouterView } from 'vue-router'
 </div>
   
 </template>
+
+<script setup>
+import { RouterLink, RouterView } from 'vue-router'
+
+
+
+</script>
+
 
 <style scoped>
 

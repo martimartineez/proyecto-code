@@ -33,7 +33,7 @@
       <!-- Controles de vista -->
       <div class="view-controls">
         <button 
-          @click="showMap = !showMap" 
+          @click="toggleMap"
           class="btn btn-secondary"
         >
           {{ showMap ? 'Ocultar Mapa' : 'Mostrar Mapa' }}
@@ -104,7 +104,7 @@
           <div class="field">
             <label class="field-label">Ordenar por</label>
             <select v-model="state.order_by" @change="onSearch" class="field-select">
-              <option value="fecha_registro">Fecha de registro</option>
+              <option value="fechaRegistro">Fecha de registro</option>
               <option value="nombre">Nombre</option>
             </select>
           </div>
@@ -169,13 +169,15 @@
 
 <script setup>
 // Vue y Vue Router
-import { onMounted, ref, reactive, watch } from 'vue';
+import { onMounted, ref, reactive, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 // API y componentes
 import { api } from '@/api/client';
 import SiteCard from '@/components/SiteCard.vue';
 import MapView from './MapView.vue';
+
+const restoreScroll = ref(false);
 
 // Constantes
 const per_page = 12;
@@ -194,7 +196,7 @@ const items = ref([]);
 const loading = ref(false);
 const error = ref(null);
 const filtersOpen = ref(false);
-const showMap = ref(false);
+const showMap = ref(route.query.map === 'true');
 
 // Paginación
 const page = ref(1);
@@ -235,6 +237,8 @@ function updateUrlQuery() {
     tags: state.tags.length ? state.tags : undefined,
     city: state.city || undefined,
     province: state.province ?? undefined,
+    map: showMap.value ? 'true' : undefined,
+    radius: (state.latitude && state.longitude) ? state.radius : undefined
   };
   
   // Eliminar propiedades undefined del query
@@ -243,9 +247,9 @@ function updateUrlQuery() {
   // Actualizar la ubicación del mapa si hay coordenadas
   if (state.latitude && state.longitude) {
     searchLocation.value = {
-      lat: state.latitude,
-      lng: state.longitude,
-      radius: state.radius
+      lat: Number(state.latitude),
+      lng: Number(state.longitude),
+      radius: Number(state.radius)
     };
   }
   
@@ -253,33 +257,24 @@ function updateUrlQuery() {
   router.replace({ query: q });
 }
 
+function toggleMap() {
+  showMap.value = !showMap.value;
+  // si se abre el mapa y ya hay coordenadas en el state, 
+  // asegurar que searchLocation esté listo
+  if (showMap.value && state.latitude && state.longitude) {
+    searchLocation.value = {
+      lat: Number(state.latitude),
+      lng: Number(state.longitude),
+      radius: Number(state.radius || 2000)
+    };
+  }
+  updateUrlQuery();
+}
+
 /**
  * Obtiene la lista de provincias y tags
  */
 async function fetchFilters() {
-  try {
-    const [prov, tg] = await Promise.all([
-      api.listProvinces(),
-      api.listTags(),
-    ]);
-    // Normalizar provincias y tags a { id, nombre }
-    const normProv = Array.isArray(prov) ? prov.map((p) => ({
-      id: p?.id ?? String(p?.nombre ?? p?.name ?? p),
-      nombre: p?.nombre ?? p?.name ?? String(p),
-    })) : [];
-    const normTags = Array.isArray(tg) ? tg.map((t) => ({
-      id: t?.id ?? String(t?.nombre ?? t?.name ?? t?.slug ?? t),
-      nombre: t?.nombre ?? t?.name ?? t?.slug ?? String(t),
-    })) : [];
-    provinces.value = normProv;
-    tags.value = normTags;
-    // Si vinieron vacíos, intentar derivar
-    if (!provinces.value.length || !tags.value.length) {
-      throw new Error('Filters empty, derive from /api/sites');
-    }
-  } catch (err) {
-    // Fallback: derivar filtros desde /api/sites
-    console.warn('Fallo /filters, derivando filtros desde /api/sites:', err);
     try {
       const res = await api.listSites({ page: 1, per_page: 500 });
       const raw = res?.data ?? res?.items ?? [];
@@ -301,9 +296,9 @@ async function fetchFilters() {
       console.error('Error al derivar filtros desde /api/sites:', e2);
       error.value = 'Error al cargar los filtros';
     }
-  } finally {
-    await fetchCities();
-  }
+    finally {
+      await fetchCities();
+    }
 }
 
 /**
@@ -329,7 +324,7 @@ async function fetchCities() {
     console.warn('Fallo /filters/cities, derivando ciudades desde /api/sites:', err);
     try {
       const provinceName = provinces.value.find(p => String(p.id) === String(state.province))?.nombre || state.province;
-      const res = await api.listSites({ province: provinceName, page: 1, per_page: 500 });
+      const res = await api.listSites({ province: provinceName, page: 1, per_page: 25 });
       const raw = res?.data ?? res?.items ?? [];
       const citySet = new Set(
         raw.map(it => (
@@ -400,6 +395,7 @@ async function fetchPage(reset = false) {
       const latitude = it.latitud ?? it.latitude ?? it.lat ?? null;
       const longitude = it.longitud ?? it.longitude ?? it.long ?? null;
       const cover_image = it.cover_image ?? it.coverImage ?? null;
+      const fechaRegistro = it.fechaRegistro ?? it.registration_date ?? null;
       let tagsArr = it.tags ?? [];
       if (Array.isArray(tagsArr)) {
         // si vienen objetos, extraer nombre/name
@@ -414,13 +410,10 @@ async function fetchPage(reset = false) {
         latitude,
         longitude,
         cover_image,
+        fechaRegistro,
         tags: tagsArr,
       };
     });
-    // Log rápido para inspeccionar forma del payload en desarrollo
-    if (raw && raw.length) {
-      try { console.debug('[Sites API] sample item', raw[0]); } catch (e) {}
-    }
     const meta = res?.meta;
     pages.value = meta ? Math.max(1, Math.ceil((meta.total || 0) / (meta.per_page || per_page))) : (res?.pages || 1);
     
@@ -505,12 +498,8 @@ function handleLocationUpdate(location) {
  * @param {Object} site - Sitio seleccionado
  */
 function handleSiteSelect(site) {
-  const element = document.getElementById(`site-${site.id}`);
-  if (element) {
-    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    element.classList.add('selected');
-    setTimeout(() => element.classList.remove('selected'), 2000);
-  }
+  // Guardar la posición de desplazamiento actual
+  sessionStorage.setItem('list-scroll', String(window.scrollY));
 }
 
 let io; // Referencia al IntersectionObserver
@@ -534,7 +523,7 @@ function setupInfiniteScroll() {
 
 // Recargar ciudades cuando cambia la provincia
 watch(() => state.province, async (newVal) => {
-  state.city = undefined; // Limpiar ciudad seleccionada
+  state.city = undefined; 
   
   if (newVal) {
     await fetchCities();
@@ -546,32 +535,62 @@ watch(() => state.province, async (newVal) => {
 });
 
 // Configurar scroll infinito cuando cambian los items
-watch(items, () => {
+watch(items, async () => {
   if (infiniteEl.value) setupInfiniteScroll();
 });
 
-// Cargar filtros y la primera página al montar el componente
+
+
+// Función para restaurar el scroll
+const restoreScrollPosition = () => {
+  const savedPosition = sessionStorage.getItem('list-scroll');
+  if (savedPosition) {
+    nextTick(() => {
+      window.scrollTo({ top: Number(savedPosition), behavior: 'auto' });
+      // Limpiar la posición guardada después de restaurarla
+      sessionStorage.removeItem('list-scroll');
+    });
+  }
+};
 
 onMounted(async () => {
-  state.latitude = undefined;
-  state.longitude = undefined;
-  searchLocation.value = null;
+  // 1. Recuperar estado del mapa (Abierto/Cerrado)
+  if (route.query.map === 'true') {
+    showMap.value = true;
+  }
 
-  const cleaned = { ...route.query };
-  delete cleaned.latitude;
-  delete cleaned.longitude;
-  delete cleaned.radius;
-  router.replace({ query: cleaned });
+  // 2. Recuperar Ubicación y Radio
+  if (route.query.latitude && route.query.longitude) {
+    // Parsear a números (Float para lat/long, Int o Float para radio)
+    const lat = parseFloat(route.query.latitude);
+    const lng = parseFloat(route.query.longitude);
+    const rad = route.query.radius ? parseFloat(route.query.radius) : 2000;
 
+    // Actualizar el estado interno
+    state.latitude = lat;
+    state.longitude = lng;
+    state.radius = rad;
+
+    searchLocation.value = {
+      lat: lat,
+      lng: lng,
+      latitude: lat, 
+      longitude: lng,
+      radius: rad 
+    };
+  }
+
+  // 3. Cargas iniciales
   try {
     await fetchFilters();
     await fetchPage(true);
     setupInfiniteScroll();
+    restoreScrollPosition();
   } catch (err) {
-    console.error('Error al inicializar el componente:', err);
-    error.value = 'Error al cargar la página';
+    console.error('Error al inicializar:', err);
   }
 });
+
 </script>
 
 <style scoped>
