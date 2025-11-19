@@ -129,7 +129,34 @@
         </div>
 
         <div v-else-if="activeTab === 'favoritos'">
-          <p>Aquí se mostrarán los favoritos del usuario.</p>
+          <div v-if="loadingFavoritos" class="loading">Cargando favoritos...</div>
+          <div v-else-if="favoritos.length > 0">
+            <div class="review-list">
+              <article
+                v-for="(fav, idx) in favoritos"
+                :key="fav.id || idx"
+                class="review-card clickable"
+                @click="openResena(fav)"
+                role="link"
+                tabindex="0"
+                @keydown.enter="openResena(fav)"
+              >
+                <header class="review-header">
+                  <div class="score-badge score-high" aria-label="Favorito">
+                    <div class="score-number">★</div>
+                    <div class="score-label">Fav</div>
+                  </div>
+                  <div class="review-meta">
+                    <div class="review-title">{{ fav.sitio || fav.nombre || fav.titulo || 'Favorito' }}</div>
+                  </div>
+                </header>
+                <p class="review-text">{{ fav.descripcion || fav.descripcion_corta || '' }}</p>
+              </article>
+            </div>
+          </div>
+          <div v-else class="empty-state">
+            <p>No tienes sitios favoritos aún.</p>
+          </div>
         </div>
       </div>
     </div>
@@ -149,6 +176,8 @@ const error = ref("");
 const activeTab = ref("reseñas");
 const reseñas = ref([]);
 const loadingReseñas = ref(false);
+const favoritos = ref([]);
+const loadingFavoritos = ref(false);
 
 // Pagination
 const pageSize = 25;
@@ -324,11 +353,40 @@ function reloadReseñas() {
   loadResenas();
 }
 
+// Función reutilizable para cargar favoritos
+async function loadFavoritos() {
+  loadingFavoritos.value = true;
+  try {
+    const res = await fetch("http://localhost:5000/api/favoritos_usuario", {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error("Error al cargar los favoritos.");
+    }
+
+    const data = await res.json();
+    favoritos.value = Array.isArray(data.favoritos) ? data.favoritos : [];
+  } catch (e) {
+    console.error(e.message || e);
+    favoritos.value = [];
+  } finally {
+    loadingFavoritos.value = false;
+  }
+}
+
 watch(
   () => activeTab.value,
   (newTab) => {
     if (newTab === "reseñas") {
       loadResenas();
+    }
+    if (newTab === "favoritos") {
+      loadFavoritos();
     }
   },
   { immediate: true }
@@ -359,45 +417,64 @@ function scoreClass(p) {
   return "score-low";                     // rojo
 }
 
-// Helper para extraer posible id del objeto reseña
+// Helper para extraer posible id del objeto reseña/favorito
 function extractSiteIdFromResena(r) {
-  return r?.sitio_id ?? r?.sitioId ?? r?.id_sitio ?? r?.idSitio ?? r?.site_id ?? r?.siteId ?? null;
+  return (
+    r?.sitio_id ??
+    r?.sitioId ??
+    r?.id_sitio ??
+    r?.idSitio ??
+    r?.site_id ??
+    r?.siteId ??
+    r?.id ?? // <-- ahora también acepta 'id'
+    r?.ID ??
+    null
+  );
 }
 
 async function openResena(reseña) {
   if (!reseña) return;
-  // 1) Si la API ya devuelve un id, navegar directo
+
+  // 1) Si tenemos id directo, navegar al detalle
   const sitioId = extractSiteIdFromResena(reseña);
   if (sitioId) {
-    router.push({ name: 'detalle-sitio', params: { id: String(sitioId) } });
+    router.push({ name: "detalle-sitio", params: { id: String(sitioId) } });
     return;
   }
 
-  // 2) Fallback: buscar por nombre del sitio (reseña.sitio)
-  const q = reseña.sitio || reseña.sitio_nombre || reseña.sitioNombre;
+  // 2) Fallback: intentar buscar por nombre/nombre de sitio
+  const q =
+    reseña.sitio ||
+    reseña.sitio_nombre ||
+    reseña.sitioNombre ||
+    reseña.nombre ||      // <-- favorito devuelve 'nombre'
+    reseña.name ||
+    reseña.titulo ||
+    null;
+
   if (!q) return;
 
   try {
     const url = new URL(`${API_BASE_URL}/sites`, window.location.origin);
-    url.searchParams.set('q', q);
-    url.searchParams.set('per_page', '1'); // solo necesitamos el primer match
+    url.searchParams.set("q", q);
+    url.searchParams.set("per_page", "1"); // solo necesitamos el primer match
     const res = await fetch(url.toString());
     if (!res.ok) {
-      console.warn('No se pudo buscar el sitio para la reseña', res.status);
+      console.warn("No se pudo buscar el sitio para la reseña/favorito", res.status);
       return;
     }
     const data = await res.json();
-    // el client puede devolver { data: [...], meta: ... } o un array directo
     const items = data?.data ?? data?.items ?? data;
     const first = Array.isArray(items) && items.length ? items[0] : null;
     const id = first?.id ?? first?.ID ?? first?._id;
     if (id) {
-      router.push({ name: 'detalle-sitio', params: { id: String(id) } });
+      router.push({ name: "detalle-sitio", params: { id: String(id) } });
     } else {
-      console.warn('No se encontró un sitio coincidente para:', q);
+      // Último recurso: navegar a la página de búsqueda con el query
+      router.push({ name: "sites", query: { q } });
     }
   } catch (err) {
-    console.error('Error buscando sitio para reseña:', err);
+    console.error("Error buscando sitio para reseña/favorito:", err);
   }
 }
 </script>
