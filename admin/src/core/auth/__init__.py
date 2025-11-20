@@ -103,20 +103,7 @@ def baja_logica_usuario(user: Usuario):
 
 def comprobar_bloqueado(user):
     estado = user.activo
-    return estado
-
-def crear_usuario_publico(nombre, apellido, email, foto):
-    if not checkear_usuario_publico_existente(email):
-        usuario_publico = UsuarioPublico(
-            nombre=nombre,
-            apellido=apellido,
-            email=email,
-            foto=foto,
-        )
-        db.session.add(usuario_publico)
-        db.session.commit()
-        return usuario_publico
-    
+    return estado 
 
 def checkear_usuario_publico_existente(email):
     usuario = db.session.query(Usuario).filter(Usuario.email == email).first()
