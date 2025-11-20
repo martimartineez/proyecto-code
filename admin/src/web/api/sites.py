@@ -373,7 +373,7 @@ def auth():
 
 
 @bp.route("/sites/<int:id>/reviews", methods=["GET"])
-# @jwt_required()
+@jwt_required()
 def listar_resenas_sitio(id):
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)

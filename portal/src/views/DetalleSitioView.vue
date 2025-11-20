@@ -1,7 +1,7 @@
 <template>
   <main v-if="site && !site.error" class="site-detail-container">
     <button @click="router.back()" class="back-button">
-      &larr; Volver al Listado
+      &larr; Volver atras
     </button>
     
     <section class="info-and-media">
