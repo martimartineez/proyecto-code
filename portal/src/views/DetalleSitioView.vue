@@ -161,16 +161,27 @@ const get_review = computed(() => {
 })
 
 const user_reviews = async() => {
-  const res = await fetch(`${API_URL}/api/reseñas_usuario`, {
-  method: "GET",
-  credentials: "include",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  });
-  let valor = await res.json();
-  reviews.value = valor.reseñas;
-  console.log(reviews.value);
+  try {
+    const res = await fetch(`${API_URL}/api/reseñas_usuario`, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (res.status === 500) {
+      reviews.value = [];
+      return;
+    }
+    if (!res.ok) {
+      throw new Error(res.status);
+    }
+    let valor = await res.json();
+    reviews.value = valor.reseñas;
+    console.log(reviews.value);
+  } catch (err) {
+    reviews.value = [];
+  }
 }
 
 
