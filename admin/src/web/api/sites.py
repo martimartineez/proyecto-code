@@ -750,7 +750,7 @@ def reseñas_usuario():
     reseñas_json = [
         {
             "sitio": r.sitio.nombre,
-            "texto": r.texto,
+            "texto": r.texto[:30] + ("..." if len(r.texto) > 30 else ""),
             "puntuacion": r.puntaje,
             "fecha": r.inserted_at.isoformat() if r.inserted_at else None,
             "estado": r.estado,
@@ -759,8 +759,6 @@ def reseñas_usuario():
         }
         for r in reseñas
     ]
-
-    #print("reseñas_json:", reseñas_json)  # Depuración
 
     return jsonify({"reseñas": reseñas_json}), 200
 
@@ -792,11 +790,6 @@ def favoritos_usuario():
     ]
 
     
-    # Convertir a diccionarios
-
-
-    #print("reseñas_json:", reseñas_json)  # Depuración
-
     return jsonify({"favoritos": favoritos_json}), 200
 
 
