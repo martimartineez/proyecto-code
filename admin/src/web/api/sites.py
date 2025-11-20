@@ -816,6 +816,7 @@ def favoritos_usuario():
         {
             "id": s.id,
             "nombre": s.nombre,
+            "desc_corta": s.descBreve,
             "fecha": s.inserted_at 
             # agregar lo que necesites
         }
