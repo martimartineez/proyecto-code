@@ -18,7 +18,10 @@
         <pre class="payload">{{ user }}</pre>
       </div>
 
-      <router-link to="/" class="back">Volver</router-link>
+      <button @click="router.back()" class="back-button">
+         Volver
+      </button>
+      <!-- <router-link to="/" class="back">Volver</router-link> -->
     </div>
   </main>
 </template>
@@ -128,5 +131,41 @@ const onGoogleResponse = (response) => {
   white-space: pre-wrap;
   max-height: 160px;
   overflow: auto;
+}
+
+.back-button {
+  margin: 1rem auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center; /* <- asegura que el texto esté centrado dentro del botón */
+  gap: 0.5rem;
+  padding: 0.6rem 1.1rem;
+  min-width: 140px;       /* opcional: evita que el botón sea demasiado pequeño */
+  background: linear-gradient(90deg, #6c5ce7 0%, #00b894 100%);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  box-shadow: 0 8px 20px rgba(16,24,40,0.12);
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .12s ease, opacity .12s;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-align: center;     /* redundante con justify-content pero útil como fallback */
+}
+
+.back-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px rgba(16,24,40,0.16);
+  opacity: 0.98;
+}
+
+.back-button:active {
+  transform: translateY(0);
+  box-shadow: 0 8px 20px rgba(16,24,40,0.12);
+}
+
+.back-button:focus {
+  outline: 3px solid rgba(108,92,231,0.18);
+  outline-offset: 4px;
 }
 </style>
