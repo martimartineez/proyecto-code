@@ -10,6 +10,9 @@
           </div>
           </RouterLink>
       </div>
+      <div v-else>
+        <h5> No hay Sitios disponibles </h5>
+      </div>
       <div v-for="sitio in sitiosHero.slice(1)" :key="sitio.id" class="carousel-item">
           <RouterLink :to="{ name: 'detalle-sitio', params: { id: sitio.id } }">
           <img alt="museo-ejemplo" :src="sitio.cover_url" class="d-block w-100">    
@@ -380,9 +383,7 @@ function sitiosPorFila(lista) {    //muestra de a 1 elemento en celular y 3 en p
       overflow: hidden;
       padding: 0 20px;
     }
-    .carousel-item h4 {
-      font-family: 'Varela Round', sans-serif;
-    }
+
     .carousel-item img {
       max-width: 100%;
       display: inline-block;

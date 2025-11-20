@@ -108,6 +108,9 @@
               </template>
             </Review>
             <p> Estado: <b> {{ get_review.estado }} </b></p>
+            <button class="btn btn-danger mb-3" @click="delete_review">
+              Borrar Reseña
+            </button>
           </span>
         </div>
         <ReviewList :site-id="site.id" />
@@ -207,8 +210,27 @@ const user_reviews = async() => {
   }
 }
 
-
-
+const delete_review = async() =>{
+  try{
+    console.log(get_review.value.id);
+    console.log(site.value.id);
+    console.log(get_review.value.id);
+        const res = await fetch(`${API_URL}/api/sites/${site.value.id}/reviews/${get_review.value.id}`, {
+          method: "DELETE",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+      if (!res.ok) {
+        throw new Error(res.status);
+      }
+  }
+  catch(error){
+    console.log(error);
+  }
+    window.location.reload();
+}
 
 // *** LÓGICA DE REDIRECCIÓN CONDICIONAL PARA ESCRIBIR RESEÑA ***
 const handleRestrictedAction = async (actionType) => {

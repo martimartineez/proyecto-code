@@ -82,7 +82,6 @@ const profileEl = ref(null)
 
 
 function onDocumentClick(e) {
-  if (!menuOpen.value) return
   const el = profileEl.value
   if (!el) return
   if (!el.contains(e.target)) {
@@ -215,7 +214,7 @@ nav{
     padding: 0 30px 0 60px;
     border: none;
     border-radius: 100px;
-    font: 24px/1 system-ui, sans-serif;
+    font-size: 24px;
     outline-offset: -8px;
 }
 

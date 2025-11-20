@@ -462,7 +462,7 @@ def crear_resena_sitio(id_sitio):
             404,
         )
 
-    if not texto or puntaje is None or float(puntaje) < 1 or float(puntaje) > 5 or len(texto) < 20:
+    if not texto or puntaje is None or float(puntaje) < 0.5 or float(puntaje) > 5 or len(texto) < 20:
         return (
             jsonify(
                 {
@@ -782,7 +782,9 @@ def reseñas_usuario():
     # Convertir a diccionarios
     reseñas_json = [
         {
+            "id": r.id,
             "usuario_id": r.id_usuario,
+            "sitio_id": r.sitio.id,
             "usuario": r.usuario.nombre,
             "sitio": r.sitio.nombre,
             "texto": r.texto,

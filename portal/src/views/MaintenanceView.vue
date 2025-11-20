@@ -42,7 +42,6 @@ export default {
   text-align: center;
   padding: 20px;
   background-color: #f8f9fa;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 .maintenance-content {

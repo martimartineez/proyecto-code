@@ -658,8 +658,6 @@ const sortedFavoritos = computed(() => {
   margin: 48px auto;
   padding: 0 16px;
   text-align: center;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
-    Arial;
   color: #222;
 }
 
