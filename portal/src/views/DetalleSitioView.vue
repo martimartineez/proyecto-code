@@ -237,7 +237,7 @@ const handleRestrictedAction = async (actionType) => {
     isActionLoading.value = true;
     
 
-    const isAuthenticatedCheck = await callProtectedApi(`${API_URL}/api/perfil`, { method: 'GET', credentials: 'include'});
+    const isAuthenticatedCheck = await callProtectedApi('/api/perfil', { method: 'GET', credentials: 'include'});
     console.log(isAuthenticatedCheck, '<<<----------------------------------')
     isActionLoading.value = false;
 
@@ -309,13 +309,11 @@ const filterByTag = (tag) => {
     });
 }
 
-//const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 
 const fetchSiteData = async () => {
     const siteId = route.params.id; 
-    //const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'; 
-    //const API_URL = import.meta.env.VITE_API_BASE_URL;
+
 
     
     try {
