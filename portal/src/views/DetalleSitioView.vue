@@ -235,58 +235,52 @@ const delete_review = async() =>{
 // *** LÓGICA DE REDIRECCIÓN CONDICIONAL PARA ESCRIBIR RESEÑA ***
 const handleRestrictedAction = async (actionType) => {
     isActionLoading.value = true;
-    
 
-    const isAuthenticatedCheck = await callProtectedApi('/api/perfil', { method: 'GET' });
-    
+    // Si NO está logueado, useApi lo redirige
+    const perfil = await callProtectedApi('/api/perfil');
+
     isActionLoading.value = false;
 
-    if (isAuthenticatedCheck !== null) {
-        if (actionType === 'REVIEW') {
-            console.log("Abrir modal/formulario para crear reseña.");
-        }
+    if (perfil === null) return; // Ya fue redirigido por useApi()
+
+    // Si está logueado → permitir acción
+    if (actionType === 'REVIEW') {
+        console.log("Abrir modal/formulario para crear reseña.");
     }
 };
 
 const toggleFavorite = async () => {
     isActionLoading.value = true;
+
+    // 1) Primero verificar login usando useApi
+    const perfil = await callProtectedApi('/api/perfil');
     
-    const isCurrentlyFavorited = site.value.is_favorite;
-    const method = isCurrentlyFavorited ? 'DELETE' : 'PUT';
-    
-    try {
-        const url = `/api/sites/${site.value.id}/favorite`;
-
-        const respuesta = await fetch(url, {
-            method: method,
-            credentials: "include"
-        });
-
-        // --- AUTENTICACIÓN / REDIRECCIÓN ---
-        if (respuesta.status === 401 || respuesta.status === 403) {
-
-            // Guardamos la URL actual para volver después del login
-            localStorage.setItem('redirectAfterLogin', window.location.pathname);
-
-            // Redirigimos al login
-            window.location.href = '/login';
-            return;
-        }
-        // -----------------------------------
-
-        if (!respuesta.ok) {
-            console.error("Error marcando favorito:", respuesta.status);
-            return;
-        }
-
-        // Si todo OK → actualizamos visualmente
-        site.value.is_favorite = !isCurrentlyFavorited;
-
-    } catch (error) {
-        console.error("Error de red al marcar favorito:", error);
-    } finally {
+    if (perfil === null) { 
+        // useApi ya redirigió al login si no estaba autenticado
         isActionLoading.value = false;
+        return;
     }
+
+    // 2) Luego mandamos la acción de favorito
+    const method = site.value.is_favorite ? "DELETE" : "PUT";
+
+    const res = await callProtectedApi(
+        `/api/sites/${site.value.id}/favorite`,
+        {
+            method
+        }
+    );
+
+    // 3) Si callProtectedApi devolvió null → redirigió solo
+    if (res === null) {
+        isActionLoading.value = false;
+        return;
+    }
+
+    // 4) Actualizar el estado visual
+    site.value.is_favorite = !site.value.is_favorite;
+
+    isActionLoading.value = false;
 };
 
 // Función para mapear el estado de conservación a una clase CSS

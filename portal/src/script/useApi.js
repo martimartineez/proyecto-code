@@ -1,25 +1,32 @@
-// src/composables/useApi.js
 export function useApi() {
     async function callProtectedApi(url, options = {}) {
         try {
-            const response = await fetch(url, options);
+            const response = await fetch(url, {
+                credentials: "include",
+                ...options
+            });
 
-            if (!response.ok) {
-                // Guardar pestaña actual
+            // Solo redirigir si NO está autenticado
+            if (response.status === 401 || response.status === 403) {
                 localStorage.setItem('redirectAfterLogin', window.location.pathname);
-
                 window.location.href = '/login';
                 return null;
             }
 
-            return await response.json();
+            // Si la respuesta es 204 (No Content)
+            if (response.status === 204) {
+                return { ok: true };
+            }
+
+            // Para otros errores, retornar null sin redirigir
+            if (!response.ok) {
+                return null;
+            }
+
+            return await response.json(); // Aquí sí hay JSON
+
         } catch (error) {
             console.error('API error:', error);
-
-            // Guardar pestaña actual también en errores de red
-            localStorage.setItem('redirectAfterLogin', window.location.pathname);
-
-            window.location.href = '/login';
             return null;
         }
     }
