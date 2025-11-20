@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from src.core.entity.rol import Rol  
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey, String, Table, Column, UniqueConstraint
+from sqlalchemy import func
 
 if TYPE_CHECKING:
     from src.core.entity.rol import Rol
@@ -23,7 +24,11 @@ favoritos_usuarios_sitios = Table(
     Base.metadata,
     Column("usuario_id", ForeignKey("usuarios.id"), primary_key=True),
     Column("sitio_id", ForeignKey("sitios_historicos.id"), primary_key=True),
-    UniqueConstraint("usuario_id", "sitio_id", name="unique_user_site_favorite")
+
+    Column("inserted_at", DateTime, server_default=func.now(), nullable=False),
+    Column("updated_at", DateTime, server_default=func.now(), onupdate=func.now(), nullable=False),
+
+    UniqueConstraint("usuario_id", "sitio_id", name="unique_user_site_favorite"),
 )
 
 class Usuario(Base):
