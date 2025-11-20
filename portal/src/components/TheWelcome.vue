@@ -124,6 +124,53 @@
           </div>
       </div>
     </div>
+    <div id="slide-ratings"><a href="/"> <p class="slider-title"> Mejor Puntuados </p> </a>
+        <div class="row">
+            <div id="ratings" class="carousel slide" data-ride="carousel" data-interval="0">
+              <!-- slides -->
+              <div class="carousel-item active">
+              <div class="row">
+                <div class="col-md-4" v-for="sitio in sitiosPuntaje[0]" :key="sitio.id">
+                  <RouterLink :to="{ name: 'detalle-sitio', params: { id: sitio.id } }">
+                    <SliderHome>
+                      <template #imagen>
+                          <img v-if="sitio.cover_url" :src="sitio.cover_url" class="img-responsive" />  
+                          <img v-else src="@/assets/Placeholder.png" class="img-responsive" />
+                      </template>
+                      <template #titulo>{{ sitio.name }}</template>
+                      <template #desc>{{ sitio.short_description }}</template>
+                    </SliderHome>
+                  </RouterLink>
+                </div>
+              </div>
+            </div>
+            <div v-for="(fila, index) in sitiosPuntaje.slice(1)" :key="index" class="carousel-item">
+              <div class="row">
+                <div class="col-md-4" v-for="sitio in fila" :key="sitio.id">
+                  <RouterLink :to="{ name: 'detalle-sitio', params: { id: sitio.id } }">
+                    <SliderHome>
+                      <template #imagen>
+                          <img v-if="sitio.cover_url" :src="sitio.cover_url" class="img-responsive" />  
+                          <img v-else src="@/assets/Placeholder.png" class="img-responsive" />
+                      </template>
+                      <template #titulo>{{ sitio.name }}</template>
+                      <template #desc>{{ sitio.short_description }}</template>
+                    </SliderHome>
+                  </RouterLink>
+                </div>
+              </div>
+            </div>
+          <button class="carousel-control-prev" type="button" data-bs-target="#ratings" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#ratings" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+          </button>
+          </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -134,12 +181,15 @@ import SliderHome from './Slider-home.vue';
 const openReadmeInEditor = () => fetch('/__open-in-editor?file=README.md');
 import { api } from '@/api/client';
 import { ref, onMounted, computed } from 'vue';
-
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 const sitios = ref([]);
+const sitiosRatings = ref([]);
+const sitiosFavoritos = ref([]);
 
 onMounted(async () => {
      sitios.value  = await api.listSites();
+     await fetchRatings();
 })
 
 
@@ -156,6 +206,31 @@ const ultimosSitios = computed(() => {
   return sitiosPorFila(lista);
 })
 
+const sitiosPuntaje = computed(() => {
+  var lista = sitiosRatings.value || [];
+  console.log(lista);
+  return sitiosPorFila(lista);
+})
+
+const fetchRatings = async() =>{
+  const ratings = await Promise.all(  
+  sitios.value.data.map(async (site) => {
+    const data = await fetchRatingSitio(site.id);
+    return {
+      ...site,
+      rating_avg: data.rating_avg !== "N/A" ? data.rating_avg : 0,
+      reviews_count: data.reviews_count
+    };
+    })
+  );
+  sitiosRatings.value = ratings.sort((a, b) => b.rating_avg - a.rating_avg);
+  console.log(sitiosRatings.value);
+}
+
+const fetchRatingSitio= async(id) => {
+  const res = await fetch(`${API_URL}/api/sites/${id}`);
+  return await res.json();
+}
 
 
 function sitiosPorFila(lista) {    //muestra de a 1 elemento en celular y 3 en pc
@@ -165,8 +240,8 @@ function sitiosPorFila(lista) {    //muestra de a 1 elemento en celular y 3 en p
     cant = 3;
   else
     cant = 1;
-  for (let i = 0; i < lista.length & grupos.length < 3; i += cant) {
-      if(lista.length - i >= i)          //se asegura que la lista sea multiplo de 3
+  for (let i = 0; i < lista.length && grupos.length < 3; i += cant) {
+      if(lista.length - i >= cant)          //se asegura que la lista sea multiplo de 3
         grupos.push(lista.slice(i, i + cant))
     }
     return grupos;
@@ -323,7 +398,7 @@ function sitiosPorFila(lista) {    //muestra de a 1 elemento en celular y 3 en p
       background: var(--pri-color);
       box-shadow: 0px 2px 2px rgba(0,0,0,0.1);
       height: 100%;
-      width: 90%;
+      width: 85%;
       justify-self: center;
     }
     .thumb-content {
