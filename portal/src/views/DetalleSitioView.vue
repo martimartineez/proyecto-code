@@ -58,7 +58,7 @@
         
         <div class="action-buttons">
             <button
-              class="action-btn primary"
+              class="action-btn primary mb-3"
               @click="handleRestrictedAction('REVIEW')"
               :disabled="isActionLoading"
               data-bs-toggle="collapse"
@@ -71,7 +71,7 @@
             </button>
             
             <button
-              class="action-btn favorite-btn"
+              class="action-btn favorite-btn mb-3"
               :class="{ favorited: is_favorite }"
               @click="toggleFavorite"
               :aria-pressed="is_favorite"
@@ -92,16 +92,17 @@
       </div>
 
       <!-- Sección de reseñas -->
-      <template v-if="reviewsEnabled">
+      <template v-if="reviewsEnabled">  
         <div class="collapse" id="formReseña">
-          <span v-if="!has_review"><ReviewForm :site-id="site.id" /> </span>
-          <span v-else-if="get_review">
+          <span v-if="!has_review"><ReviewForm :site-id="site.id" >  
+          </ReviewForm></span>
+          <span v-else-if=" !editando && get_review">
             <Review :review="get_review">
               <template #id>
                 {{ get_review.usuario }}
               </template>
               <template #puntuaciom>
-                {{ get_review.rating }}
+                {{ get_review.puntuacion }}
               </template>
               <template #comentario>
                 {{ get_review.texto }}
@@ -111,6 +112,16 @@
             <button class="btn btn-danger mb-3" @click="delete_review">
               Borrar Reseña
             </button>
+            <button class="btn btn-success mb-3 ms-2" @click="edicion">
+              Editar Reseña
+            </button>
+          </span>
+          <span v-else="!has_review">
+            <ReviewForm :site-id="site.id">
+              <template #texto>
+                <textarea class="form-control" name="comment" id="reseña" rows="3" minlength="20" maxlength="1000" required> {{ get_review.texto }} </textarea>
+              </template>
+            </ReviewForm>
           </span>
         </div>
         <ReviewList :site-id="site.id" />
@@ -136,7 +147,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useApi } from '@/script/useApi'; 
 import SiteMap from '@/components/SiteMap.vue';
 import CollapsibleDescription from '@/components/CollapsibleDescription.vue';
 
@@ -164,11 +174,11 @@ import Review from '../components/Review.vue';
 
 const route = useRoute();
 const router = useRouter();
-const { callProtectedApi } = useApi(); // Inicializamos el composable para llamadas protegidas
 const site = ref(); 
 const isActionLoading = ref(false); // Deshabilita botones durante el fetch
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 const reviews = ref([]);
+const editando = ref(false);
 // *** IMPLEMENTACIÓN FINAL DE LA ACCIÓN DE FAVORITOS (PUT/DELETE) ***
 
 
@@ -185,6 +195,10 @@ const get_review = computed(() => {
    return reviews.value.find(
     review => review.sitio === site.value.name);
 })
+
+const edicion = () => {
+  editando.value = true;
+};
 
 const user_reviews = async() => {
   try {
@@ -211,6 +225,7 @@ const user_reviews = async() => {
 }
 
 const delete_review = async() =>{
+  if(!confirm("¿Esta seguro de que quieres eliminar esta reseña?")) return;
   try{
     console.log(get_review.value.id);
     console.log(site.value.id);
@@ -234,18 +249,37 @@ const delete_review = async() =>{
 
 // *** LÓGICA DE REDIRECCIÓN CONDICIONAL PARA ESCRIBIR RESEÑA ***
 const handleRestrictedAction = async (actionType) => {
-    isActionLoading.value = true;
-    
+  isActionLoading.value = true;
+  try {
+    const res = await fetch(`${API_URL}/api/perfil`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }
+    });
 
-    const isAuthenticatedCheck = await callProtectedApi('/api/perfil', { method: 'GET' });
-    
-    isActionLoading.value = false;
-
-    if (isAuthenticatedCheck !== null) {
-        if (actionType === 'REVIEW') {
-            console.log("Abrir modal/formulario para crear reseña.");
-        }
+    // No autenticado → redirigir al login (mismo flujo que antes)
+    if (res.status === 401 || res.status === 403) {
+      localStorage.setItem('redirectAfterLogin', window.location.pathname);
+      window.location.href = '/login';
+      return;
     }
+
+    if (!res.ok) {
+      // error inesperado pero no forzamos login
+      console.error('Error comprobando perfil:', res.status);
+      return;
+    }
+
+    // Autenticado: abrir el formulario o lo que corresponda
+    if (actionType === 'REVIEW') {
+      console.log('Abrir modal/formulario para crear reseña.');
+    }
+
+  } catch (err) {
+    console.error('Error de red comprobando autenticación:', err);
+  } finally {
+    isActionLoading.value = false;
+  }
 };
 
 const toggleFavorite = async () => {
@@ -255,24 +289,23 @@ const toggleFavorite = async () => {
     const method = isCurrentlyFavorited ? 'DELETE' : 'PUT';
     
     try {
-        const url = `/api/sites/${site.value.id}/favorite`;
+        const url = `${API_URL}/api/sites/${site.value.id}/favorite`;
 
         const respuesta = await fetch(url, {
-            method: method,
+             method: method,
             credentials: "include"
-        });
+         });
+ 
+         // --- AUTENTICACIÓN / REDIRECCIÓN ---
+         if (respuesta.status === 401 || respuesta.status === 403) {
 
-        // --- AUTENTICACIÓN / REDIRECCIÓN ---
-        if (respuesta.status === 401 || respuesta.status === 403) {
+             // Guardamos la URL actual para volver después del login
+             localStorage.setItem('redirectAfterLogin', window.location.pathname);
 
-            // Guardamos la URL actual para volver después del login
-            localStorage.setItem('redirectAfterLogin', window.location.pathname);
-
-            // Redirigimos al login
-            window.location.href = '/login';
-            return;
-        }
-        // -----------------------------------
+             // Redirigimos al login
+             window.location.href = '/login';
+             return;
+         }
 
         if (!respuesta.ok) {
             console.error("Error marcando favorito:", respuesta.status);
@@ -360,6 +393,10 @@ const fetchSiteData = async () => {
 
 onMounted(fetchSiteData);
 onMounted(user_reviews);
+onMounted(() => {
+  editando.value = false;
+});
+
 </script>
 
 <style scoped>
