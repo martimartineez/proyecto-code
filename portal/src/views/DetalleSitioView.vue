@@ -237,8 +237,8 @@ const handleRestrictedAction = async (actionType) => {
     isActionLoading.value = true;
     
 
-    const isAuthenticatedCheck = await callProtectedApi('/api/perfil', { method: 'GET' });
-    
+    const isAuthenticatedCheck = await callProtectedApi('/api/perfil', { method: 'GET', credentials: 'include'});
+    console.log(isAuthenticatedCheck, '<<<----------------------------------')
     isActionLoading.value = false;
 
     if (isAuthenticatedCheck !== null) {
