@@ -40,7 +40,7 @@ def create_app(env="development", static_folder="../../static"):
     app.config["JWT_COOKIE_SAMESITE"] = "None"       # IMPORTANTE cambiar a none para produccion
     app.config["JWT_COOKIE_HTTPONLY"] = True
     app.config["JWT_COOKIE_CSRF_PROTECT"] = False
-    app.config["JWT_COOKIE_DOMAIN"] = ".proyecto2025.linti.unlp.edu.ar"
+    #app.config["JWT_COOKIE_DOMAIN"] = ".proyecto2025.linti.unlp.edu.ar"
 
 
     jwt = JWTManager(app)
