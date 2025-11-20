@@ -27,39 +27,36 @@
                         </div>
                     </form>
                 </div>
-
                 <!-- PROFILE / LOGIN -->
                 <div class="miperfil">
-          <template v-if="profile">
-            <div class="nav-link d-none d-lg-flex me-3 profile-container" ref="profileEl">
-              <button class="profile-button profile-link" @click.stop="toggleMenu" :aria-expanded="menuOpen" aria-haspopup="true">
-                <img :src="profile.foto || defaultAvatar" alt="avatar" class="avatar" />
-                <span class="username">{{ profile.nombre || profile.name || profile?.given_name || 'Perfil' }}</span>
-              </button>
-
-              <ul v-if="menuOpen" class="profile-menu" role="menu">
-                <li role="none">
-                  <RouterLink to="/profile" class="menu-item" role="menuitem" @click="closeMenu">Ver mi perfil</RouterLink>
-                </li>
-                <li role="none">
-                  <RouterLink :to="{ path: '/profile', query: { tab: 'reseñas' } }" class="menu-item" role="menuitem" @click="closeMenu">Mis reseñas</RouterLink>
-                </li>
-                <li role="none">
-                  <RouterLink :to="{ path: '/profile', query: { tab: 'favoritos' } }" class="menu-item" role="menuitem" @click="closeMenu">Favoritos</RouterLink>
-                </li>
-                <li class="divider" role="separator"></li>
-                <li role="none">
-                  <a href="#" class="menu-item" role="menuitem" @click.prevent="logout">Cerrar sesión</a>
-                </li>
-              </ul>
-            </div>
-          </template>
-          <template v-else>
-            <RouterLink to="/login" class="nav-link d-none d-lg-flex me-5">Iniciar sesión</RouterLink>
-          </template>
-                </div>
-
-            </div>
+                  <template v-if="profile">
+                    <div class="nav-link me-3 profile-container">
+                      <button class="profile-button profile-link me-3" data-bs-toggle="collapse" data-bs-target="#perfil-menu" :aria-expanded="menuOpen" aria-haspopup="true">
+                        <img :src="profile.foto || defaultAvatar" alt="avatar" class="avatar" />
+                        <span class="username">{{ profile.nombre || profile.name || profile?.given_name || 'Perfil' }}</span>
+                      </button>
+                      <ul class= "collapse profile-menu" id="perfil-menu" role="menu">
+                        <li role="none">
+                          <RouterLink to="/profile" class="menu-item" role="menuitem">Ver mi perfil</RouterLink>
+                        </li>
+                        <li role="none">
+                          <RouterLink :to="{ path: '/profile', query: { tab: 'reseñas' } }" class="menu-item" role="menuitem">Mis reseñas</RouterLink>
+                        </li>
+                        <li role="none">
+                          <RouterLink :to="{ path: '/profile', query: { tab: 'favoritos' } }" class="menu-item" role="menuitem" >Favoritos</RouterLink>
+                        </li>
+                        <li class="divider" role="separator"></li>
+                        <li role="none">
+                          <a href="#" class="menu-item" role="menuitem" @click.prevent="logout">Cerrar sesión</a>
+                        </li>
+                      </ul>
+                    </div>
+                  </template>
+                  <template v-else>
+                    <RouterLink to="/login" class="nav-link d-none d-lg-flex me-5">Iniciar sesión</RouterLink>
+                  </template>
+          </div>
+        </div>
       </div>
     </nav>
   </header>
@@ -81,15 +78,9 @@ const route = useRoute()
 const router = useRouter()
 
 // menú del avatar
-const menuOpen = ref(false)
 const profileEl = ref(null)
 
-function toggleMenu() {
-  menuOpen.value = !menuOpen.value
-}
-function closeMenu() {
-  menuOpen.value = false
-}
+
 function onDocumentClick(e) {
   if (!menuOpen.value) return
   const el = profileEl.value
@@ -377,8 +368,7 @@ nav{
 
 .profile-menu {
   position: absolute;
-  right: 0;
-  top: calc(100% + 8px);
+
   background: var(--card-bg, #fff);
   border: 1px solid rgba(0,0,0,0.08);
   border-radius: 8px;

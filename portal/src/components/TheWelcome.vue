@@ -124,7 +124,7 @@
           </div>
       </div>
     </div>
-      <div v-if="Favoritos[0]" id="slide-favoritos"><RouterLink :to="{ name: 'profile' }"> <p class="slider-title"> Favoritos </p> </RouterLink>
+      <div v-if="Favoritos[0]" id="slide-favoritos"><RouterLink :to="{ name: 'profile', query:{ tab: 'favoritos' }}"> <p class="slider-title"> Favoritos </p> </RouterLink>
         <div class="row">
             <div id="favoritos" class="carousel slide" data-ride="carousel" data-interval="0">
               <!-- slides -->
