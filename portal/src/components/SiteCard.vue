@@ -13,6 +13,17 @@
         Fecha de registro: {{ formatDate(site.fechaRegistro) }}
       </p>
       <p v-if="site.estado" class="state">Estado: {{ site.estado }}</p>
+      <div v-if="site.avg_rating > 0" class="rating">
+        <span v-for="i in 5" :key="i" class="star" :class="{ 'filled': i <= Math.round(site.avg_rating) }">
+          ★
+        </span>
+        <span class="rating-text">
+          {{ site.avg_rating.toFixed(1) }} ({{ site.review_count || 0 }})
+        </span>
+      </div>
+      <div v-else class="rating">
+        <span class="no-reviews">Sin calificaciones</span>
+      </div>
       <ul class="tags">
         <li v-for="t in site.tags" :key="t" class="tag">{{ t }}</li>
       </ul>
@@ -131,6 +142,35 @@ const coverStyle = computed(() => ({
   padding: 4px 10px;
   border-radius: 999px;
   font-size: 12px;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 4px 0;
+}
+
+.star {
+  color: #e2e8f0;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.star.filled {
+  color: #f59e0b;
+}
+
+.rating-text {
+  margin-left: 4px;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.no-reviews {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-style: italic;
 }
 </style>
 
