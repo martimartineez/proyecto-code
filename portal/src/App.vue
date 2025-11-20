@@ -42,10 +42,10 @@
                   <RouterLink to="/profile" class="menu-item" role="menuitem" @click="closeMenu">Ver mi perfil</RouterLink>
                 </li>
                 <li role="none">
-                  <RouterLink to="/my-reviews" class="menu-item" role="menuitem" @click="closeMenu">Mis reseñas</RouterLink>
+                  <RouterLink :to="{ path: '/profile', query: { tab: 'reseñas' } }" class="menu-item" role="menuitem" @click="closeMenu">Mis reseñas</RouterLink>
                 </li>
                 <li role="none">
-                  <RouterLink to="/favorites" class="menu-item" role="menuitem" @click="closeMenu">Favoritos</RouterLink>
+                  <RouterLink :to="{ path: '/profile', query: { tab: 'favoritos' } }" class="menu-item" role="menuitem" @click="closeMenu">Favoritos</RouterLink>
                 </li>
                 <li class="divider" role="separator"></li>
                 <li role="none">

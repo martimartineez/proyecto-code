@@ -199,10 +199,11 @@
 
 <script setup>
 import { ref, onMounted, watch, computed } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { API_BASE_URL } from '@/config';
 
 const router = useRouter();
+const route = useRoute();
 
 const profile = ref(null);
 const loading = ref(true);
@@ -371,8 +372,32 @@ onMounted(async () => {
     error.value = e.message;
   } finally {
     loading.value = false;
+
+    // Set initial tab based on route query (if present)
+    const tab = String(route.query.tab || '').toLowerCase();
+    if (tab === 'favoritos' || tab === 'favorito' || tab === 'favorites') {
+      activeTab.value = 'favoritos';
+    } else if (tab === 'reseñas' || tab === 'resenas' || tab === 'reviews') {
+      activeTab.value = 'reseñas';
+    } else {
+      // keep default 'reseñas' or you could set to 'favoritos' if you prefer
+      activeTab.value = 'reseñas';
+    }
   }
 });
+
+// Watch for route query changes and update the active tab
+watch(
+  () => route.query.tab,
+  (newTab) => {
+    const tab = String(newTab || '').toLowerCase();
+    if (tab === 'favoritos' || tab === 'favorito' || tab === 'favorites') {
+      activeTab.value = 'favoritos';
+    } else if (tab === 'reseñas' || tab === 'resenas' || tab === 'reviews') {
+      activeTab.value = 'reseñas';
+    }
+  }
+);
 
 // Función reutilizable para cargar reseñas
 async function loadResenas() {
