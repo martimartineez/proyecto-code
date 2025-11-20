@@ -53,7 +53,7 @@ def create_app(env="development", static_folder="../../static"):
     CORS(
     app,
     resources={r"/api/*": {
-        "origins": ["http://localhost:5173"],  # El frontend
+        "origins": [ "https://grupo25.proyecto2025.linti.unlp.edu.ar","http://localhost:5173"],  # El frontend
         "allow_headers": ["Content-Type", "Authorization"],
         "expose_headers": ["Content-Type"],
         "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
