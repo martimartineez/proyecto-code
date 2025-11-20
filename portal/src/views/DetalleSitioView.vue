@@ -76,11 +76,15 @@
         </div>
       </div>
 
-      <ReviewForm :site-id="site.id">
-
-      </ReviewForm>
-
-      <ReviewList :site-id="site.id" />
+      <!-- Sección de reseñas -->
+      <template v-if="reviewsEnabled">
+        <ReviewForm :site-id="site.id" />
+        <ReviewList :site-id="site.id" />
+      </template>
+      <div v-else class="alert alert-info mt-3">
+        <i class="fa fa-info-circle me-2"></i>
+        {{ reviewsMessage }}
+      </div>
       
     </section>
 
@@ -103,6 +107,23 @@ import { useApi } from '@/script/useApi';
 // Importaciones de Componentes
 import SiteMap from '@/components/SiteMap.vue';
 import CollapsibleDescription from '@/components/CollapsibleDescription.vue';
+
+const reviewsEnabled = ref(false);
+const reviewsMessage = ref('Las reseñas están temporalmente deshabilitadas.');
+
+// Verificar si las reseñas están habilitadas usando los datos del sitio
+function checkReviewsStatus(siteData) {
+  if (siteData && siteData.feature_flags) {
+    const reviewsFlag = siteData.feature_flags.find(flag => flag.name === 'reviews_enabled');
+    if (reviewsFlag) {
+      reviewsEnabled.value = reviewsFlag.valor || false;
+      reviewsMessage.value = reviewsFlag.message || 'Las reseñas están temporalmente deshabilitadas.';
+      return;
+    }
+  }
+  reviewsEnabled.value = false;
+  reviewsMessage.value = 'Las reseñas están temporalmente deshabilitadas.';
+}
 import ReviewList from '@/components/ReviewList.vue'; 
 import RatingSummary from '@/components/RatingSummary.vue';
 import SiteImageGallery from '@/components/SiteImageGallery.vue'; 
@@ -227,8 +248,11 @@ const fetchSiteData = async () => {
         
         // Inicialización de placeholders de frontend
         siteData.is_favorite = siteData.is_favorite || false;
-        siteData.images = siteData.images || []; 
-
+        siteData.images = siteData.images || []; // Ya viene de la API, pero nos aseguramos del array vacío si es null
+        
+        // Verificar el estado de las reseñas con los datos del sitio
+        checkReviewsStatus(siteData);
+        
         site.value = siteData; 
 
     } catch (error) {
