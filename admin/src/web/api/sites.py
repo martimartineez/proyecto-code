@@ -816,8 +816,7 @@ def favoritos_usuario():
         {
             "id": s.id,
             "nombre": s.nombre,
-            "desc_corta": s.descBreve,
-            "fecha": s.inserted_at 
+            "fecha": s.updated_at.isoformat() if s.updated_at else None,
             # agregar lo que necesites
         }
         for s in favoritos
