@@ -19,6 +19,7 @@ from src.core.entity.services import (
     registrar_evento_historial,
     listar_imagenes_sitio
 )
+from src.core.entity.services.feature_flags import get_flag
 from flask_jwt_extended import (
     create_access_token,
     set_access_cookies,
@@ -287,6 +288,10 @@ def check_favorite_status(id):
 
 @bp.route("/sites/<int:id>", methods=["GET"])
 def obtener_sitio_api(id):
+    # Obtener el flag de reseñas
+    reviews_flag = get_flag('reviews_enabled')
+    
+    # Obtener el sitio
     sitio = obtener_sitio(id)
     if not sitio:
         return (
@@ -319,7 +324,19 @@ def obtener_sitio_api(id):
             "portada": img.portada
         } for img in imagenes
     ]
-
+    
+    # Añadir feature flags
+    data['feature_flags'] = [
+        {
+            "name": "reviews_enabled",
+            "valor": reviews_flag.valor if reviews_flag else False,
+            "message": reviews_flag.mensaje if reviews_flag else "Las reseñas están temporalmente deshabilitadas."
+        }
+    ]
+    
+    # Inicializar placeholders (CAMBIAR CUANDO SE IMPLEMENTE LA LOGICA)
+    data['is_favorite'] = False
+    
     return jsonify(data), 200
 
 
@@ -426,6 +443,14 @@ def listar_resenas_sitio(id):
 @bp.route("/sites/<int:id_sitio>/reviews", methods=["POST"])
 @jwt_required()
 def crear_resena_sitio(id_sitio):
+    # Verificar si las reseñas están habilitadas
+    reviews_flag = get_flag('reviews_enabled')
+    if not reviews_flag or not reviews_flag.valor:
+        return jsonify({
+            "error": "reviews_disabled",
+            "message": reviews_flag.mensaje or "Las reseñas están temporalmente deshabilitadas."
+        }), 403
+
     data = request.get_json()
     texto = data.get("comment")
     puntaje = data.get("rating")
@@ -520,6 +545,14 @@ def obtener_resena_por_idSitio(id_sitio, id_resena):
 @bp.route("/sites/<int:id_sitio>/reviews/<int:id_resena>", methods=["DELETE"])
 @jwt_required()
 def eliminar_reseña_poridSitio(id_sitio, id_resena):
+    # Verificar si las reseñas están habilitadas
+    reviews_flag = get_flag('reviews_enabled')
+    if not reviews_flag or not reviews_flag.valor:
+        return jsonify({
+            "error": "reviews_disabled",
+            "message": reviews_flag.mensaje or "Las reseñas están temporalmente deshabilitadas."
+        }), 403
+
     sitio = obtener_sitio(id_sitio)
     resena = db.session.query(Reseña).filter_by(id=id_resena, id_sitio=id_sitio).first()
 
