@@ -753,6 +753,8 @@ def reseñas_usuario():
             "texto": r.texto,
             "puntuacion": r.puntaje,
             "fecha": r.inserted_at.isoformat() if r.inserted_at else None,
+            "estado": r.estado,
+            "motivo": r.motivo,
             # agregar lo que necesites
         }
         for r in reseñas
