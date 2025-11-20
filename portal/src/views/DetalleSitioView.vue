@@ -57,13 +57,36 @@
         />
         
         <div class="action-buttons">
-            <button class="action-btn" @click="handleRestrictedAction('REVIEW')" :disabled="isActionLoading" data-bs-toggle="collapse" data-bs-target="#formReseña">
-                Escribir Reseña
+            <button
+              class="action-btn primary"
+              @click="handleRestrictedAction('REVIEW')"
+              :disabled="isActionLoading"
+              data-bs-toggle="collapse"
+              data-bs-target="#formReseña"
+              aria-label="Escribir reseña"
+            >
+              <span class="btn-icon" aria-hidden>✍️</span>
+              <span class="btn-text">Escribir Reseña</span>
+              <span v-if="isActionLoading" class="btn-spinner" aria-hidden></span>
             </button>
             
-            <button class="action-btn" @click="toggleFavorite" :disabled="isActionLoading">
-              <p v-if="is_favorite"> ★ Favorito </p>
-              <p v-else> ☆ Marcar Favorito </p>
+            <button
+              class="action-btn favorite-btn"
+              :class="{ favorited: is_favorite }"
+              @click="toggleFavorite"
+              :aria-pressed="is_favorite"
+              :disabled="isActionLoading"
+              aria-label="Marcar como favorito"
+            >
+              <span class="btn-icon" aria-hidden>
+                <template v-if="is_favorite">★</template>
+                <template v-else>☆</template>
+              </span>
+              <span class="btn-text">
+                <template v-if="is_favorite">Favorito</template>
+                <template v-else>Marcar Favorito</template>
+              </span>
+              <span v-if="isActionLoading" class="btn-spinner" aria-hidden></span>
             </button>
         </div>
       </div>
@@ -318,9 +341,6 @@ onMounted(user_reviews);
 </script>
 
 <style scoped>
-
-
-
 /* Estilos Mobile First (manteniendo los esenciales) */
 .site-detail-container {
   padding: 1rem;
@@ -350,12 +370,11 @@ hr {
   font-size: 0.8rem;
   font-weight: bold;
   margin-top: 0.5rem;
-  /* Estilos para las clases generadas por getConservationClass */
-  &.good { background-color: #d4edda; color: #155724; } 
-  &.fair { background-color: #fff3cd; color: #856404; } 
-  &.poor { background-color: #f8d7da; color: #721c24; } 
-  &.neutral { background-color: #f1f1f1; color: #333; } 
 }
+.status-chip.good { background-color: #d4edda; color: #155724; } 
+.status-chip.fair { background-color: #fff3cd; color: #856404; } 
+.status-chip.poor { background-color: #f8d7da; color: #721c24; } 
+.status-chip.neutral { background-color: #f1f1f1; color: #333; } 
 
 /* --- ESTILOS DE TAGS CLICABLES --- */
 .tag-list {
@@ -380,26 +399,102 @@ hr {
 
 /* Estilos base para simulación */
 .action-btn {
-    border: 1px solid #ccc;
-    padding: 8px;
-    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    border: 1px solid #d0d0d0;
+    padding: 10px 14px;
+    border-radius: 8px;
     margin-top: 10px;
-    font-size: 0.9em;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease;
+    background: white;
+    color: #222;
+    user-select: none;
 }
+
+/* Primary button (Escribir Reseña) */
+.action-btn.primary {
+    background: linear-gradient(180deg, #3b82f6, #2563eb);
+    color: #fff;
+    border: none;
+    box-shadow: 0 6px 18px rgba(37,99,235,0.18);
+}
+.action-btn.primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(37,99,235,0.2);
+}
+.action-btn.primary:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* Favorite button */
+.favorite-btn {
+    background: linear-gradient(180deg,#fff,#fafafa);
+    border: 1px solid #cfcfcf;
+    color: #333;
+}
+.favorite-btn:hover:not(.favorited):not(:disabled) {
+    background: #f6f6f6;
+}
+.favorite-btn.favorited {
+    background: linear-gradient(180deg,#ffd54a,#ffca28);
+    color: #3a2a00;
+    border-color: #ffb300;
+    box-shadow: 0 6px 14px rgba(255,176,0,0.18);
+}
+.favorite-btn.favorited:hover:not(:disabled) {
+    transform: translateY(-2px);
+}
+
+/* Icon and text sizing */
+.btn-icon {
+    font-size: 1.05rem;
+    line-height: 1;
+}
+.btn-text {
+    font-weight: 600;
+}
+
+/* Disabled state */
+.action-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Small inline spinner */
+.btn-spinner {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: rgba(255,255,255,0.95);
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+    margin-left: 6px;
+}
+.favorite-btn .btn-spinner {
+    border: 2px solid rgba(0,0,0,0.12);
+    border-top-color: rgba(0,0,0,0.5);
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .action-buttons {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.75rem;
     flex-wrap: wrap;
+    align-items: center;
 }
 
-/* Estilo para botón favorito marcado */
+/* Estilo para botón favorito marcado (compatibilidad antigua) */
 .btn-favorited {
     background-color: gold !important;
     color: black !important;
     border-color: #ffc107 !important;
 }
-
 
 /* Media Query para Tablet/Escritorio */
 @media (min-width: 768px) {
