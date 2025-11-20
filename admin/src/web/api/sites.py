@@ -276,8 +276,8 @@ def check_favorite_status(id):
     if user:
         # Consulta directa a la tabla de asociación para verificar el estado
         is_favorite_record = db.session.query(favoritos_usuarios_sitios).filter_by(
-            usuarioId=user.id,
-            sitioId=sitio.id
+            usuario_id=user.id,
+            sitio_id=sitio.id
         ).first()
         
         if is_favorite_record:
@@ -782,8 +782,10 @@ def reseñas_usuario():
     # Convertir a diccionarios
     reseñas_json = [
         {
+            "usuario_id": r.id_usuario,
+            "usuario": r.usuario.nombre,
             "sitio": r.sitio.nombre,
-            "texto": r.texto[:30] + ("..." if len(r.texto) > 30 else ""),
+            "texto": r.texto,
             "puntuacion": r.puntaje,
             "fecha": r.inserted_at.isoformat() if r.inserted_at else None,
             "estado": r.estado,

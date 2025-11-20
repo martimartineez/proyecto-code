@@ -105,7 +105,7 @@
                   </div>
                 </header>
 
-                <p class="review-text">{{ reseña.texto }}</p>
+                <p class="review-text">  {{ reseña.texto.length > 30 ? reseña.texto.slice(0, 30) + "..." : reseña.texto }}</p>
 
                 <!-- Si la reseña fue rechazada, mostrar motivo detallado -->
                 <div v-if="normalizedStatus(reseña) === 'rechazada'" class="rejection-reason" role="note">
