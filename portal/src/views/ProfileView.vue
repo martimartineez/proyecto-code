@@ -93,9 +93,25 @@
                     <div class="review-title">{{ reseña.sitio || 'Reseña' }}</div>
                     <div class="review-date">{{ formatDate(reseña.fecha) }}</div>
                   </div>
+
+                  <!-- Estado de la reseña -->
+                  <div class="review-status" aria-hidden="false">
+                    <span
+                      :class="['status-badge', statusClass(reseña)]"
+                      :aria-label="statusLabel(reseña)"
+                    >
+                      {{ statusLabel(reseña) }}
+                    </span>
+                  </div>
                 </header>
 
-                <p class="review-text">{{ reseña.texto }}</p>
+                <p class="review-text">  {{ reseña.texto.length > 30 ? reseña.texto.slice(0, 30) + "..." : reseña.texto }}</p>
+
+                <!-- Si la reseña fue rechazada, mostrar motivo detallado -->
+                <div v-if="normalizedStatus(reseña) === 'rechazada'" class="rejection-reason" role="note">
+                  <strong>Motivo: </strong>
+                  <span>{{ rejectionReason(reseña) || 'No especificado' }}</span>
+                </div>
               </article>
             </div>
 
@@ -108,15 +124,17 @@
               <nav class="pagination">
                 <button class="page-btn" @click="prevPage" :disabled="currentPage === 1">‹</button>
 
-                <button
-                  v-for="p in pagesToShow"
-                  :key="p"
-                  class="page-btn"
-                  :class="{ active: p === currentPage }"
-                  @click="goToPage(p)"
-                >
-                  {{ p }}
-                </button>
+                <template v-for="p in pagesToShow" :key="p">
+                  <button
+                    v-if="p !== -1"
+                    class="page-btn"
+                    :class="{ active: p === currentPage }"
+                    @click="goToPage(p)"
+                  >
+                    {{ p }}
+                  </button>
+                  <span v-else class="page-btn ellipsis">…</span>
+                </template>
 
                 <button class="page-btn" @click="nextPage" :disabled="currentPage === totalPages">›</button>
               </nav>
@@ -246,7 +264,7 @@ const pagesToShow = computed(() => {
   return pages;
 });
 
-// Replace -1 with ellipsis in template via a small helper
+// Helpers
 function isEllipsis(p) {
   return p === -1;
 }
@@ -479,6 +497,66 @@ async function openResena(reseña) {
     console.error("Error buscando sitio para reseña/favorito:", err);
   }
 }
+
+/* -----------------------
+   Nuevas helpers para estado y motivo
+   ----------------------- */
+
+// Normaliza posibles campos de estado en diferentes APIs
+function getRawStatus(r) {
+  return (
+    r?.estado ??
+    r?.status ??
+    r?.estado_reseña ??
+    r?.estado_resena ??
+    r?.state ??
+    r?.review_status ??
+    r?.status_reseña ??
+    r?.status_resena ??
+    null
+  );
+}
+
+function normalizedStatus(r) {
+  const raw = String(getRawStatus(r) ?? "").toLowerCase().trim();
+  if (!raw) return "desconocido";
+  if (raw.includes("rech")) return "rechazada";
+  if (raw.includes("pend")) return "pendiente";
+  if (raw.includes("aprob") || raw.includes("acept")) return "aprobada";
+  return raw;
+}
+
+function statusLabel(r) {
+  const s = normalizedStatus(r);
+  if (s === "rechazada") return "Rechazada";
+  if (s === "pendiente") return "Pendiente";
+  if (s === "aprobada") return "Aprobada";
+  // Capitaliza genérico
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function statusClass(r) {
+  const s = normalizedStatus(r);
+  if (s === "rechazada") return "status-rejected";
+  if (s === "pendiente") return "status-pending";
+  if (s === "aprobada") return "status-approved";
+  return "status-unknown";
+}
+
+// Extrae posible motivo de rechazo desde distintos campos
+function rejectionReason(r) {
+  return (
+    r?.motivo_rechazo ??
+    r?.motivo ??
+    r?.razon ??
+    r?.detalle_rechazo ??
+    r?.rejection_reason ??
+    r?.reason ??
+    r?.detalle ??
+    r?.comment ??
+    ""
+  );
+}
 </script>
 
 <style scoped>
@@ -683,6 +761,10 @@ async function openResena(reseña) {
 .score-badge {
   width: 64px;
   height: 64px;
+  min-width: 64px;
+  min-height: 64px;
+  max-width: 64px;
+  max-height: 64px;
   border-radius: 50%;
   display: flex;
   flex-direction: column;
@@ -693,6 +775,7 @@ async function openResena(reseña) {
   box-shadow: 0 8px 18px rgba(2,6,23,0.08);
   border: 2px solid rgba(255,255,255,0.12);
   transition: transform 160ms ease, box-shadow 160ms ease;
+  box-sizing: border-box;
 }
 
 .score-badge:hover {
@@ -760,6 +843,52 @@ async function openResena(reseña) {
   font-size: 0.95rem;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+/* Estado de reseña */
+.review-status {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.78rem;
+  color: white;
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 6px 14px rgba(2,6,23,0.06);
+}
+
+/* Variantes */
+.status-approved {
+  background: linear-gradient(90deg, #16a34a, #059669); /* verde */
+}
+.status-pending {
+  background: linear-gradient(90deg, #f59e0b, #f97316); /* naranja */
+}
+.status-rejected {
+  background: linear-gradient(90deg, #ef4444, #dc2626); /* rojo */
+}
+.status-unknown {
+  background: linear-gradient(90deg, #64748b, #475569); /* gris */
+}
+
+/* Motivo de rechazo (detalle) */
+.rejection-reason {
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #fff5f6;
+  border: 1px solid rgba(239,68,68,0.08);
+  color: #7f1d1d;
+  font-size: 0.92rem;
+  text-align: left;
 }
 
 /* Pagination */

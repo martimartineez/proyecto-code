@@ -72,8 +72,7 @@ const mainImage = computed(() => {
     }
     // Placeholder si no hay imágenes
     return { 
-        url: 'https://via.placeholder.com/600x250?text=IMAGEN+PENDIENTE', 
-        alt: 'Imagen de sitio no disponible' 
+        alt: 'Este sitio no tiene imágenes disponibles', 
     };
 });
 

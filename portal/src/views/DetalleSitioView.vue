@@ -1,7 +1,7 @@
 <template>
   <main v-if="site && !site.error" class="site-detail-container">
     <button @click="router.back()" class="back-button">
-      &larr; Volver al Listado
+      &larr; Volver atras
     </button>
     
     <section class="info-and-media">
@@ -27,7 +27,7 @@
           >
               {{ tag }}
           </span>
-          <span v-if="!site.tags || site.tags.length === 0" class="tag-chip-placeholder">N/A</span>
+          <span v-if="!site.tags || site.tags.length === 0" class="tag-chip-placeholder"></span>
       </div>
     </section>
 
@@ -57,30 +57,42 @@
         />
         
         <div class="action-buttons">
-            <button 
-                class="action-btn" 
-                @click="handleRestrictedAction('REVIEW')" 
-                :disabled="isActionLoading"
-            >
-                Escribir Reseña (Login requerido)
+            <button class="action-btn" @click="handleRestrictedAction('REVIEW')" :disabled="isActionLoading" data-bs-toggle="collapse" data-bs-target="#formReseña">
+                Escribir Reseña
             </button>
             
-            <button 
-                class="action-btn" 
-                :class="{ 'btn-favorited': site.is_favorite }"
-                @click="toggleFavorite"
-                :disabled="isActionLoading"
-            >
-              {{ site.is_favorite ? '★ Favorito' : '☆ Marcar Favorito' }}
+            <button class="action-btn" @click="toggleFavorite" :disabled="isActionLoading">
+              <p v-if="is_favorite"> ★ Favorito </p>
+              <p v-else> ☆ Marcar Favorito </p>
             </button>
         </div>
       </div>
 
-      <ReviewForm :site-id="site.id">
-
-      </ReviewForm>
-
-      <ReviewList :site-id="site.id" />
+      <!-- Sección de reseñas -->
+      <template v-if="reviewsEnabled">
+        <div class="collapse" id="formReseña">
+          <span v-if="!has_review"><ReviewForm :site-id="site.id" /> </span>
+          <span v-else-if="get_review">
+            <Review :review="get_review">
+              <template #id>
+                {{ get_review.usuario }}
+              </template>
+              <template #puntuaciom>
+                {{ get_review.rating }}
+              </template>
+              <template #comentario>
+                {{ get_review.texto }}
+              </template>
+            </Review>
+            <p> Estado: <b> {{ get_review.estado }} </b></p>
+          </span>
+        </div>
+        <ReviewList :site-id="site.id" />
+      </template>
+      <div v-else class="alert alert-info mt-3">
+        <i class="fa fa-info-circle me-2"></i>
+        {{ reviewsMessage }}
+      </div>
       
     </section>
 
@@ -96,29 +108,90 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-// Importamos el composable de tu compañero para JWT
 import { useApi } from '@/script/useApi'; 
-// Importaciones de Componentes
 import SiteMap from '@/components/SiteMap.vue';
 import CollapsibleDescription from '@/components/CollapsibleDescription.vue';
+
+const reviewsEnabled = ref(false);
+const reviewsMessage = ref('Las reseñas están temporalmente deshabilitadas.');
+
+// Verificar si las reseñas están habilitadas usando los datos del sitio
+function checkReviewsStatus(siteData) {
+  if (siteData && siteData.feature_flags) {
+    const reviewsFlag = siteData.feature_flags.find(flag => flag.name === 'reviews_enabled');
+    if (reviewsFlag) {
+      reviewsEnabled.value = reviewsFlag.valor || false;
+      reviewsMessage.value = reviewsFlag.message || 'Las reseñas están temporalmente deshabilitadas.';
+      return;
+    }
+  }
+  reviewsEnabled.value = false;
+  reviewsMessage.value = 'Las reseñas están temporalmente deshabilitadas.';
+}
 import ReviewList from '@/components/ReviewList.vue'; 
 import RatingSummary from '@/components/RatingSummary.vue';
 import SiteImageGallery from '@/components/SiteImageGallery.vue'; 
 import ReviewForm from '../components/ReviewForm.vue';
-
+import Review from '../components/Review.vue';
 
 const route = useRoute();
 const router = useRouter();
 const { callProtectedApi } = useApi(); // Inicializamos el composable para llamadas protegidas
-const site = ref(null); 
+const site = ref(); 
 const isActionLoading = ref(false); // Deshabilita botones durante el fetch
 const API_URL = import.meta.env.VITE_API_BASE_URL;
-
-
-
+const reviews = ref([]);
 // *** IMPLEMENTACIÓN FINAL DE LA ACCIÓN DE FAVORITOS (PUT/DELETE) ***
+
+
+const is_favorite = computed(() => {
+  return site.value.is_favorite
+})
+
+const has_review = computed(() => {
+  console.log(reviews.value.some(review => review.sitio === site.value.name))
+  return reviews.value.some(review => review.sitio === site.value.name);
+})
+
+const get_review = computed(() => {
+   return reviews.value.find(
+    review => review.sitio === site.value.name);
+})
+
+const user_reviews = async() => {
+  const res = await fetch(`${API_URL}/api/reseñas_usuario`, {
+  method: "GET",
+  credentials: "include",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  });
+  let valor = await res.json();
+  reviews.value = valor.reseñas;
+  console.log(reviews.value);
+}
+
+
+
+
+// *** LÓGICA DE REDIRECCIÓN CONDICIONAL PARA ESCRIBIR RESEÑA ***
+const handleRestrictedAction = async (actionType) => {
+    isActionLoading.value = true;
+    
+
+    const isAuthenticatedCheck = await callProtectedApi('/api/perfil', { method: 'GET' });
+    
+    isActionLoading.value = false;
+
+    if (isAuthenticatedCheck !== null) {
+        if (actionType === 'REVIEW') {
+            console.log("Abrir modal/formulario para crear reseña.");
+        }
+    }
+};
+
 const toggleFavorite = async () => {
     isActionLoading.value = true;
     
@@ -160,26 +233,6 @@ const toggleFavorite = async () => {
     }
 };
 
-// *** LÓGICA DE REDIRECCIÓN CONDICIONAL PARA ESCRIBIR RESEÑA ***
-const handleRestrictedAction = async (actionType) => {
-    isActionLoading.value = true;
-    
-    // Llamamos a una ruta protegida simple (/api/perfil) para forzar la verificación del JWT
-    // Si el usuario no está logueado, useApi.js lo redirigirá a /login.
-    const isAuthenticatedCheck = await callProtectedApi('/api/perfil', { method: 'GET' });
-    
-    isActionLoading.value = false;
-
-    // Si la llamada fue exitosa (no hubo redirección por 401)
-    if (isAuthenticatedCheck !== null) {
-        if (actionType === 'REVIEW') {
-            console.log("Abrir modal/formulario para crear reseña.");
-            // Aquí iría el router.push o la apertura del modal del formulario de reseña
-        }
-    }
-};
-
-
 // Función para mapear el estado de conservación a una clase CSS
 const getConservationClass = (estado) => {
     if (!estado) return 'unknown';
@@ -195,7 +248,7 @@ const getConservationClass = (estado) => {
 // IMPLEMENTACIÓN FINAL DE LA NAVEGACIÓN DE TAGS CLICABLES
 const filterByTag = (tag) => {
     router.push({ 
-        path: '/sitios', // RUTA FINAL CORREGIDA
+        path: '/sitios',
         query: { tags: tag } 
     });
 }
@@ -225,22 +278,38 @@ const fetchSiteData = async () => {
         siteData.calificacion_promedio = siteData.rating_avg || 'N/A';
         siteData.cantidad_reseñas = siteData.reviews_count || 0;
         
-        // Inicialización de placeholders de frontend
-        siteData.is_favorite = siteData.is_favorite || false;
+        const favoriteResponse = await fetch( `${API_URL}/api/sites/${siteId}/is_favorite`, {
+          method: "GET",
+          credentials: "include",
+          headers: {
+          "Content-Type": "application/json"
+        },
+        });
+        let favorite = await favoriteResponse.json();
+        siteData.is_favorite = favorite.is_favorite;
         siteData.images = siteData.images || []; 
-
+        
+        // Verificar el estado de las reseñas con los datos del sitio
+        checkReviewsStatus(siteData);
+        
         site.value = siteData; 
-
+        console.log(site.value)
     } catch (error) {
         console.error("Error al cargar detalles del sitio:", error);
         site.value = { error: 'No se pudo contactar al servidor de la API o hubo un error de red.' };
     }
 };
 
+
+
 onMounted(fetchSiteData);
+onMounted(user_reviews);
 </script>
 
 <style scoped>
+
+
+
 /* Estilos Mobile First (manteniendo los esenciales) */
 .site-detail-container {
   padding: 1rem;

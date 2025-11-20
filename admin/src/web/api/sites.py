@@ -19,6 +19,7 @@ from src.core.entity.services import (
     registrar_evento_historial,
     listar_imagenes_sitio
 )
+from src.core.entity.services.feature_flags import get_flag
 from flask_jwt_extended import (
     create_access_token,
     set_access_cookies,
@@ -275,8 +276,8 @@ def check_favorite_status(id):
     if user:
         # Consulta directa a la tabla de asociación para verificar el estado
         is_favorite_record = db.session.query(favoritos_usuarios_sitios).filter_by(
-            usuarioId=user.id,
-            sitioId=sitio.id
+            usuario_id=user.id,
+            sitio_id=sitio.id
         ).first()
         
         if is_favorite_record:
@@ -287,6 +288,10 @@ def check_favorite_status(id):
 
 @bp.route("/sites/<int:id>", methods=["GET"])
 def obtener_sitio_api(id):
+    # Obtener el flag de reseñas
+    reviews_flag = get_flag('reviews_enabled')
+    
+    # Obtener el sitio
     sitio = obtener_sitio(id)
     if not sitio:
         return (
@@ -319,7 +324,19 @@ def obtener_sitio_api(id):
             "portada": img.portada
         } for img in imagenes
     ]
+    
+    # Añadir feature flags
+    data['feature_flags'] = [
+        {
+            "name": "reviews_enabled",
+            "valor": reviews_flag.valor if reviews_flag else False,
+            "message": reviews_flag.mensaje if reviews_flag else "Las reseñas están temporalmente deshabilitadas."
+        }
+    ]
+    
+    data['is_favorite'] = False
 
+    
     return jsonify(data), 200
 
 
@@ -356,7 +373,7 @@ def auth():
 
 
 @bp.route("/sites/<int:id>/reviews", methods=["GET"])
-# @jwt_required()
+@jwt_required()
 def listar_resenas_sitio(id):
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
@@ -426,6 +443,14 @@ def listar_resenas_sitio(id):
 @bp.route("/sites/<int:id_sitio>/reviews", methods=["POST"])
 @jwt_required()
 def crear_resena_sitio(id_sitio):
+    # Verificar si las reseñas están habilitadas
+    reviews_flag = get_flag('reviews_enabled')
+    if not reviews_flag or not reviews_flag.valor:
+        return jsonify({
+            "error": "reviews_disabled",
+            "message": reviews_flag.mensaje or "Las reseñas están temporalmente deshabilitadas."
+        }), 403
+
     data = request.get_json()
     texto = data.get("comment")
     puntaje = data.get("rating")
@@ -520,6 +545,14 @@ def obtener_resena_por_idSitio(id_sitio, id_resena):
 @bp.route("/sites/<int:id_sitio>/reviews/<int:id_resena>", methods=["DELETE"])
 @jwt_required()
 def eliminar_reseña_poridSitio(id_sitio, id_resena):
+    # Verificar si las reseñas están habilitadas
+    reviews_flag = get_flag('reviews_enabled')
+    if not reviews_flag or not reviews_flag.valor:
+        return jsonify({
+            "error": "reviews_disabled",
+            "message": reviews_flag.mensaje or "Las reseñas están temporalmente deshabilitadas."
+        }), 403
+
     sitio = obtener_sitio(id_sitio)
     resena = db.session.query(Reseña).filter_by(id=id_resena, id_sitio=id_sitio).first()
 
@@ -749,16 +782,18 @@ def reseñas_usuario():
     # Convertir a diccionarios
     reseñas_json = [
         {
+            "usuario_id": r.id_usuario,
+            "usuario": r.usuario.nombre,
             "sitio": r.sitio.nombre,
             "texto": r.texto,
             "puntuacion": r.puntaje,
             "fecha": r.inserted_at.isoformat() if r.inserted_at else None,
+            "estado": r.estado,
+            "motivo": r.motivo,
             # agregar lo que necesites
         }
         for r in reseñas
     ]
-
-    #print("reseñas_json:", reseñas_json)  # Depuración
 
     return jsonify({"reseñas": reseñas_json}), 200
 
@@ -781,20 +816,13 @@ def favoritos_usuario():
         {
             "id": s.id,
             "nombre": s.nombre,
-            "descBreve": s.descBreve,
-            "latitud": s.latitud,
-            "longitud": s.longitud,
+            "fecha": s.inserted_at 
             # agregar lo que necesites
         }
         for s in favoritos
     ]
 
     
-    # Convertir a diccionarios
-
-
-    #print("reseñas_json:", reseñas_json)  # Depuración
-
     return jsonify({"favoritos": favoritos_json}), 200
 
 

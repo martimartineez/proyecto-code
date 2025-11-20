@@ -68,6 +68,9 @@ async function postReview(){
   catch (e) {
       console.error(e)
     }
+  finally{
+    window.location.reload()
+  }
 }
 </script>
 

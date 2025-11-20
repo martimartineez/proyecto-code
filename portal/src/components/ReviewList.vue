@@ -30,7 +30,9 @@
       </li>
     </ul>
 
-    <p v-else>No hay reseñas aprobadas para este sitio.</p>
+    <p v-else>
+      {{ isLoggedIn ? 'No hay reseñas aprobadas para este sitio.' : 'Inicia sesión para ver las reseñas.' }}
+    </p>
 
     <div v-if="totalPages > 1" class="pagination-controls">
       <button 
@@ -72,21 +74,22 @@ const sortState = reactive({
     order: 'desc'     // asc o desc
 });
 
+// NUEVO: Estado de login
+const isLoggedIn = ref(true);
 
-//const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'; 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
-
-
 
 const fetchReviews = async (page) => {
   loading.value = true;
   try {
-    // 1. Incluir los parámetros de ordenamiento en la solicitud GET
     const response = await fetch(
-      `${API_URL}/api/sites/${props.siteId}/reviews?page=${page}&per_page=${perPage}&order_by=${sortState.by}&order=${sortState.order}`
-    );
-    
-    
+      `${API_URL}/api/sites/${props.siteId}/reviews?page=${page}&per_page=${perPage}&order_by=${sortState.by}&order=${sortState.order}`, {
+      method: "GET",
+      credentials: "include",
+    });
+
+    isLoggedIn.value = response.ok; // <-- Aquí guardas el estado de login
+
     if (!response.ok) throw new Error("Error al cargar las reseñas");
 
     const data = await response.json();
@@ -95,7 +98,6 @@ const fetchReviews = async (page) => {
     totalReviews.value = data.meta.total;
     totalPages.value = Math.ceil(data.meta.total / perPage);
     currentPage.value = page;
-    
     
   } catch (error) {
     console.error("Fallo al obtener reseñas:", error);
@@ -107,9 +109,7 @@ const fetchReviews = async (page) => {
   }
 };
 
-// NUEVO: Función para manejar el cambio en el select
 const handleSortChange = () => {
-    // Al cambiar el orden, reiniciamos a la página 1 para aplicar el filtro
     fetchReviews(1); 
 };
 
@@ -125,7 +125,6 @@ const formatDate = (dateString) => {
 };
 
 onMounted(() => {
-  // Carga inicial usando el orden por defecto (Más reciente/desc)
   fetchReviews(1); 
 });
 </script>
