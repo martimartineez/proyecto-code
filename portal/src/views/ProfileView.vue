@@ -499,14 +499,7 @@ function scoreClass(p) {
 // Helper para extraer posible id del objeto reseña/favorito
 function extractSiteIdFromResena(r) {
   return (
-    r?.sitio_id ??
-    r?.sitioId ??
-    r?.id_sitio ??
-    r?.idSitio ??
-    r?.site_id ??
-    r?.siteId ??
     r?.id ?? // <-- ahora también acepta 'id'
-    r?.ID ??
     null
   );
 }
@@ -524,11 +517,11 @@ async function openResena(reseña) {
   // 2) Fallback: intentar buscar por nombre/nombre de sitio
   const q =
     reseña.sitio ||
-    reseña.sitio_nombre ||
-    reseña.sitioNombre ||
-    reseña.nombre ||      // <-- favorito devuelve 'nombre'
-    reseña.name ||
-    reseña.titulo ||
+    // reseña.sitio_nombre ||
+    // reseña.sitioNombre ||
+    // reseña.nombre ||      // <-- favorito devuelve 'nombre'
+    // reseña.name ||
+    // reseña.titulo ||
     null;
 
   if (!q) return;
@@ -564,14 +557,7 @@ async function openResena(reseña) {
 // Normaliza posibles campos de estado en diferentes APIs
 function getRawStatus(r) {
   return (
-    r?.estado ??
-    r?.status ??
-    r?.estado_reseña ??
-    r?.estado_resena ??
-    r?.state ??
-    r?.review_status ??
-    r?.status_reseña ??
-    r?.status_resena ??
+    r.estado ??
     null
   );
 }
@@ -605,14 +591,7 @@ function statusClass(r) {
 // Extrae posible motivo de rechazo desde distintos campos
 function rejectionReason(r) {
   return (
-    r?.motivo_rechazo ??
     r?.motivo ??
-    r?.razon ??
-    r?.detalle_rechazo ??
-    r?.rejection_reason ??
-    r?.reason ??
-    r?.detalle ??
-    r?.comment ??
     ""
   );
 }
@@ -620,15 +599,7 @@ function rejectionReason(r) {
 // Nueva helper para extraer la fecha de agregado de un favorito
 function extractFavoriteDate(f) {
   return (
-    f?.fecha_agregado ??
-    f?.fecha_agregado_iso ??
-    f?.added_at ??
-    f?.addedAt ??
-    f?.created_at ??
-    f?.createdAt ??
     f?.fecha ??
-    f?.fecha_creacion ??
-    f?.fechaCreacion ??
     null
   );
 }
