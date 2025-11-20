@@ -5,6 +5,44 @@ import SitesView from '../views/SitesView.vue'
 import MapView from '../views/MapView.vue'
 import MaintenanceView from '../views/MaintenanceView.vue'
 
+// Crear el router primero
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: [
+    {
+      path: '/maintenance',
+      name: 'maintenance',
+      component: MaintenanceView,
+      meta: { isMaintenance: true }
+    },
+    { 
+      path: '/', 
+      name: 'home', 
+      component: HomeView,
+    },
+    {
+      path: '/sitios',
+      name: 'sites',
+      component: SitesView,
+    },
+    {
+      path: '/sitios/:id',
+      name: 'detalle-sitio',
+      component: DetalleSitioView,
+    }, 
+    {
+      path: '/login',
+      name: 'login',
+      component: () => import('../views/LoginView.vue')
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: () => import('../views/ProfileView.vue')
+    },
+  ]
+})
+
 let isMaintenanceMode = false;
 
 async function checkMaintenance() {
@@ -44,42 +82,5 @@ router.beforeEach(async (to, from, next) => {
 
   next();
 });
-
-const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    {
-      path: '/maintenance',
-      name: 'maintenance',
-      component: MaintenanceView,
-      meta: { isMaintenance: true }
-    },
-    { 
-      path: '/', 
-      name: 'home', 
-      component: HomeView,
-    },
-    {
-      path: '/sitios',
-      name: 'sites',
-      component: SitesView,
-    },
-    {
-      path: '/sitios/:id',
-      name: 'detalle-sitio',
-      component: DetalleSitioView,
-    }, 
-    {
-      path: '/login',
-      name: 'login',
-      component: () => import('../views/LoginView.vue')
-    },
-    {
-      path: '/profile',
-      name: 'profile',
-      component: () => import('../views/ProfileView.vue')
-    },
-  ]
-})
 
 export default router
