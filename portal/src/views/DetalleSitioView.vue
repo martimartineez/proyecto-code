@@ -249,6 +249,7 @@ const handleRestrictedAction = async (actionType) => {
 };
 
 const toggleFavorite = async () => {
+    console.log("Toggle favorite clickedddddddddd");
     isActionLoading.value = true;
     
     const isCurrentlyFavorited = site.value.is_favorite;
