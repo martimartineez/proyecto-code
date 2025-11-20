@@ -5,7 +5,7 @@
             <div id="puntaje-estrellas">
                 <div class="rating-group">
                     <label aria-label="1 star" class="rating__label" for="rating2-10"><i class="rating__icon rating__icon--star fa fa-star"></i></label>
-                    <input class="rating__input" name="rating" id="rating2-10" value=1 type="radio">
+                    <input class="rating__input" name="rating" id="rating2-10" value=1 type="radio" checked required>
                     <label aria-label="2 stars" class="rating__label" for="rating2-20"><i class="rating__icon rating__icon--star fa fa-star"></i></label>
                     <input class="rating__input" name="rating" id="rating2-20" value=2 type="radio">
                     <label aria-label="3 stars" class="rating__label" for="rating2-30"><i class="rating__icon rating__icon--star fa fa-star"></i></label>
@@ -16,7 +16,7 @@
                     <input class="rating__input" name="rating" id="rating2-50" value=5 type="radio">
                 </div>
             </div>
-            <textarea class="form-control" name="comment" id="reseña" rows="3"></textarea>
+           <slot name="texto"> <textarea class="form-control" name="comment" id="reseña" rows="3" minlength="20" maxlength="1000" required></textarea> </slot>
             <div class="col-12">
              <button type="submit" class="btn btn-primary" id="enviar"> Enviar </button>
             </div>
