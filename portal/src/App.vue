@@ -31,10 +31,28 @@
                 <!-- PROFILE / LOGIN -->
                 <div class="miperfil">
           <template v-if="profile">
-            <RouterLink to="/profile" class="nav-link d-none d-lg-flex me-3 profile-link">
-              <img :src="profile.foto || defaultAvatar" alt="avatar" class="avatar" />
-              <span class="username">{{ profile.nombre || profile.name || profile?.given_name || 'Perfil' }}</span>
-            </RouterLink>
+            <div class="nav-link d-none d-lg-flex me-3 profile-container" ref="profileEl">
+              <button class="profile-button profile-link" @click.stop="toggleMenu" :aria-expanded="menuOpen" aria-haspopup="true">
+                <img :src="profile.foto || defaultAvatar" alt="avatar" class="avatar" />
+                <span class="username">{{ profile.nombre || profile.name || profile?.given_name || 'Perfil' }}</span>
+              </button>
+
+              <ul v-if="menuOpen" class="profile-menu" role="menu">
+                <li role="none">
+                  <RouterLink to="/profile" class="menu-item" role="menuitem" @click="closeMenu">Ver mi perfil</RouterLink>
+                </li>
+                <li role="none">
+                  <RouterLink to="/my-reviews" class="menu-item" role="menuitem" @click="closeMenu">Mis reseñas</RouterLink>
+                </li>
+                <li role="none">
+                  <RouterLink to="/favorites" class="menu-item" role="menuitem" @click="closeMenu">Favoritos</RouterLink>
+                </li>
+                <li class="divider" role="separator"></li>
+                <li role="none">
+                  <a href="#" class="menu-item" role="menuitem" @click.prevent="logout">Cerrar sesión</a>
+                </li>
+              </ul>
+            </div>
           </template>
           <template v-else>
             <RouterLink to="/login" class="nav-link d-none d-lg-flex me-5">Iniciar sesión</RouterLink>
@@ -53,13 +71,54 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
-import { RouterLink, RouterView, useRoute } from 'vue-router'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 
 const profile = ref(null)
 const defaultAvatar = 'https://www.gravatar.com/avatar/?d=mp&s=80' // placeholder externo
 const API_URL = import.meta.env.VITE_API_BASE_URL || ''
 
 const route = useRoute()
+const router = useRouter()
+
+// menú del avatar
+const menuOpen = ref(false)
+const profileEl = ref(null)
+
+function toggleMenu() {
+  menuOpen.value = !menuOpen.value
+}
+function closeMenu() {
+  menuOpen.value = false
+}
+function onDocumentClick(e) {
+  if (!menuOpen.value) return
+  const el = profileEl.value
+  if (!el) return
+  if (!el.contains(e.target)) {
+    closeMenu()
+  }
+}
+
+async function logout() {
+  try {
+    if (API_URL) {
+      // intenta invalidar sesión en backend si existe endpoint
+      await fetch(`${API_URL}/api/logout`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+  } catch (e) {
+    console.warn('No se pudo llamar al logout en backend:', e)
+  } finally {
+    profile.value = null
+    // notificar a otras pestañas
+    localStorage.setItem('authChanged', Date.now())
+    closeMenu()
+    router.push('/')
+  }
+}
 
 async function fetchProfile() {
   try {
@@ -95,6 +154,7 @@ function onStorage(e) {
 onMounted(() => {
   fetchProfile()
   window.addEventListener('storage', onStorage)
+  document.addEventListener('click', onDocumentClick)
 })
 
 // Re-fetch cuando cambie la ruta (por ejemplo al ir a /login o /profile)
@@ -104,6 +164,7 @@ watch(() => route.fullPath, () => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('storage', onStorage)
+  document.removeEventListener('click', onDocumentClick)
 })
 </script>
 
@@ -297,5 +358,55 @@ nav{
   .profile-link {
     gap: 10px;
   }
+}
+
+/* ===== Estilos del dropdown del profile ===== */
+.profile-container {
+  position: relative;
+}
+
+.profile-button {
+  background: none;
+  border: none;
+  padding: 6px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.profile-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  background: var(--card-bg, #fff);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 8px;
+  list-style: none;
+  padding: 6px 0;
+  margin: 0;
+  min-width: 200px;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.12);
+  z-index: 1000;
+}
+
+.profile-menu .menu-item {
+  display: block;
+  padding: 10px 14px;
+  color: var(--text-color, inherit);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.profile-menu .menu-item:hover,
+.profile-menu .menu-item:focus {
+  background: rgba(0,0,0,0.03);
+}
+
+.profile-menu .divider {
+  height: 1px;
+  background: rgba(0,0,0,0.06);
+  margin: 6px 8px;
+  border-radius: 1px;
 }
 </style>
