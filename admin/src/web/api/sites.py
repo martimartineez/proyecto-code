@@ -334,8 +334,6 @@ def obtener_sitio_api(id):
         }
     ]
     
-    # Inicializar placeholders (CAMBIAR CUANDO SE IMPLEMENTE LA LOGICA)
-    data['is_favorite'] = False
     
     return jsonify(data), 200
 
@@ -487,7 +485,6 @@ def crear_resena_sitio(id_sitio):
         jsonify(
             {
                 "id": nueva_resena.id,
-                "texto": nueva_resena.texto,
                 "puntaje": nueva_resena.puntaje,
                 "usuario_id": nueva_resena.id_usuario,
                 "sitio_id": nueva_resena.id_sitio,

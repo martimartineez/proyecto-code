@@ -246,14 +246,40 @@ const fetchSiteData = async () => {
         siteData.calificacion_promedio = siteData.rating_avg || 'N/A';
         siteData.cantidad_reseñas = siteData.reviews_count || 0;
         
-        // Inicialización de placeholders de frontend
-        siteData.is_favorite = siteData.is_favorite || false;
-        siteData.images = siteData.images || []; // Ya viene de la API, pero nos aseguramos del array vacío si es null
+        siteData.is_favorite = false;
+        siteData.images = siteData.images || []; 
         
         // Verificar el estado de las reseñas con los datos del sitio
         checkReviewsStatus(siteData);
         
-        site.value = siteData; 
+          // Después de obtener los datos del sitio, intentamos chequear si
+          // el usuario actual ya marcó el sitio como favorito.
+          // Usamos `callProtectedApi` que maneja JWT y redirección en caso de 401.
+          try {
+            const favCheck = await callProtectedApi(`/api/sites/${siteId}/is_favorite`, { method: 'GET' });
+
+            // `callProtectedApi` puede devolver `null` cuando no autenticó y
+            // redirigió al login; o bien un objeto JSON ya parseado.
+            if (favCheck !== null) {
+              // Si viene como Response, parseamos; si viene ya parseado, lo usamos.
+              let favJson = favCheck;
+              if (favCheck instanceof Response) {
+                if (favCheck.ok) {
+                  favJson = await favCheck.json();
+                } else {
+                  favJson = null;
+                }
+              }
+
+              if (favJson && typeof favJson === 'object' && 'is_favorite' in favJson) {
+                siteData.is_favorite = !!favJson.is_favorite;
+              }
+            }
+          } catch (err) {
+            console.error('Error comprobando favorito al cargar:', err);
+          }
+
+          site.value = siteData; 
 
     } catch (error) {
         console.error("Error al cargar detalles del sitio:", error);
