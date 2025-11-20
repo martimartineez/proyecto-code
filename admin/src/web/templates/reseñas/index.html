@@ -48,7 +48,7 @@
       <label>Puntaje</label>
       <select id="PuntajeSelect" name="puntaje" class="form-control">
   <option value="">Seleccione un puntaje</option>
-  {% for p in [1,2,3,4,5] %}
+  {% for p in [0.5,1,1.5,2,2.5,3,3.5,4,4.5,5] %}
     <option value="{{ p }}" {% if request_args.get('puntaje') == p|string %}selected{% endif %}>
       {{ p }}
     </option>
