@@ -166,7 +166,7 @@
           <div v-else-if="favoritos.length > 0">
             <div class="review-list">
               <article
-                v-for="(fav, idx) in sortedFavoritos"
+                v-for="(fav, idx) in paginatedFavoritos"
                 :key="fav.id || idx"
                 class="review-card clickable"
                 @click="openResena(fav)"
@@ -186,6 +186,31 @@
                 </header>
                 <p class="review-text">{{ fav.descripcion || fav.descripcion_corta || '' }}</p>
               </article>
+            </div>
+
+            <!-- Pagination info & controls for favoritos -->
+            <div class="pagination-wrap" style="margin-top:12px;">
+              <div class="pagination-info">
+                Mostrando {{ favoritosStartIndex }}–{{ favoritosEndIndex }} de {{ favoritos.length }} favoritos
+              </div>
+
+              <nav class="pagination" aria-label="Paginación favoritos">
+                <button class="page-btn" @click="prevFavPage" :disabled="favoritosCurrentPage === 1">‹</button>
+
+                <template v-for="p in pagesToShowFavoritos" :key="p">
+                  <button
+                    v-if="p !== -1"
+                    class="page-btn"
+                    :class="{ active: p === favoritosCurrentPage }"
+                    @click="goToFavPage(p)"
+                  >
+                    {{ p }}
+                  </button>
+                  <span v-else class="page-btn ellipsis">…</span>
+                </template>
+
+                <button class="page-btn" @click="nextFavPage" :disabled="favoritosCurrentPage === favoritosTotalPages">›</button>
+              </nav>
             </div>
           </div>
           <div v-else class="empty-state">
@@ -284,6 +309,55 @@ const pagesToShow = computed(() => {
   return pages;
 });
 
+// Paginación para favoritos (paralela a la de reseñas)
+const favoritosCurrentPage = ref(1);
+
+// Total de páginas para favoritos
+const favoritosTotalPages = computed(() => {
+  return Math.max(1, Math.ceil(favoritos.value.length / pageSize));
+});
+
+// Favoritos paginados (usa el array ya ordenado: sortedFavoritos)
+const paginatedFavoritos = computed(() => {
+  const start = (favoritosCurrentPage.value - 1) * pageSize;
+  return sortedFavoritos.value.slice(start, start + pageSize);
+});
+
+const favoritosStartIndex = computed(() => {
+  if (favoritos.value.length === 0) return 0;
+  return (favoritosCurrentPage.value - 1) * pageSize + 1;
+});
+
+const favoritosEndIndex = computed(() => {
+  return Math.min(favoritos.value.length, favoritosCurrentPage.value * pageSize);
+});
+
+// Páginas a mostrar para favoritos (compacto, similar a pagesToShow)
+const pagesToShowFavoritos = computed(() => {
+  const total = favoritosTotalPages.value;
+  const cur = favoritosCurrentPage.value;
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  const pages = [];
+  const left = Math.max(1, cur - 2);
+  const right = Math.min(total, cur + 2);
+
+  if (left > 1) {
+    pages.push(1);
+    if (left > 2) pages.push(-1); // -1 representa la elipsis
+  }
+
+  for (let p = left; p <= right; p++) pages.push(p);
+
+  if (right < total) {
+    if (right < total - 1) pages.push(-1);
+    pages.push(total);
+  }
+
+  return pages;
+});
+
 // Helpers
 function isEllipsis(p) {
   return p === -1;
@@ -309,6 +383,27 @@ function nextPage() {
   }
 }
 
+// Navegación de páginas para favoritos
+function goToFavPage(n) {
+  if (n === -1) return;
+  favoritosCurrentPage.value = Math.min(Math.max(1, n), favoritosTotalPages.value);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function prevFavPage() {
+  if (favoritosCurrentPage.value > 1) {
+    favoritosCurrentPage.value--;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+}
+
+function nextFavPage() {
+  if (favoritosCurrentPage.value < favoritosTotalPages.value) {
+    favoritosCurrentPage.value++;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+}
+
 // Toggle de orden (alternar asc/desc)
 function toggleSort() {
   sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc";
@@ -319,7 +414,7 @@ function toggleSort() {
 // Cambia el orden de los favoritos
 function toggleFavoritosSort() {
   favoritosSortOrder.value = favoritosSortOrder.value === "asc" ? "desc" : "asc";
-  // opcional: volver a la parte superior cuando se cambia el orden
+  favoritosCurrentPage.value = 1;
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -499,14 +594,7 @@ function scoreClass(p) {
 // Helper para extraer posible id del objeto reseña/favorito
 function extractSiteIdFromResena(r) {
   return (
-    r?.sitio_id ??
-    r?.sitioId ??
-    r?.id_sitio ??
-    r?.idSitio ??
-    r?.site_id ??
-    r?.siteId ??
     r?.id ?? // <-- ahora también acepta 'id'
-    r?.ID ??
     null
   );
 }
@@ -524,11 +612,11 @@ async function openResena(reseña) {
   // 2) Fallback: intentar buscar por nombre/nombre de sitio
   const q =
     reseña.sitio ||
-    reseña.sitio_nombre ||
-    reseña.sitioNombre ||
-    reseña.nombre ||      // <-- favorito devuelve 'nombre'
-    reseña.name ||
-    reseña.titulo ||
+    // reseña.sitio_nombre ||
+    // reseña.sitioNombre ||
+    // reseña.nombre ||      // <-- favorito devuelve 'nombre'
+    // reseña.name ||
+    // reseña.titulo ||
     null;
 
   if (!q) return;
@@ -564,14 +652,7 @@ async function openResena(reseña) {
 // Normaliza posibles campos de estado en diferentes APIs
 function getRawStatus(r) {
   return (
-    r?.estado ??
-    r?.status ??
-    r?.estado_reseña ??
-    r?.estado_resena ??
-    r?.state ??
-    r?.review_status ??
-    r?.status_reseña ??
-    r?.status_resena ??
+    r.estado ??
     null
   );
 }
@@ -605,14 +686,7 @@ function statusClass(r) {
 // Extrae posible motivo de rechazo desde distintos campos
 function rejectionReason(r) {
   return (
-    r?.motivo_rechazo ??
     r?.motivo ??
-    r?.razon ??
-    r?.detalle_rechazo ??
-    r?.rejection_reason ??
-    r?.reason ??
-    r?.detalle ??
-    r?.comment ??
     ""
   );
 }
@@ -620,15 +694,7 @@ function rejectionReason(r) {
 // Nueva helper para extraer la fecha de agregado de un favorito
 function extractFavoriteDate(f) {
   return (
-    f?.fecha_agregado ??
-    f?.fecha_agregado_iso ??
-    f?.added_at ??
-    f?.addedAt ??
-    f?.created_at ??
-    f?.createdAt ??
     f?.fecha ??
-    f?.fecha_creacion ??
-    f?.fechaCreacion ??
     null
   );
 }
