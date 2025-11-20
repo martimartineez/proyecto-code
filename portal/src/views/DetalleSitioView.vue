@@ -237,7 +237,7 @@ const handleRestrictedAction = async (actionType) => {
     isActionLoading.value = true;
     
 
-    const isAuthenticatedCheck = await callProtectedApi('/api/perfil', { method: 'GET', credentials: 'include'});
+    const isAuthenticatedCheck = await callProtectedApi(`${API_URL}/api/perfil`, { method: 'GET', credentials: 'include'});
     console.log(isAuthenticatedCheck, '<<<----------------------------------')
     isActionLoading.value = false;
 
@@ -249,7 +249,6 @@ const handleRestrictedAction = async (actionType) => {
 };
 
 const toggleFavorite = async () => {
-    console.log("Toggle favorite clickedddddddddd");
     isActionLoading.value = true;
     
     const isCurrentlyFavorited = site.value.is_favorite;
