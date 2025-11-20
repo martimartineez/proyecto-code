@@ -307,6 +307,14 @@ async function logout() {
       },
     });
 
+    // Notificar a otras pestañas/componentes que la autentificación cambió
+    try {
+      localStorage.setItem('authChanged', String(Date.now()));
+    } catch (err) {
+      // si localStorage falla, no rompemos el flujo
+      console.warn('No se pudo escribir authChanged en localStorage', err);
+    }
+
     router.push("/login");
   } catch (e) {
     console.error("Error al cerrar sesión:", e);
