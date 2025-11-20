@@ -35,7 +35,7 @@ def listar_reseñas():
     if sitio:
         query = query.filter(Reseña.id_sitio == sitio)
     if puntaje:
-        query = query.filter(Reseña.puntaje == int(puntaje))
+        query = query.filter(Reseña.puntaje == float(puntaje))
     if fecha_desde:
         query = query.filter(Reseña.inserted_at >= fecha_desde)
     if fecha_hasta:

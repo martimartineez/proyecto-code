@@ -1,37 +1,18 @@
 <template>
   <section class="page">
-    <!-- Barra superior con búsqueda y acciones -->
-    <header class="toolbar">
-      <div class="search-container">
-        <input
-          v-model="state.q"
-          class="search"
-          type="search"
-          placeholder="Buscar sitios (nombre, descripción)"
-          @keyup.enter="onSearch"
-        />
-        <button class="search-btn" @click="onSearch">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-        </button>
-      </div>
-
-      <div class="toolbar-actions">
-        <button class="btn btn-filters" @click="toggleFilters">
+    <div class="content">
+      <!-- Movidos todos los botones de acción a view-controls -->
+      <div class="view-controls">
+        <!-- Botón de filtros solo visible en mobile -->
+        <button class="btn btn-filters btn-mobile-only" @click="toggleFilters">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
           </svg>
           Filtros
         </button>
-        <button class="btn btn-filters" @click="onClear">Limpiar</button>
-      </div>
-    </header>
-
-    <div class="content">
-      <!-- Controles de vista -->
-      <div class="view-controls">
+        <!-- Botón limpiar visible en mobile y escritorio -->
+        <button class="btn btn-clear" @click="onClear">Limpiar</button>
+        <!-- Botón mostrar/ocultar mapa -->
         <button 
           @click="toggleMap"
           class="btn btn-secondary"
@@ -39,8 +20,6 @@
           {{ showMap ? 'Ocultar Mapa' : 'Mostrar Mapa' }}
         </button>
       </div>
-      
-      
 
       <!-- Filtros -->
       <aside class="filters" :class="{ open: filtersOpen }">
@@ -106,6 +85,7 @@
             <select v-model="state.order_by" @change="onSearch" class="field-select">
               <option value="fechaRegistro">Fecha de registro</option>
               <option value="nombre">Nombre</option>
+              <option value="rating">Puntuación</option>
             </select>
           </div>
 
@@ -228,6 +208,13 @@ const state = reactive({
   order: route.query.order ?? 'asc'
 });
 
+watch(() => route.query.q, (newQuery) => {
+  if (newQuery !== state.q) {
+    state.q = newQuery || '';
+    onSearch();
+  }
+});
+
 /**
  * Actualiza la URL con los parámetros de búsqueda actuales
  */
@@ -249,7 +236,7 @@ function updateUrlQuery() {
     searchLocation.value = {
       lat: Number(state.latitude),
       lng: Number(state.longitude),
-      radius: Number(state.radius)
+      radius: Number(state.radius || 2000)
     };
   }
   
@@ -439,6 +426,10 @@ async function fetchPage(reset = false) {
  */
 function onSearch() {
   page.value = 1;
+  // Si se selecciona ordenar por puntuación, forzar orden descendente
+  if (state.order_by === 'rating') {
+    state.order = 'desc';
+  }
   fetchPage(true);
 }
 
@@ -635,67 +626,25 @@ onMounted(async () => {
   background-color: #f8fafc; /* Fondo gris claro */
 }
 
-/* Toolbar */
-.toolbar {
+/* Content Layout */
+.content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+/* Actualizados estilos de view-controls para contener todos los botones */
+.view-controls {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
   padding: 16px;
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.toolbar-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.search-container {
-  display: flex;
-  width: 100%;
-  position: relative;
-}
-
-.search {
-  flex: 1;
-  padding: 12px 48px 12px 16px;
-  border: 2px solid #e5e7eb;
-  border-radius: 10px;
-  font-size: 15px;
-  transition: all 0.2s;
-  width: 100%;
-  background-color: #fff;
-}
-
-.search-btn {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #6b7280;
-  padding: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.2s;
-}
-
-.search-btn:hover {
-  color: #3b82f6;
-}
-
-.search:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  flex-wrap: wrap;
 }
 
 .btn {
@@ -708,6 +657,7 @@ onMounted(async () => {
   transition: all 0.2s;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   white-space: nowrap;
 }
@@ -717,26 +667,36 @@ onMounted(async () => {
   border-color: #d1d5db;
 }
 
-/* Asegurar que los botones secundarios muestren texto legible y no se compriman */
+/* Botón de filtros solo visible en mobile */
+.btn-mobile-only {
+  display: inline-flex;
+}
+
+/* Botón limpiar con estilo distintivo */
+.btn-clear {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
+.btn-clear:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+/* Botón secundario para mejor legibilidad */
 .btn-secondary {
-  color: #111827; /* texto oscuro */
-  background: #d0befa;
-  border-color: #e5e7eb;
-  min-width: 120px; /* evitar que el botón se encoja y oculte el texto */
-  text-align: center;
+  color: #ffffff;
+  background: #3b82f6;
+  border-color: #3b82f6;
+  font-weight: 600;
+  min-width: 140px;
+  padding: 10px 20px;
 }
 
-.btn-secondary svg {
-  margin-right: 8px;
-  vertical-align: middle;
-}
-
-/* Content Layout */
-.content {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
-  align-items: start;
+.btn-secondary:hover {
+  background: #2563eb;
+  border-color: #2563eb;
 }
 
 /* Filters Sidebar */
@@ -955,18 +915,15 @@ onMounted(async () => {
     gap: 24px;
   }
 
-  .toolbar {
-    flex-direction: row;
-    align-items: center;
+  /* Ocultar botón de filtros en desktop */
+  .btn-mobile-only {
+    display: none;
+  }
+
+  /* Ajustar view-controls para desktop */
+  .view-controls {
     padding: 20px 32px;
-  }
-
-  .toolbar-actions {
-    flex-shrink: 0;
-  }
-
-  .btn-filters {
-    flex: 0;
+    justify-content: flex-end;
   }
 
   /* Colocar la barra de filtros a la izquierda y el contenido principal a la derecha */
@@ -975,8 +932,12 @@ onMounted(async () => {
     gap: 24px;
   }
 
-  /* Forzar que la barra de vista y el mapa ocupen ambas columnas (encabezado y mapa full-width) */
-  .view-controls,
+  /* view-controls ocupa ambas columnas en desktop */
+  .view-controls {
+    grid-column: 1 / -1;
+  }
+
+  /* Forzar que el mapa ocupe ambas columnas */
   .map-container {
     grid-column: 1 / -1;
   }
@@ -990,7 +951,6 @@ onMounted(async () => {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     max-height: calc(100vh - 120px);
     overflow-y: auto;
-    /* Ubicar la sidebar en la primera columna (izquierda) */
     grid-column: 1;
     align-self: start;
   }
@@ -1024,12 +984,11 @@ onMounted(async () => {
     padding: 32px;
   }
 
-  .toolbar {
+  .view-controls {
     padding: 24px 40px;
   }
 
   .content {
-    /* Sidebar de filtros a la izquierda (260px) */
     grid-template-columns: 260px 1fr;
     gap: 32px;
   }
@@ -1071,4 +1030,5 @@ onMounted(async () => {
     gap: 36px;
   }
 }
+
 </style>

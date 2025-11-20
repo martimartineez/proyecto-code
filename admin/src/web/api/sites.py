@@ -65,7 +65,7 @@ def handle_jwt_errors(e):
         jsonify(
             {"error": {"code": "unauthorized", "message": "Authentication required"}}
         ),
-        401,
+        401
     )
 
 
@@ -93,17 +93,20 @@ def listar_sitios():
         or (page < 1)
         or (per_page < 1)
     ):
-        return {
-            "error": {
-                "code": "invalid_query",
-                "message": "Parameter validation failed",
-                "details": {
-                    "lat": ["Must be a valid latitude"],
-                    "long": ["Must be a valid longitude"],
-                    "per_page": ["Must be between 1 and 100"],
-                },
-            }
-        }, 400
+        return (
+            jsonify({
+                "error": {
+                    "code": "invalid_query",
+                    "message": "Parameter validation failed",
+                    "details": {
+                        "lat": ["Must be a valid latitude"],
+                        "long": ["Must be a valid longitude"],
+                        "per_page": ["Must be between 1 and 100"]
+                    }
+                }
+            }),
+            400
+        )
 
     query = db.session.query(SitioHistorico).join(Ciudad).join(Provincia)
     # Solo sitios visibles y no dados de baja
@@ -116,7 +119,7 @@ def listar_sitios():
         query = query.filter(
             or_(
                 SitioHistorico.nombre.ilike(f"%{q}%"),
-                SitioHistorico.descBreve.ilike(f"%{q}%"),
+                SitioHistorico.descBreve.ilike(f"%{q}%")
             )
         )
     else:
@@ -147,31 +150,80 @@ def listar_sitios():
         query = query.filter(distance <= radius)
     if state:
         query = query.filter(SitioHistorico.estadoConservacion.ilike(f"%{state}%"))
-    if order_by:
-        if order_by == "nombre":
-            if order == "asc":
-                query = query.order_by(SitioHistorico.nombre)
-            else:
-                query = query.order_by(SitioHistorico.nombre.desc())
-        elif order_by == "fechaRegistro":
-            if order == "asc":
-                query = query.order_by(SitioHistorico.fechaRegistro)
-            else:
-                query = query.order_by(SitioHistorico.fechaRegistro.desc())
+    if order_by == "nombre":
+        if order == "asc":
+            query = query.order_by(SitioHistorico.nombre)
+        else:
+            query = query.order_by(SitioHistorico.nombre.desc())
+    elif order_by == "fechaRegistro":
+        if order == "asc":
+            query = query.order_by(SitioHistorico.fechaRegistro)
+        else:
+            query = query.order_by(SitioHistorico.fechaRegistro.desc())
+   
+    elif order_by == "rating":
+        query = query.order_by(SitioHistorico.nombre)  
 
     total = query.count()
     offset = (page - 1) * per_page
     sitios = query.offset(offset).limit(per_page).all()
+    
+    if not sitios:
+        return jsonify({"data": [], "meta": {"page": page, "per_page": per_page, "total": total}}), 200
+    
+    sitio_ids = [s.id for s in sitios]
+    print(f"[DEBUG] Site IDs for rating query: {sitio_ids}")
+    
+    try:
+        ratings_query = db.session.query(
+            Reseña.id_sitio,
+            func.coalesce(func.avg(Reseña.puntaje), 0).label('avg_rating'),
+            func.count(Reseña.id).label('review_count')
+        ).filter(
+            Reseña.id_sitio.in_(sitio_ids) if sitio_ids else False,
+            Reseña.estado == 'aprobada'
+        ).group_by(Reseña.id_sitio)
+        print("[DEBUG] Ratings query executed successfully")
+        
+        ratings = {r[0]: {'avg_rating': float(r[1]), 'review_count': r[2]} for r in ratings_query}
+        
+        response_data = []
+        for sitio in sitios:
+            sitio_data = sitio.to_dict()
+            if sitio.id in ratings and ratings[sitio.id]['review_count'] > 0:
+                sitio_data.update({
+                    'avg_rating': ratings[sitio.id]['avg_rating'],
+                    'review_count': ratings[sitio.id]['review_count']
+                })
+            else:
+                sitio_data.update({
+                    'avg_rating': None,
+                    'review_count': 0
+                })
+            response_data.append(sitio_data)
+        
+        if order_by == "rating":
+            print(f"[DEBUG] Sorting by rating, order: {order}")
+            try:
+                if order == "asc":
+                    response_data.sort(key=lambda x: (x.get('avg_rating') is None, x.get('avg_rating') or 0, x.get('nombre', '')))
+                else:
+                    response_data.sort(key=lambda x: (x.get('avg_rating') is None, -(x.get('avg_rating') or 0), x.get('nombre', '')))
+            except Exception as e:
+                print(f"[ERROR] Error during sorting: {str(e)}")
+                print(f"[DEBUG] First few items: {response_data[:2] if response_data else 'No items'}")
+                raise
 
-    return (
-        jsonify(
+        response = jsonify(
             {
-                "data": [s.to_dict() for s in sitios],
+                "data": response_data,
                 "meta": {"page": page, "per_page": per_page, "total": total},
             }
-        ),
-        200,
-    )
+        )
+        return response, 200
+        
+    except Exception as e:
+        return jsonify({"error": "Internal server error", "details": str(e)}), 500
 
 
 @bp.route("/sites", methods=["POST"])
@@ -462,7 +514,7 @@ def crear_resena_sitio(id_sitio):
             404,
         )
 
-    if not texto or puntaje is None or float(puntaje) < 1 or float(puntaje) > 5 or len(texto) < 20:
+    if not texto or puntaje is None or float(puntaje) < 0.5 or float(puntaje) > 5 or len(texto) < 20:
         return (
             jsonify(
                 {
@@ -782,7 +834,9 @@ def reseñas_usuario():
     # Convertir a diccionarios
     reseñas_json = [
         {
+            "id": r.id,
             "usuario_id": r.id_usuario,
+            "sitio_id": r.sitio.id,
             "usuario": r.usuario.nombre,
             "sitio": r.sitio.nombre,
             "texto": r.texto,
@@ -816,7 +870,7 @@ def favoritos_usuario():
         {
             "id": s.id,
             "nombre": s.nombre,
-            "fecha": s.inserted_at 
+            "fecha": s.updated_at.isoformat() if s.updated_at else None,
             # agregar lo que necesites
         }
         for s in favoritos

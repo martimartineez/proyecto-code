@@ -147,11 +147,26 @@
         </div>
 
         <div v-else-if="activeTab === 'favoritos'">
+          <!-- Controls: order favorites -->
+          <div class="reload-row" style="justify-content: flex-end; margin-bottom: 6px;">
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button
+                class="sort-btn"
+                @click="toggleFavoritosSort"
+                :aria-pressed="favoritosSortOrder === 'desc' ? 'true' : 'false'"
+                :title="favoritosSortOrder === 'desc' ? 'Ordenar por fecha: más recientes primero' : 'Ordenar por fecha: más antiguas primero'"
+              >
+                <span v-if="favoritosSortOrder === 'desc'">Orden: ↓ Fecha</span>
+                <span v-else>Orden: ↑ Fecha</span>
+              </button>
+            </div>
+          </div>
+
           <div v-if="loadingFavoritos" class="loading">Cargando favoritos...</div>
           <div v-else-if="favoritos.length > 0">
             <div class="review-list">
               <article
-                v-for="(fav, idx) in favoritos"
+                v-for="(fav, idx) in paginatedFavoritos"
                 :key="fav.id || idx"
                 class="review-card clickable"
                 @click="openResena(fav)"
@@ -166,10 +181,36 @@
                   </div>
                   <div class="review-meta">
                     <div class="review-title">{{ fav.sitio || fav.nombre || fav.titulo || 'Favorito' }}</div>
+                    <div class="review-date">Agregado: {{ formatDate(extractFavoriteDate(fav)) }}</div>
                   </div>
                 </header>
                 <p class="review-text">{{ fav.descripcion || fav.descripcion_corta || '' }}</p>
               </article>
+            </div>
+
+            <!-- Pagination info & controls for favoritos -->
+            <div class="pagination-wrap" style="margin-top:12px;">
+              <div class="pagination-info">
+                Mostrando {{ favoritosStartIndex }}–{{ favoritosEndIndex }} de {{ favoritos.length }} favoritos
+              </div>
+
+              <nav class="pagination" aria-label="Paginación favoritos">
+                <button class="page-btn" @click="prevFavPage" :disabled="favoritosCurrentPage === 1">‹</button>
+
+                <template v-for="p in pagesToShowFavoritos" :key="p">
+                  <button
+                    v-if="p !== -1"
+                    class="page-btn"
+                    :class="{ active: p === favoritosCurrentPage }"
+                    @click="goToFavPage(p)"
+                  >
+                    {{ p }}
+                  </button>
+                  <span v-else class="page-btn ellipsis">…</span>
+                </template>
+
+                <button class="page-btn" @click="nextFavPage" :disabled="favoritosCurrentPage === favoritosTotalPages">›</button>
+              </nav>
             </div>
           </div>
           <div v-else class="empty-state">
@@ -183,10 +224,11 @@
 
 <script setup>
 import { ref, onMounted, watch, computed } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { API_BASE_URL } from '@/config';
 
 const router = useRouter();
+const route = useRoute();
 
 const profile = ref(null);
 const loading = ref(true);
@@ -205,6 +247,9 @@ const currentPage = ref(1);
 
 // Ordenamiento de reseñas
 const sortOrder = ref("desc"); // 'desc' (más recientes primero) o 'asc' (más antiguas primero)
+
+// Orden para favoritos: 'desc' (por defecto) o 'asc'
+const favoritosSortOrder = ref("desc");
 
 const totalPages = computed(() => {
   return Math.max(1, Math.ceil(reseñas.value.length / pageSize));
@@ -264,6 +309,55 @@ const pagesToShow = computed(() => {
   return pages;
 });
 
+// Paginación para favoritos (paralela a la de reseñas)
+const favoritosCurrentPage = ref(1);
+
+// Total de páginas para favoritos
+const favoritosTotalPages = computed(() => {
+  return Math.max(1, Math.ceil(favoritos.value.length / pageSize));
+});
+
+// Favoritos paginados (usa el array ya ordenado: sortedFavoritos)
+const paginatedFavoritos = computed(() => {
+  const start = (favoritosCurrentPage.value - 1) * pageSize;
+  return sortedFavoritos.value.slice(start, start + pageSize);
+});
+
+const favoritosStartIndex = computed(() => {
+  if (favoritos.value.length === 0) return 0;
+  return (favoritosCurrentPage.value - 1) * pageSize + 1;
+});
+
+const favoritosEndIndex = computed(() => {
+  return Math.min(favoritos.value.length, favoritosCurrentPage.value * pageSize);
+});
+
+// Páginas a mostrar para favoritos (compacto, similar a pagesToShow)
+const pagesToShowFavoritos = computed(() => {
+  const total = favoritosTotalPages.value;
+  const cur = favoritosCurrentPage.value;
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  const pages = [];
+  const left = Math.max(1, cur - 2);
+  const right = Math.min(total, cur + 2);
+
+  if (left > 1) {
+    pages.push(1);
+    if (left > 2) pages.push(-1); // -1 representa la elipsis
+  }
+
+  for (let p = left; p <= right; p++) pages.push(p);
+
+  if (right < total) {
+    if (right < total - 1) pages.push(-1);
+    pages.push(total);
+  }
+
+  return pages;
+});
+
 // Helpers
 function isEllipsis(p) {
   return p === -1;
@@ -289,10 +383,38 @@ function nextPage() {
   }
 }
 
+// Navegación de páginas para favoritos
+function goToFavPage(n) {
+  if (n === -1) return;
+  favoritosCurrentPage.value = Math.min(Math.max(1, n), favoritosTotalPages.value);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function prevFavPage() {
+  if (favoritosCurrentPage.value > 1) {
+    favoritosCurrentPage.value--;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+}
+
+function nextFavPage() {
+  if (favoritosCurrentPage.value < favoritosTotalPages.value) {
+    favoritosCurrentPage.value++;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+}
+
 // Toggle de orden (alternar asc/desc)
 function toggleSort() {
   sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc";
   currentPage.value = 1;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// Cambia el orden de los favoritos
+function toggleFavoritosSort() {
+  favoritosSortOrder.value = favoritosSortOrder.value === "asc" ? "desc" : "asc";
+  favoritosCurrentPage.value = 1;
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -306,6 +428,14 @@ async function logout() {
         "Content-Type": "application/json",
       },
     });
+
+    // Notificar a otras pestañas/componentes que la autentificación cambió
+    try {
+      localStorage.setItem('authChanged', String(Date.now()));
+    } catch (err) {
+      // si localStorage falla, no rompemos el flujo
+      console.warn('No se pudo escribir authChanged en localStorage', err);
+    }
 
     router.push("/login");
   } catch (e) {
@@ -337,8 +467,32 @@ onMounted(async () => {
     error.value = e.message;
   } finally {
     loading.value = false;
+
+    // Set initial tab based on route query (if present)
+    const tab = String(route.query.tab || '').toLowerCase();
+    if (tab === 'favoritos' || tab === 'favorito' || tab === 'favorites') {
+      activeTab.value = 'favoritos';
+    } else if (tab === 'reseñas' || tab === 'resenas' || tab === 'reviews') {
+      activeTab.value = 'reseñas';
+    } else {
+      // keep default 'reseñas' or you could set to 'favoritos' if you prefer
+      activeTab.value = 'reseñas';
+    }
   }
 });
+
+// Watch for route query changes and update the active tab
+watch(
+  () => route.query.tab,
+  (newTab) => {
+    const tab = String(newTab || '').toLowerCase();
+    if (tab === 'favoritos' || tab === 'favorito' || tab === 'favorites') {
+      activeTab.value = 'favoritos';
+    } else if (tab === 'reseñas' || tab === 'resenas' || tab === 'reviews') {
+      activeTab.value = 'reseñas';
+    }
+  }
+);
 
 // Función reutilizable para cargar reseñas
 async function loadResenas() {
@@ -440,14 +594,7 @@ function scoreClass(p) {
 // Helper para extraer posible id del objeto reseña/favorito
 function extractSiteIdFromResena(r) {
   return (
-    r?.sitio_id ??
-    r?.sitioId ??
-    r?.id_sitio ??
-    r?.idSitio ??
-    r?.site_id ??
-    r?.siteId ??
     r?.id ?? // <-- ahora también acepta 'id'
-    r?.ID ??
     null
   );
 }
@@ -465,11 +612,11 @@ async function openResena(reseña) {
   // 2) Fallback: intentar buscar por nombre/nombre de sitio
   const q =
     reseña.sitio ||
-    reseña.sitio_nombre ||
-    reseña.sitioNombre ||
-    reseña.nombre ||      // <-- favorito devuelve 'nombre'
-    reseña.name ||
-    reseña.titulo ||
+    // reseña.sitio_nombre ||
+    // reseña.sitioNombre ||
+    // reseña.nombre ||      // <-- favorito devuelve 'nombre'
+    // reseña.name ||
+    // reseña.titulo ||
     null;
 
   if (!q) return;
@@ -505,14 +652,7 @@ async function openResena(reseña) {
 // Normaliza posibles campos de estado en diferentes APIs
 function getRawStatus(r) {
   return (
-    r?.estado ??
-    r?.status ??
-    r?.estado_reseña ??
-    r?.estado_resena ??
-    r?.state ??
-    r?.review_status ??
-    r?.status_reseña ??
-    r?.status_resena ??
+    r.estado ??
     null
   );
 }
@@ -546,17 +686,36 @@ function statusClass(r) {
 // Extrae posible motivo de rechazo desde distintos campos
 function rejectionReason(r) {
   return (
-    r?.motivo_rechazo ??
     r?.motivo ??
-    r?.razon ??
-    r?.detalle_rechazo ??
-    r?.rejection_reason ??
-    r?.reason ??
-    r?.detalle ??
-    r?.comment ??
     ""
   );
 }
+
+// Nueva helper para extraer la fecha de agregado de un favorito
+function extractFavoriteDate(f) {
+  return (
+    f?.fecha ??
+    null
+  );
+}
+
+// Lista ordenada de favoritos por fecha (segura ante fechas faltantes/invalidas)
+const sortedFavoritos = computed(() => {
+  const arr = favoritos.value ? favoritos.value.slice() : [];
+  arr.sort((a, b) => {
+    const daRaw = extractFavoriteDate(a);
+    const dbRaw = extractFavoriteDate(b);
+
+    const da = daRaw ? new Date(daRaw) : new Date(0);
+    const db = dbRaw ? new Date(dbRaw) : new Date(0);
+
+    const ta = isNaN(da.getTime()) ? 0 : da.getTime();
+    const tb = isNaN(db.getTime()) ? 0 : db.getTime();
+
+    return favoritosSortOrder.value === "asc" ? ta - tb : tb - ta;
+  });
+  return arr;
+});
 </script>
 
 <style scoped>
@@ -565,8 +724,6 @@ function rejectionReason(r) {
   margin: 48px auto;
   padding: 0 16px;
   text-align: center;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
-    Arial;
   color: #222;
 }
 
