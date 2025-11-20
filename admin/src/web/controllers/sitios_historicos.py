@@ -381,9 +381,11 @@ def ver_sitio(sitio_id):
         for u in usuarios
     ]
     historial_view = _build_historial_view(historial, ciudades, categorias, usuarios_by_id)
+    imagenes = services.listar_imagenes_sitio(sitio_id)
     return render_template(
         "sitios_historicos/ver_sitio.html",
         sitio=sitio,
+        imagenes=imagenes,
         historial=historial,
         historial_view=historial_view,
         usuarios_historial=usuarios_historial,
