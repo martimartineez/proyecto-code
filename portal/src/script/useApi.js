@@ -3,7 +3,7 @@ export function useApi() {
     async function callProtectedApi(url, options = {}) {
         try {
             const response = await fetch(url, options);
-
+            console.log('API response status xxxxxxxxxxxxxxxxx:', response);
             if (!response.ok) {
                 // Guardar pestaña actual
                 localStorage.setItem('redirectAfterLogin', window.location.pathname);
