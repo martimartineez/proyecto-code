@@ -814,9 +814,7 @@ def favoritos_usuario():
         {
             "id": s.id,
             "nombre": s.nombre,
-            "descBreve": s.descBreve,
-            "latitud": s.latitud,
-            "longitud": s.longitud,
+            "fecha": s.inserted_at 
             # agregar lo que necesites
         }
         for s in favoritos
