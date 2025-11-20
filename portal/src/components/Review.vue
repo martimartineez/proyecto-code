@@ -2,7 +2,7 @@
     <div class="review-item">
         <div class="review-header">
             <strong class="user-alias">Usuario #<slot name="id"> </slot></strong>
-            <span class="rating">Puntuación: <slot name="puntuaciom"></slot>> / 5</span>
+            <span class="rating">Puntuación: <slot name="puntuaciom"></slot> / 5</span>
             <span class="date">  <slot name="fecha" :review="review"> {{ formatDate(review.fecha) }} </slot> </span>
         </div>
         <p class="review-text"> <slot name="comentario"> </slot> </p>
