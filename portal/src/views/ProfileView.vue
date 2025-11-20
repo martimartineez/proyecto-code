@@ -147,11 +147,26 @@
         </div>
 
         <div v-else-if="activeTab === 'favoritos'">
+          <!-- Controls: order favorites -->
+          <div class="reload-row" style="justify-content: flex-end; margin-bottom: 6px;">
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button
+                class="sort-btn"
+                @click="toggleFavoritosSort"
+                :aria-pressed="favoritosSortOrder === 'desc' ? 'true' : 'false'"
+                :title="favoritosSortOrder === 'desc' ? 'Ordenar por fecha: más recientes primero' : 'Ordenar por fecha: más antiguas primero'"
+              >
+                <span v-if="favoritosSortOrder === 'desc'">Orden: ↓ Fecha</span>
+                <span v-else>Orden: ↑ Fecha</span>
+              </button>
+            </div>
+          </div>
+
           <div v-if="loadingFavoritos" class="loading">Cargando favoritos...</div>
           <div v-else-if="favoritos.length > 0">
             <div class="review-list">
               <article
-                v-for="(fav, idx) in favoritos"
+                v-for="(fav, idx) in sortedFavoritos"
                 :key="fav.id || idx"
                 class="review-card clickable"
                 @click="openResena(fav)"
@@ -166,6 +181,7 @@
                   </div>
                   <div class="review-meta">
                     <div class="review-title">{{ fav.sitio || fav.nombre || fav.titulo || 'Favorito' }}</div>
+                    <div class="review-date">Agregado: {{ formatDate(extractFavoriteDate(fav)) }}</div>
                   </div>
                 </header>
                 <p class="review-text">{{ fav.descripcion || fav.descripcion_corta || '' }}</p>
@@ -205,6 +221,9 @@ const currentPage = ref(1);
 
 // Ordenamiento de reseñas
 const sortOrder = ref("desc"); // 'desc' (más recientes primero) o 'asc' (más antiguas primero)
+
+// Orden para favoritos: 'desc' (por defecto) o 'asc'
+const favoritosSortOrder = ref("desc");
 
 const totalPages = computed(() => {
   return Math.max(1, Math.ceil(reseñas.value.length / pageSize));
@@ -293,6 +312,13 @@ function nextPage() {
 function toggleSort() {
   sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc";
   currentPage.value = 1;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// Cambia el orden de los favoritos
+function toggleFavoritosSort() {
+  favoritosSortOrder.value = favoritosSortOrder.value === "asc" ? "desc" : "asc";
+  // opcional: volver a la parte superior cuando se cambia el orden
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -565,6 +591,40 @@ function rejectionReason(r) {
     ""
   );
 }
+
+// Nueva helper para extraer la fecha de agregado de un favorito
+function extractFavoriteDate(f) {
+  return (
+    f?.fecha_agregado ??
+    f?.fecha_agregado_iso ??
+    f?.added_at ??
+    f?.addedAt ??
+    f?.created_at ??
+    f?.createdAt ??
+    f?.fecha ??
+    f?.fecha_creacion ??
+    f?.fechaCreacion ??
+    null
+  );
+}
+
+// Lista ordenada de favoritos por fecha (segura ante fechas faltantes/invalidas)
+const sortedFavoritos = computed(() => {
+  const arr = favoritos.value ? favoritos.value.slice() : [];
+  arr.sort((a, b) => {
+    const daRaw = extractFavoriteDate(a);
+    const dbRaw = extractFavoriteDate(b);
+
+    const da = daRaw ? new Date(daRaw) : new Date(0);
+    const db = dbRaw ? new Date(dbRaw) : new Date(0);
+
+    const ta = isNaN(da.getTime()) ? 0 : da.getTime();
+    const tb = isNaN(db.getTime()) ? 0 : db.getTime();
+
+    return favoritosSortOrder.value === "asc" ? ta - tb : tb - ta;
+  });
+  return arr;
+});
 </script>
 
 <style scoped>
