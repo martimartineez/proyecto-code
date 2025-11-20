@@ -48,7 +48,7 @@
       <label>Puntaje</label>
       <select id="PuntajeSelect" name="puntaje" class="form-control">
   <option value="">Seleccione un puntaje</option>
-  {% for p in [0.5,1,1.5,2,2.5,3,3.5,4,4.5,5] %}
+  {% for p in [1,2,3,4,5] %}
     <option value="{{ p }}" {% if request_args.get('puntaje') == p|string %}selected{% endif %}>
       {{ p }}
     </option>
@@ -194,24 +194,38 @@
       </td>
       <td>{{ resena.inserted_at.strftime('%d-%m-%Y %H:%M') if resena.inserted_at else '' }}</td>
       <td>
-        <form action="/reseñas/{{ resena.id }}/aprobar" method="POST" style="display:inline;">
-          <button type="submit" class="button-approve">Aprobar</button>
-        </form>
-        <form action="/reseñas/{{ resena.id }}/rechazar" method="POST" 
-            class="form-rechazo" data-id="{{ resena.id }}" style="display:inline;">
-            <button type="button" class="button-reject btnAbrirRechazo">Rechazar</button>
-            <input type="hidden" name="motivo">
-        </form>
-        <form action="/reseñas/{{ resena.id }}/eliminar" 
-            method="POST" 
-            style="display:inline;"
-            onsubmit="return confirm('¿Seguro que querés eliminar esta reseña? Esta acción no se puede deshacer.');">
-            <button type="submit" class="button-delete">Eliminar</button>
-        </form>
-        <form action="/reseñas/reseña/{{ resena.id }}" method="GET" style="display:inline;">
-          <button type="submit" class="button-18">Ver detalles</button>
-        </form>
-      </td>
+
+  {# Mostrar "Aprobar" solo si NO está aprobada #}
+  {% if resena.estado != 'aprobada' %}
+  <form action="/reseñas/{{ resena.id }}/aprobar" method="POST" style="display:inline;">
+    <button type="submit" class="button-approve">Aprobar</button>
+  </form>
+  {% endif %}
+
+  {# Mostrar "Rechazar" solo si NO está rechazada #}
+  {% if resena.estado != 'rechazada' %}
+  <form action="/reseñas/{{ resena.id }}/rechazar" method="POST" 
+        class="form-rechazo" data-id="{{ resena.id }}" style="display:inline;">
+    <button type="button" class="button-reject btnAbrirRechazo">Rechazar</button>
+    <input type="hidden" name="motivo">
+  </form>
+  {% endif %}
+
+  {# Siempre puede eliminar #}
+  <form action="/reseñas/{{ resena.id }}/eliminar" 
+        method="POST" 
+        style="display:inline;"
+        onsubmit="return confirm('¿Seguro que querés eliminar esta reseña? Esta acción no se puede deshacer.');">
+    <button type="submit" class="button-delete">Eliminar</button>
+  </form>
+
+  {# Ver detalles siempre visible #}
+  <form action="/reseñas/reseña/{{ resena.id }}" method="GET" style="display:inline;">
+    <button type="submit" class="button-18">Ver detalles</button>
+  </form>
+
+</td>
+
     </tr>
     {% endfor %}
   </tbody>
