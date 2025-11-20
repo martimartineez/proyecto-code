@@ -192,7 +192,7 @@
           ⏳ Pendiente
         {% endif %}
       </td>
-      <td>{{ resena.inserted_at.strftime('%d-%m-%dY %H:%M') if resena.inserted_at else '' }}</td>
+      <td>{{ resena.inserted_at.strftime('%d-%m-%Y %H:%M') if resena.inserted_at else '' }}</td>
       <td>
         <form action="/reseñas/{{ resena.id }}/aprobar" method="POST" style="display:inline;">
           <button type="submit" class="button-approve">Aprobar</button>
