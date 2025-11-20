@@ -27,7 +27,7 @@
           >
               {{ tag }}
           </span>
-          <span v-if="!site.tags || site.tags.length === 0" class="tag-chip-placeholder">N/A</span>
+          <span v-if="!site.tags || site.tags.length === 0" class="tag-chip-placeholder"></span>
       </div>
     </section>
 
@@ -62,7 +62,7 @@
                 @click="handleRestrictedAction('REVIEW')" 
                 :disabled="isActionLoading"
             >
-                Escribir Reseña (Login requerido)
+                Escribir Reseña
             </button>
             
             <button 
