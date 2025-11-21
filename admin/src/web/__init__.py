@@ -35,12 +35,12 @@ def create_app(env="development", static_folder="../../static"):
     app.config['JSON_SORT_KEYS'] = False
     app.config["JWT-SECRET-KEY"] = "miClaveJWTSecreta12345678"
 
-    app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
+    app.config["JWT_TOKEN_LOCATION"] = ["cookies"] #saque headers
     app.config["JWT_COOKIE_SECURE"] = True          # en local cambiar a true para produccion
     app.config["JWT_COOKIE_SAMESITE"] = "None"       # IMPORTANTE cambiar a none para produccion
     app.config["JWT_COOKIE_HTTPONLY"] = True
     app.config["JWT_COOKIE_CSRF_PROTECT"] = False
-    #app.config["JWT_COOKIE_DOMAIN"] = ".proyecto2025.linti.unlp.edu.ar"
+    app.config["JWT_COOKIE_DOMAIN"] = "grupo.proyecto2025.linti.unlp.edu.ar" # esto no va seguro
 
 
     jwt = JWTManager(app)
