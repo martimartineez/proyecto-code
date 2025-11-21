@@ -136,7 +136,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useApi } from '@/script/useApi'; 
+//import { useApi } from '@/script/useApi'; 
 import SiteMap from '@/components/SiteMap.vue';
 import CollapsibleDescription from '@/components/CollapsibleDescription.vue';
 
@@ -164,7 +164,7 @@ import Review from '../components/Review.vue';
 
 const route = useRoute();
 const router = useRouter();
-const { callProtectedApi } = useApi(); // Inicializamos el composable para llamadas protegidas
+//const { callProtectedApi } = useApi(); // Inicializamos el composable para llamadas protegidas
 const site = ref(); 
 const isActionLoading = ref(false); // Deshabilita botones durante el fetch
 const API_URL = import.meta.env.VITE_API_BASE_URL;
@@ -236,8 +236,39 @@ const delete_review = async() =>{
 const handleRestrictedAction = async (actionType) => {
     isActionLoading.value = true;
     
+        try {
+        const url = `${API_URL}/api/perfil`;
 
-    const isAuthenticatedCheck = await callProtectedApi(`${API_URL}/api/perfil`, { method: 'GET' });
+        const respuesta = await fetch(url, {
+            method: 'GET',
+            credentials: "include"
+        });
+
+        // --- AUTENTICACIÓN / REDIRECCIÓN ---
+        if (respuesta.status === 401 || respuesta.status === 403) {
+
+            // Guardamos la URL actual para volver después del login
+            localStorage.setItem('redirectAfterLogin', window.location.pathname);
+
+            // Redirigimos al login
+            window.location.href = '/login';
+            return;
+        }
+        // -----------------------------------
+
+        if (!respuesta.ok) {
+            console.error("Error marcando favorito:", respuesta.status);
+            return;
+        }
+
+        // Si todo OK → actualizamos visualmente
+        const isAuthenticatedCheck = await response.json();
+
+    } catch (error) {
+        console.error("Error de red:", error);
+    } finally {
+        isActionLoading.value = false;
+    }
     
     isActionLoading.value = false;
 
