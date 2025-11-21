@@ -121,7 +121,7 @@
           <span v-else-if="editando && get_review">
             <div class="mb-2">
               <label class="form-label">Puntuación</label>
-              <input type="number" min="0.5" max="5" step="0.5" class="form-control" v-model.number="editRating" />
+              <input type="number" min="1" max="5" step="1" class="form-control" v-model.number="editRating" />
             </div>
             <div class="mb-2">
               <label class="form-label">Comentario</label>
