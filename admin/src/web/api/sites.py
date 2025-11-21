@@ -879,5 +879,90 @@ def favoritos_usuario():
     
     return jsonify({"favoritos": favoritos_json}), 200
 
+@bp.route("/sites/<int:id_sitio>/reviews/<int:id_resena>", methods=["PUT"])
+@jwt_required()
+def editar_resena_sitio(id_sitio, id_resena):
+    # Verificar si las reseñas están habilitadas
+    reviews_flag = get_flag('reviews_enabled')
+    if not reviews_flag or not reviews_flag.valor:
+        return jsonify({
+            "error": "reviews_disabled",
+            "message": reviews_flag.mensaje or "Las reseñas están temporalmente deshabilitadas."
+        }), 403
 
-    
+    data = request.get_json() or {}
+    texto = data.get("comment")
+    puntaje = data.get("rating")
+
+    sitio = obtener_sitio(id_sitio)
+    if not sitio:
+        return jsonify({"error": {"code": "not_found", "message": "Site not found"}}), 404
+
+    resena = db.session.query(Reseña).filter_by(id=id_resena, id_sitio=id_sitio).first()
+    if not resena:
+        return jsonify({"error": {"code": "not_found", "message": "Review not found"}}), 404
+
+    # Validaciones de entrada
+    try:
+        puntaje_float = float(puntaje) if puntaje is not None else None
+    except (ValueError, TypeError):
+        return jsonify({"error": {"code": "invalid_data", "message": "Invalid rating"}}), 400
+
+    if texto is None or puntaje_float is None:
+        return jsonify({"error": {"code": "invalid_data", "message": "Missing fields"}}), 400
+
+    if puntaje_float < 0.5 or puntaje_float > 5 or (texto and len(texto) < 20):
+        return (
+            jsonify(
+                {
+                    "error": {
+                        "code": "invalid_data",
+                        "message": "Invalid input data",
+                        "details": {"rating": ["Must be between 0.5 and 5"], "comment": ["Must be at least 20 characters"]},
+                    }
+                }
+            ),
+            400,
+        )
+
+    # Verificar propietario de la reseña
+    email = get_jwt_identity()
+    user = devolver_usuario_publico_por_email(email)
+    if not user:
+        return jsonify({"error": {"code": "not_found", "message": "User not found"}}), 404
+
+    if resena.id_usuario != user.id:
+        return (
+            jsonify(
+                {
+                    "error": {
+                        "code": "forbidden",
+                        "message": "You do not have permission to edit this review",
+                    }
+                }
+            ),
+            403,
+        )
+
+    # Actualizar y guardar
+    resena.texto = texto
+    resena.puntaje = puntaje_float
+    db.session.commit()
+
+    # Respuesta con el objeto actualizado (alineado con create/obtener)
+    return (
+        jsonify(
+            {
+                "id": resena.id,
+                "texto": resena.texto,
+                "puntaje": resena.puntaje,
+                "usuario_id": resena.id_usuario,
+                "sitio_id": resena.id_sitio,
+                "inserted_at": resena.inserted_at.isoformat() if resena.inserted_at else None,
+                "updated_at": resena.updated_at.isoformat() if resena.updated_at else None,
+            }
+        ),
+        200,
+    )
+
+

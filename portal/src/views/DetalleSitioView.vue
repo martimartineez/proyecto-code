@@ -96,7 +96,7 @@
         <div class="collapse" id="formReseña">
           <span v-if="!has_review"><ReviewForm :site-id="site.id" >  
           </ReviewForm></span>
-          <span v-else-if=" !editando && get_review">
+          <span v-else-if="!editando && get_review">
             <Review :review="get_review">
               <template #id>
                 {{ get_review.usuario }}
@@ -116,12 +116,23 @@
               Editar Reseña
             </button>
           </span>
-          <span v-else="!has_review">
-            <ReviewForm :site-id="site.id">
-              <template #texto>
-                <textarea class="form-control" name="comment" id="reseña" rows="3" minlength="20" maxlength="1000" required> {{ get_review.texto }} </textarea>
-              </template>
-            </ReviewForm>
+
+          <!-- Formulario de edición (cuando editando === true) -->
+          <span v-else-if="editando && get_review">
+            <div class="mb-2">
+              <label class="form-label">Puntuación</label>
+              <input type="number" min="0.5" max="5" step="0.5" class="form-control" v-model.number="editRating" />
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Comentario</label>
+              <textarea class="form-control" v-model="editText" rows="4" minlength="20"></textarea>
+            </div>
+            <button class="btn btn-primary me-2" @click="saveEditedReview" :disabled="isActionLoading">
+              Guardar cambios
+            </button>
+            <button class="btn btn-secondary" @click="cancelEdit" :disabled="isActionLoading">
+              Cancelar
+            </button>
           </span>
         </div>
         <ReviewList :site-id="site.id" />
@@ -181,6 +192,9 @@ const isActionLoading = ref(false); // Deshabilita botones durante el fetch
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 const reviews = ref([]);
 const editando = ref(false);
+const editText = ref('');
+const editRating = ref(5);
+
 // *** IMPLEMENTACIÓN FINAL DE LA ACCIÓN DE FAVORITOS (PUT/DELETE) ***
 
 
@@ -199,7 +213,11 @@ const get_review = computed(() => {
 })
 
 const edicion = () => {
+  if (!get_review.value) return;
   editando.value = true;
+  // Si la review local usa claves 'texto' y 'puntuacion' (según tu endpoint reseñas_usuario)
+  editText.value = get_review.value.texto || '';
+  editRating.value = Number(get_review.value.puntuacion ?? get_review.value.rating ?? 5);
 };
 
 const user_reviews = async() => {
@@ -249,51 +267,106 @@ const delete_review = async() =>{
     window.location.reload();
 }
 
-// *** LÓGICA DE REDIRECCIÓN CONDICIONAL PARA ESCRIBIR RESEÑA ***
+// *** LÓGICA DE REDIRECCIÓN CONDICIONAL PARA ESCRIBIR RESEÑA (CORREGIDA) ***
 const handleRestrictedAction = async (actionType) => {
-    isActionLoading.value = true;
-    
-        try {
-        const url = `${API_URL}/api/perfil`;
+  isActionLoading.value = true;
+  try {
+    const url = `${API_URL}/api/perfil`;
+    const respuesta = await fetch(url, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }
+    });
 
-        const respuesta = await fetch(url, {
-            method: 'GET',
-            credentials: "include"
-        });
-
-        // --- AUTENTICACIÓN / REDIRECCIÓN ---
-        if (respuesta.status === 401 || respuesta.status === 403) {
-
-            // Guardamos la URL actual para volver después del login
-            localStorage.setItem('redirectAfterLogin', window.location.pathname);
-
-            // Redirigimos al login
-            window.location.href = '/login';
-            return;
-        }
-        // -----------------------------------
-
-        if (!respuesta.ok) {
-            console.error("Error marcando favorito:", respuesta.status);
-            return;
-        }
-
-        // Si todo OK → actualizamos visualmente
-        const isAuthenticatedCheck = await response.json();
-
-    } catch (error) {
-        console.error("Error de red:", error);
-    } finally {
-        isActionLoading.value = false;
+    // --- AUTENTICACIÓN / REDIRECCIÓN ---
+    if (respuesta.status === 401 || respuesta.status === 403) {
+      localStorage.setItem('redirectAfterLogin', window.location.pathname);
+      window.location.href = '/login';
+      return null;
     }
-    
+
+    if (!respuesta.ok) {
+      console.error("Error verificando perfil:", respuesta.status);
+      return null;
+    }
+
+    // Retornamos el JSON por si hace falta
+    const profile = await respuesta.json();
+    return profile;
+
+  } catch (error) {
+    console.error("Error de red al verificar perfil:", error);
+    // Comportamiento seguro: redirigir al login y guardar ruta
+    localStorage.setItem('redirectAfterLogin', window.location.pathname);
+    window.location.href = '/login';
+    return null;
+  } finally {
     isActionLoading.value = false;
+  }
+};
 
-    if (isAuthenticatedCheck !== null) {
-        if (actionType === 'REVIEW') {
-            console.log("Abrir modal/formulario para crear reseña.");
-        }
+// Cancelar edición: restaura estado local y cierra modo edición
+const cancelEdit = () => {
+  editando.value = false;
+  editText.value = '';
+  editRating.value = 5;
+};
+
+// Guardar reseña editada
+const saveEditedReview = async () => {
+  if (!get_review.value) return;
+  // Validaciones simples cliente (mejor también validar en backend)
+  if (!editText.value || editText.value.length < 20) {
+    alert('El comentario debe tener al menos 20 caracteres.');
+    return;
+  }
+  if (Number(editRating.value) < 0.5 || Number(editRating.value) > 5) {
+    alert('La puntuación debe estar entre 0.5 y 5.');
+    return;
+  }
+
+  isActionLoading.value = true;
+  try {
+    const url = `${API_URL}/api/sites/${site.value.id}/reviews/${get_review.value.id}`;
+    const res = await fetch(url, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        comment: editText.value,
+        rating: editRating.value
+      })
+    });
+
+    // Manejo de autenticación idéntico a toggleFavorite
+    if (res.status === 401 || res.status === 403) {
+      localStorage.setItem('redirectAfterLogin', window.location.pathname);
+      window.location.href = '/login';
+      return;
     }
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      console.error('Error actualizando reseña:', res.status, text);
+      alert('No se pudo guardar la reseña. Revisa la consola para más detalles.');
+      return;
+    }
+
+    // Refrescar reseñas del usuario y datos del sitio
+    await user_reviews();
+    await fetchSiteData();
+
+    // Salir del modo edición
+    editando.value = false;
+    editText.value = '';
+    editRating.value = 5;
+
+  } catch (err) {
+    console.error('Error guardando reseña editada:', err);
+    alert('Ocurrió un error al guardar. Revisa la consola.');
+  } finally {
+    isActionLoading.value = false;
+  }
 };
 
 const toggleFavorite = async () => {
