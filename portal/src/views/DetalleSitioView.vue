@@ -58,7 +58,7 @@
         
         <div class="action-buttons">
             <button
-              class="action-btn primary"
+              class="action-btn primary mb-3"
               @click="handleRestrictedAction('REVIEW')"
               :disabled="isActionLoading"
               data-bs-toggle="collapse"
@@ -71,7 +71,7 @@
             </button>
             
             <button
-              class="action-btn favorite-btn"
+              class="action-btn favorite-btn mb-3"
               :class="{ favorited: is_favorite }"
               @click="toggleFavorite"
               :aria-pressed="is_favorite"
@@ -92,16 +92,17 @@
       </div>
 
       <!-- Sección de reseñas -->
-      <template v-if="reviewsEnabled">
+      <template v-if="reviewsEnabled"> 
         <div class="collapse" id="formReseña">
-          <span v-if="!has_review"><ReviewForm :site-id="site.id" /> </span>
-          <span v-else-if="get_review">
+          <span v-if="!has_review"><ReviewForm :site-id="site.id" >  
+          </ReviewForm></span>
+          <span v-else-if=" !editando && get_review">
             <Review :review="get_review">
               <template #id>
                 {{ get_review.usuario }}
               </template>
               <template #puntuaciom>
-                {{ get_review.rating }}
+                {{ get_review.puntuacion }}
               </template>
               <template #comentario>
                 {{ get_review.texto }}
@@ -111,6 +112,16 @@
             <button class="btn btn-danger mb-3" @click="delete_review">
               Borrar Reseña
             </button>
+            <button class="btn btn-success mb-3 ms-2" @click="edicion">
+              Editar Reseña
+            </button>
+          </span>
+          <span v-else="!has_review">
+            <ReviewForm :site-id="site.id">
+              <template #texto>
+                <textarea class="form-control" name="comment" id="reseña" rows="3" minlength="20" maxlength="1000" required> {{ get_review.texto }} </textarea>
+              </template>
+            </ReviewForm>
           </span>
         </div>
         <ReviewList :site-id="site.id" />
@@ -169,6 +180,7 @@ const site = ref();
 const isActionLoading = ref(false); // Deshabilita botones durante el fetch
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 const reviews = ref([]);
+const editando = ref(false);
 // *** IMPLEMENTACIÓN FINAL DE LA ACCIÓN DE FAVORITOS (PUT/DELETE) ***
 
 
@@ -185,6 +197,10 @@ const get_review = computed(() => {
    return reviews.value.find(
     review => review.sitio === site.value.name);
 })
+
+const edicion = () => {
+  editando.value = true;
+};
 
 const user_reviews = async() => {
   try {
@@ -211,6 +227,7 @@ const user_reviews = async() => {
 }
 
 const delete_review = async() =>{
+  if(!confirm("¿Esta seguro de que quieres eliminar esta reseña?")) return;
   try{
     console.log(get_review.value.id);
     console.log(site.value.id);
@@ -391,6 +408,10 @@ const fetchSiteData = async () => {
 
 onMounted(fetchSiteData);
 onMounted(user_reviews);
+onMounted(() => {
+  editando.value = false;
+});
+
 </script>
 
 <style scoped>
