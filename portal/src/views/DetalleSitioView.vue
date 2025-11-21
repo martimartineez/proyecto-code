@@ -237,7 +237,7 @@ const handleRestrictedAction = async (actionType) => {
     isActionLoading.value = true;
     
 
-    const isAuthenticatedCheck = await callProtectedApi('/api/perfil', { method: 'GET' });
+    const isAuthenticatedCheck = await callProtectedApi(`${API_URL}/api/perfil`, { method: 'GET' });
     
     isActionLoading.value = false;
 
@@ -255,7 +255,7 @@ const toggleFavorite = async () => {
     const method = isCurrentlyFavorited ? 'DELETE' : 'PUT';
     
     try {
-        const url = `/api/sites/${site.value.id}/favorite`;
+        const url = `${API_URL}/api/sites/${site.value.id}/favorite`;
 
         const respuesta = await fetch(url, {
             method: method,
