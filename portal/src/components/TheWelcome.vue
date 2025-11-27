@@ -33,9 +33,9 @@
   </div>
 
   <div id="sliders">
-    <div id="slide-destacados"><RouterLink :to="{name: 'sites', query: { order_by: 'fecha_registro', order: 'asc'}}"> <p class="slider-title"> Novedades </p> </RouterLink>
+    <div id="slide-novedades"><RouterLink :to="{name: 'sites', query: { order_by: 'fechaRegistro', order: 'desc'}}"> <p class="slider-title"> Novedades </p> </RouterLink>
         <div class="row">
-            <div id="Destacados" class="carousel slide" data-ride="carousel" data-interval="0">
+            <div id="Novedades" class="carousel slide" data-ride="carousel" data-interval="0">
               <!-- slides -->
               <div class="carousel-item active">
               <div class="row">
@@ -69,18 +69,18 @@
                 </div>
               </div>
             </div>
-          <button v-if="ultimosSitios[1]" class="carousel-control-prev" type="button" data-bs-target="#Destacados" data-bs-slide="prev">
+          <button v-if="ultimosSitios[1]" class="carousel-control-prev" type="button" data-bs-target="#Novedades" data-bs-slide="prev">
             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
             <span class="visually-hidden">Previous</span>
           </button>
-          <button v-if="ultimosSitios[1]" class="carousel-control-next" type="button" data-bs-target="#Destacados" data-bs-slide="next">
+          <button v-if="ultimosSitios[1]" class="carousel-control-next" type="button" data-bs-target="#Novedades" data-bs-slide="next">
             <span class="carousel-control-next-icon" aria-hidden="true"></span>
             <span class="visually-hidden">Next</span>
           </button>
           </div>
       </div>
     </div>
-    <div id="slide-ratings"><a href="/"> <p class="slider-title"> Mejor Puntuados </p> </a>
+    <div id="slide-ratings"> <RouterLink :to="{name: 'sites', query: { order_by: 'rating', order: 'desc'}}"><p class="slider-title"> Mejor Puntuados </p> </RouterLink>
         <div class="row">
             <div id="ratings" class="carousel slide" data-ride="carousel" data-interval="0">
               <!-- slides -->
@@ -200,12 +200,12 @@ onMounted(async () => {
 
 const sitiosHero = computed(() => {
   const lista = sitios.value.data || [];
-  return lista.sort((b,a) => new Date(a.fecha_registro) - new Date(b.fecha_registro)).slice(0,3);  //agarro los 3 sitios mas recientes
+  return lista.sort((b,a) => new Date(a.fechaRegistro) - new Date(b.fechaRegistro)).slice(0,3);  //agarro los 3 sitios mas recientes
 })
 
-const ultimosSitios = computed(() => {
+const ultimosSitios = computed(() => {  
   var lista = sitios.value.data || [];
-  lista = lista.sort((b,a) => new Date(a.fecha_registro) - new Date(b.fecha_registro));
+  lista = lista.sort((b,a) => new Date(a.fechaRegistro) - new Date(b.fechaRegistro));
   lista = lista.slice(3);     //borro los 3 primeros que uso en el hero
   return sitiosPorFila(lista);
 })
