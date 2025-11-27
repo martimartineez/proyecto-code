@@ -34,6 +34,23 @@ from flask_jwt_extended.exceptions import (
     JWTExtendedException,
 )
 
+from functools import wraps
+
+def require_reviews_enabled(f):
+    """
+    Decorador que verifica si el feature flag de reseñas está habilitado.
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        reviews_flag = get_flag('reviews_enabled')
+        if not reviews_flag or not reviews_flag.valor:
+            return jsonify({
+                "error": "reviews_disabled",
+                "message": reviews_flag.mensaje if reviews_flag else "Las reseñas están temporalmente deshabilitadas."
+            }), 403
+        return f(*args, **kwargs)
+    return decorated_function
+
 bp = Blueprint("site_api", __name__, url_prefix="/api")
 
 
@@ -426,12 +443,13 @@ def auth():
 
 @bp.route("/sites/<int:id>/reviews", methods=["GET"])
 @jwt_required()
+@require_reviews_enabled
 def listar_resenas_sitio(id):
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
 
-    order_by = request.args.get("order_by", "inserted_at") # Valor por defecto: fecha
-    order = request.args.get("order", "desc")              # Valor por defecto: descendente
+    order_by = request.args.get("order_by", "inserted_at")
+    order = request.args.get("order", "desc")
 
     sitio = obtener_sitio(id)
 
@@ -456,7 +474,6 @@ def listar_resenas_sitio(id):
         )
 
     query = db.session.query(Reseña).filter_by(id_sitio=id, estado='aprobada')
-
     query = query.options(joinedload(Reseña.usuario))
 
     sort_column = Reseña.inserted_at 
@@ -494,15 +511,8 @@ def listar_resenas_sitio(id):
 
 @bp.route("/sites/<int:id_sitio>/reviews", methods=["POST"])
 @jwt_required()
+@require_reviews_enabled
 def crear_resena_sitio(id_sitio):
-    # Verificar si las reseñas están habilitadas
-    reviews_flag = get_flag('reviews_enabled')
-    if not reviews_flag or not reviews_flag.valor:
-        return jsonify({
-            "error": "reviews_disabled",
-            "message": reviews_flag.mensaje or "Las reseñas están temporalmente deshabilitadas."
-        }), 403
-
     data = request.get_json()
     texto = data.get("comment")
     puntaje = data.get("rating")
@@ -553,6 +563,7 @@ def crear_resena_sitio(id_sitio):
 
 @bp.route("/sites/<int:id_sitio>/reviews/<int:id_resena>", methods=["GET"])
 @jwt_required()
+@require_reviews_enabled
 def obtener_resena_por_idSitio(id_sitio, id_resena):
     if id_resena < 1:
         return (
@@ -596,15 +607,8 @@ def obtener_resena_por_idSitio(id_sitio, id_resena):
 
 @bp.route("/sites/<int:id_sitio>/reviews/<int:id_resena>", methods=["DELETE"])
 @jwt_required()
+@require_reviews_enabled
 def eliminar_reseña_poridSitio(id_sitio, id_resena):
-    # Verificar si las reseñas están habilitadas
-    reviews_flag = get_flag('reviews_enabled')
-    if not reviews_flag or not reviews_flag.valor:
-        return jsonify({
-            "error": "reviews_disabled",
-            "message": reviews_flag.mensaje or "Las reseñas están temporalmente deshabilitadas."
-        }), 403
-
     sitio = obtener_sitio(id_sitio)
     resena = db.session.query(Reseña).filter_by(id=id_resena, id_sitio=id_sitio).first()
 
@@ -820,10 +824,10 @@ def logout():
 
 @bp.route('/reseñas_usuario', methods=['GET'])
 @jwt_required()
+@require_reviews_enabled
 def reseñas_usuario():
     from src.core.entity.services import listar_reseñas_usuario
     from src.core.auth import devolver_usuario_publico_por_email
-
 
     user_email = get_jwt_identity()
     user = devolver_usuario_publico_por_email(user_email)
@@ -831,7 +835,6 @@ def reseñas_usuario():
         return jsonify({"error": "Usuario no encontrado"}), 404
 
     reseñas = listar_reseñas_usuario(user.id)
-    # Convertir a diccionarios
     reseñas_json = [
         {
             "id": r.id,
@@ -844,7 +847,6 @@ def reseñas_usuario():
             "fecha": r.inserted_at.isoformat() if r.inserted_at else None,
             "estado": r.estado,
             "motivo": r.motivo,
-            # agregar lo que necesites
         }
         for r in reseñas
     ]
@@ -881,15 +883,8 @@ def favoritos_usuario():
 
 @bp.route("/sites/<int:id_sitio>/reviews/<int:id_resena>", methods=["PUT"])
 @jwt_required()
+@require_reviews_enabled
 def editar_resena_sitio(id_sitio, id_resena):
-    # Verificar si las reseñas están habilitadas
-    reviews_flag = get_flag('reviews_enabled')
-    if not reviews_flag or not reviews_flag.valor:
-        return jsonify({
-            "error": "reviews_disabled",
-            "message": reviews_flag.mensaje or "Las reseñas están temporalmente deshabilitadas."
-        }), 403
-
     data = request.get_json() or {}
     texto = data.get("comment")
     puntaje = data.get("rating")
@@ -949,7 +944,7 @@ def editar_resena_sitio(id_sitio, id_resena):
     resena.puntaje = puntaje_float
     db.session.commit()
 
-    # Respuesta con el objeto actualizado (alineado con create/obtener)
+    # Respuesta con el objeto actualizado
     return (
         jsonify(
             {

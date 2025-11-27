@@ -1,7 +1,7 @@
 <template>
   <article class="card" @click="goToDetail">
     <div class="cover" :style="coverStyle">
-      <span v-if="!site.cover_image" class="placeholder">📍</span>
+      <img v-if="!site.cover_url" :src="placeholderImg" alt="Imagen no disponible" class="placeholder" />
     </div>
     <div class="body">
       <h3 class="title">{{ site.nombre }}</h3>
@@ -34,6 +34,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
+import placeholderImg from '@/assets/Placeholder.png';
 
 const router = useRouter();
 
@@ -88,15 +89,18 @@ const coverStyle = computed(() => ({
 .cover {
   aspect-ratio: 16/9;
   background: #f3f4f6 center/cover no-repeat;
-  display: grid;
-  place-items: center;
-  /* Para que el zoom no afecte los bordes redondeados */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
   transform: translateZ(0);
 }
 
 .placeholder {
-  font-size: 2rem;
-  color: #9ca3af;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background-color: #f3f4f6;
 }
 
 .body {

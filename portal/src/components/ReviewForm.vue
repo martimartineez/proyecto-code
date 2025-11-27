@@ -29,7 +29,6 @@
 import 'font-awesome/css/font-awesome.min.css';
 import { ref } from 'vue';
 
-//const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'; 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 const formulario = ref();
 
@@ -44,6 +43,8 @@ async function postReview(){
   data.site_id = props.siteId;
   console.log(data)
 
+  let shouldReload = true;
+
   try {
       const respuesta = await fetch(`${API_URL}/api/sites/${props.siteId}/reviews`, {
         method: "POST",
@@ -54,12 +55,30 @@ async function postReview(){
         body: JSON.stringify(data)
       })
 
+      if (!respuesta.ok) {
+        shouldReload = false; 
+
+        const errorData = await respuesta.json();
+        
+        if (respuesta.status === 403 && errorData.error === "reviews_disabled") {
+          alert(errorData.message || "Las reseñas están temporalmente deshabilitadas.");
+        } else {
+          alert("Ocurrió un error al intentar enviar la reseña.");
+        }
+      } else {
+        alert("Reseña enviada con éxito.");
+      }
+
   }
   catch (e) {
-      console.error(e)
+      console.error(e);
+      shouldReload = false;
+      alert("Error de conexión o inesperado.");
     }
   finally{
-    window.location.reload()
+    if (shouldReload) {
+      window.location.reload();
+    }
   }
 }
 </script>
