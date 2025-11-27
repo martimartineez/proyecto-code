@@ -1,8 +1,10 @@
 from flask import jsonify
-from . import bp as api_bp
 from src.core.entity.services.feature_flags import get_flag
+from flask import Blueprint
 
-@api_bp.route('/feature-flags/<flag_name>', methods=['GET'])
+bp = Blueprint("feature_flags_api", __name__, url_prefix="/api")
+
+@bp.route('/feature-flags/<flag_name>', methods=['GET'])
 def get_feature_flag(flag_name):
 
     flag = get_flag(flag_name)

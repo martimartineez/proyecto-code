@@ -44,10 +44,11 @@ const router = createRouter({
 })
 
 let isMaintenanceMode = false;
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 async function checkMaintenance() {
   try {
-    const response = await fetch('/api/feature-flags/portal_maintenance_mode');
+    const response = await fetch(`${API_URL}/api/feature-flags/portal_maintenance_mode`);
     if (!response.ok) {
       console.error('Error checking maintenance status:', response.statusText);
       return;
