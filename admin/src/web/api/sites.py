@@ -871,6 +871,8 @@ def favoritos_usuario():
             "id": s.id,
             "nombre": s.nombre,
             "fecha": s.updated_at.isoformat() if s.updated_at else None,
+            "desc_corta": s.descBreve,
+            "cover_url": s.to_dict()['cover_url'],
             # agregar lo que necesites
         }
         for s in favoritos
