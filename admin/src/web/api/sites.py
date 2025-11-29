@@ -944,6 +944,7 @@ def editar_resena_sitio(id_sitio, id_resena):
     # Actualizar y guardar
     resena.texto = texto
     resena.puntaje = puntaje_float
+    resena.estado = 'pendiente'
     db.session.commit()
 
     # Respuesta con el objeto actualizado
