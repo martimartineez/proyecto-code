@@ -93,8 +93,10 @@ class SitioHistorico(Base):
         try:
             portada = next((img for img in getattr(self, "imagenes", []) if getattr(img, "portada", False)), None)
             d["cover_url"] = portada.url_publica if portada else None
+            d["cover_alt"] = portada.titulo_alt if portada else None
         except Exception:
             d["cover_url"] = None
+            d["cover_alt"] = None
         d["state_of_conservation"] = self.estadoConservacion
         d["fechaRegistro"] = self.fechaRegistro.isoformat() if self.fechaRegistro else None
         d["inserted_at"] = self.inserted_at.isoformat() if self.inserted_at else None

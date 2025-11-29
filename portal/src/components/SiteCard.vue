@@ -1,7 +1,8 @@
 <template>
   <article class="card" @click="goToDetail">
-    <div class="cover" :style="coverStyle">
-      <img v-if="!site.cover_url" :src="placeholderImg" alt="Imagen no disponible" class="placeholder" />
+    <div class="cover" :style="coverStyle" :aria-label="site.cover_alt ">
+      <img v-if="site.cover_url" :src="site.cover_url" :alt="site.cover_alt" />
+      <img v-else :src="placeholderImg" alt="Imagen no disponible" class="placeholder" />
     </div>
     <div class="body">
       <h3 class="title">{{ site.nombre }}</h3>
