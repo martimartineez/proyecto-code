@@ -52,7 +52,7 @@
                     </div>
                   </template>
                   <template v-else>
-                    <RouterLink to="/login" class="nav-link d-none d-lg-flex me-5">Iniciar sesión</RouterLink>
+                    <RouterLink to="/login" class="nav-link d-none d-lg-flex me-5" @click="saveRedirectPath">Iniciar sesión</RouterLink>
                   </template>
           </div>
         </div>
@@ -69,6 +69,7 @@
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 
+
 const profile = ref(null)
 const defaultAvatar = 'https://www.gravatar.com/avatar/?d=mp&s=80' // placeholder externo
 const API_URL = import.meta.env.VITE_API_BASE_URL || ''
@@ -79,6 +80,10 @@ const router = useRouter()
 // menú del avatar
 const profileEl = ref(null)
 
+
+function saveRedirectPath() {
+  localStorage.setItem('redirectAfterLogin', window.location.pathname)
+}
 
 function onDocumentClick(e) {
   const el = profileEl.value
