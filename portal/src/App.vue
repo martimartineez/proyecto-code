@@ -104,7 +104,6 @@ async function logout() {
     profile.value = null
     // notificar a otras pestañas
     localStorage.setItem('authChanged', Date.now())
-    closeMenu()
     router.push('/')
   }
 }

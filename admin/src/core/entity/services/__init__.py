@@ -745,11 +745,6 @@ def listar_reseñas_usuario(id_usuario: int):
         .all()
     )
 
-# def listar_favoritos_usuario(user):
-#     """
-#     Lista los sitios marcados como favoritos por un usuario público específico.
-#     """
-#     return user.favoritos
 
 def listar_favoritos_usuario(user):
     from src.core.auth.usuario import favoritos_usuarios_sitios
