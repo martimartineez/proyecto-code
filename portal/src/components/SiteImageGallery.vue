@@ -32,7 +32,7 @@
 import { ref, computed, watchEffect } from 'vue';
 
 const props = defineProps({
-  // Espera un array de objetos: [{url: '...', alt: '...', portada: true/false}]
+  
   images: {
     type: Array,
     default: () => [] 
@@ -40,7 +40,7 @@ const props = defineProps({
 });
 
 const currentMainIndex = ref(0); // Índice de la imagen que se está mostrando actualmente
-const MAX_THUMBNAILS = 4;
+const MAX_THUMBNAILS = 10;
 
 // LÓGICA CLAVE: Buscar la Portada y actualizar el índice al cargar los datos
 watchEffect(() => {
