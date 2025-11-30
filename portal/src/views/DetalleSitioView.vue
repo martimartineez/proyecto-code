@@ -63,10 +63,10 @@
               :disabled="isActionLoading"
               data-bs-toggle="collapse"
               data-bs-target="#formReseña"
-              aria-label="Escribir reseña"
+              aria-label="Mi reseña"
             >
               <span class="btn-icon" aria-hidden>✍️</span>
-              <span class="btn-text">Escribir Reseña</span>
+              <span class="btn-text">Mi Reseña</span>
               <span v-if="isActionLoading" class="btn-spinner" aria-hidden></span>
             </button>
             
