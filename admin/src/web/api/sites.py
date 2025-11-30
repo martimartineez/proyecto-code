@@ -858,6 +858,8 @@ def reseñas_usuario():
 def favoritos_usuario():
     from src.core.entity.services import listar_favoritos_usuario
     from src.core.auth import devolver_usuario_publico_por_email
+    from src.core.auth.usuario import favoritos_usuarios_sitios
+
 
 
     print("Entrando en favoritos_usuario")  # Depuración
@@ -867,18 +869,18 @@ def favoritos_usuario():
         return jsonify({"error": "Usuario no encontrado"}), 404
 
     favoritos = listar_favoritos_usuario(user)
-    print("favoritos:", favoritos)  # Depuración    
+    #print("favoritos:", favoritos)  # Depuración    
+
     favoritos_json = [
-        {
-            "id": s.id,
-            "nombre": s.nombre,
-            "fecha": s.updated_at.isoformat() if s.updated_at else None,
-            "desc_corta": s.descBreve,
-            "cover_url": s.to_dict()['cover_url'],
-            # agregar lo que necesites
-        }
-        for s in favoritos
-    ]
+    {
+        "id": sitio.id,
+        "nombre": sitio.nombre,
+        "fecha": inserted_at.isoformat() if inserted_at else None,
+        "desc_corta": sitio.descBreve,
+        "cover_url": sitio.to_dict()['cover_url'],
+    }
+    for sitio, inserted_at, updated_at in favoritos
+]
 
     
     return jsonify({"favoritos": favoritos_json}), 200

@@ -745,8 +745,27 @@ def listar_reseñas_usuario(id_usuario: int):
         .all()
     )
 
+# def listar_favoritos_usuario(user):
+#     """
+#     Lista los sitios marcados como favoritos por un usuario público específico.
+#     """
+#     return user.favoritos
+
 def listar_favoritos_usuario(user):
-    """
-    Lista los sitios marcados como favoritos por un usuario público específico.
-    """
-    return user.favoritos
+    from src.core.auth.usuario import favoritos_usuarios_sitios
+    from sqlalchemy import select
+
+    stmt = (
+        select(
+            SitioHistorico,
+            favoritos_usuarios_sitios.c.inserted_at,
+            favoritos_usuarios_sitios.c.updated_at
+        )
+        .join(
+            favoritos_usuarios_sitios,
+            SitioHistorico.id == favoritos_usuarios_sitios.c.sitio_id,
+        )
+        .where(favoritos_usuarios_sitios.c.usuario_id == user.id)
+    )
+
+    return db.session.execute(stmt).all()
