@@ -352,6 +352,8 @@ const saveEditedReview = async () => {
       return;
     }
 
+
+    alert('Reseña guardada con éxito.');
     // Refrescar reseñas del usuario y datos del sitio
     await user_reviews();
     await fetchSiteData();
