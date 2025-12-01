@@ -270,13 +270,13 @@ nav{
 
 
 .magnifier .glass {
-    cx: 27;
-    cy: 27;
-    r: 8;
-    stroke-width: 3;
+    cx: 27px;
+    cy: 27px;
+    r: 8px;
+    stroke-width: 3px;
 }
 .magnifier .handle {
-    stroke-width: 3;
+    stroke-width: 3px;
 }
 
 #results {
