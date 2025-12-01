@@ -180,11 +180,11 @@
                     <div class="score-label">Fav</div>
                   </div>
                   <div class="review-meta">
-                    <div class="review-title">{{ fav.sitio || fav.nombre || fav.titulo || 'Favorito' }}</div>
+                    <div class="review-title">{{fav.nombre}}</div>
                     <div class="review-date">Agregado: {{ formatDate(extractFavoriteDate(fav)) }}</div>
                   </div>
                 </header>
-                <p class="review-text">{{ fav.descripcion || fav.descripcion_corta || '' }}</p>
+                
               </article>
             </div>
 
@@ -612,11 +612,6 @@ async function openResena(reseña) {
   // 2) Fallback: intentar buscar por nombre/nombre de sitio
   const q =
     reseña.sitio ||
-    // reseña.sitio_nombre ||
-    // reseña.sitioNombre ||
-    // reseña.nombre ||      // <-- favorito devuelve 'nombre'
-    // reseña.name ||
-    // reseña.titulo ||
     null;
 
   if (!q) return;
