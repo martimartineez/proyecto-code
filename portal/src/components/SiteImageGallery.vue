@@ -70,13 +70,13 @@ const mainImage = computed(() => {
             alt: imageObject.alt || 'Sitio histórico, foto principal', 
         };
     }
-    // Placeholder si no hay imágenes
+    // si no hay imágenes
     return { 
         alt: 'Este sitio no tiene imágenes disponibles', 
     };
 });
 
-// Muestra solo las primeras N miniaturas
+// Muestra solo las primeras N imagenes en la barra de miniaturas
 const thumbnailImages = computed(() => props.images.slice(0, MAX_THUMBNAILS));
 
 // Cambia la imagen principal al hacer clic en una miniatura

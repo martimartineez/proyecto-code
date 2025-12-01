@@ -65,16 +65,16 @@ const reviews = ref([]);
 const currentPage = ref(1);
 const totalPages = ref(1);
 const totalReviews = ref(0);
-const perPage = 25; // Requerimiento: 25 por página
+const perPage = 25; 
 const loading = ref(true);
 
-// NUEVO: Estado para el ordenamiento
+
 const sortState = reactive({
     by: 'inserted_at', // rating o inserted_at
     order: 'desc'     // asc o desc
 });
 
-// NUEVO: Estado de login
+
 const isLoggedIn = ref(true);
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
@@ -88,7 +88,7 @@ const fetchReviews = async (page) => {
       credentials: "include",
     });
 
-    isLoggedIn.value = response.ok; // <-- Aquí guardas el estado de login
+    isLoggedIn.value = response.ok; 
 
     if (!response.ok) throw new Error("Error al cargar las reseñas");
 

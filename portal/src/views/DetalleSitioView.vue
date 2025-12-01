@@ -158,7 +158,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-//import { useApi } from '@/script/useApi'; 
 import SiteMap from '@/components/SiteMap.vue';
 import CollapsibleDescription from '@/components/CollapsibleDescription.vue';
 
@@ -186,7 +185,6 @@ import Review from '../components/Review.vue';
 
 const route = useRoute();
 const router = useRouter();
-//const { callProtectedApi } = useApi(); // Inicializamos el composable para llamadas protegidas
 const site = ref(); 
 const isActionLoading = ref(false); // Deshabilita botones durante el fetch
 const API_URL = import.meta.env.VITE_API_BASE_URL;
@@ -195,7 +193,7 @@ const editando = ref(false);
 const editText = ref('');
 const editRating = ref(5);
 
-// *** IMPLEMENTACIÓN FINAL DE LA ACCIÓN DE FAVORITOS (PUT/DELETE) ***
+
 
 
 const is_favorite = computed(() => {
@@ -215,7 +213,6 @@ const get_review = computed(() => {
 const edicion = () => {
   if (!get_review.value) return;
   editando.value = true;
-  // Si la review local usa claves 'texto' y 'puntuacion' (según tu endpoint reseñas_usuario)
   editText.value = get_review.value.texto || '';
   editRating.value = Number(get_review.value.puntuacion ?? get_review.value.rating ?? 5);
 };
@@ -267,7 +264,7 @@ const delete_review = async() =>{
     window.location.reload();
 }
 
-// *** LÓGICA DE REDIRECCIÓN CONDICIONAL PARA ESCRIBIR RESEÑA (CORREGIDA) ***
+
 const handleRestrictedAction = async (actionType) => {
   isActionLoading.value = true;
   try {
@@ -290,13 +287,13 @@ const handleRestrictedAction = async (actionType) => {
       return null;
     }
 
-    // Retornamos el JSON por si hace falta
+    
     const profile = await respuesta.json();
     return profile;
 
   } catch (error) {
     console.error("Error de red al verificar perfil:", error);
-    // Comportamiento seguro: redirigir al login y guardar ruta
+    // redirigir al login y guardar ruta
     localStorage.setItem('redirectAfterLogin', window.location.pathname);
     window.location.href = '/login';
     return null;
@@ -305,7 +302,7 @@ const handleRestrictedAction = async (actionType) => {
   }
 };
 
-// Cancelar edición: restaura estado local y cierra modo edición
+// restaura estado local y cierra modo edición
 const cancelEdit = () => {
   editando.value = false;
   editText.value = '';
@@ -388,10 +385,10 @@ const toggleFavorite = async () => {
         // --- AUTENTICACIÓN / REDIRECCIÓN ---
         if (respuesta.status === 401 || respuesta.status === 403) {
 
-            // Guardamos la URL actual para volver después del login
+            
             localStorage.setItem('redirectAfterLogin', window.location.pathname);
 
-            // Redirigimos al login
+            
             window.location.href = '/login';
             return;
         }
@@ -402,7 +399,7 @@ const toggleFavorite = async () => {
             return;
         }
 
-        // Si todo OK → actualizamos visualmente
+        // Si todo OK : actualizamos visualmente
         site.value.is_favorite = !isCurrentlyFavorited;
 
     } catch (error) {
@@ -424,7 +421,7 @@ const getConservationClass = (estado) => {
     return 'neutral';
 }
 
-// IMPLEMENTACIÓN FINAL DE LA NAVEGACIÓN DE TAGS CLICABLES
+
 const filterByTag = (tag) => {
     router.push({ 
         path: '/sitios',
@@ -432,13 +429,11 @@ const filterByTag = (tag) => {
     });
 }
 
-//const API_URL = import.meta.env.VITE_API_BASE_URL;
+
 
 
 const fetchSiteData = async () => {
     const siteId = route.params.id; 
-    //const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'; 
-    //const API_URL = import.meta.env.VITE_API_BASE_URL;
 
     
     try {
