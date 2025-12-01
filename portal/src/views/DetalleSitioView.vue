@@ -121,7 +121,20 @@
           <span v-else-if="editando && get_review">
             <div class="mb-2">
               <label class="form-label">Puntuación</label>
-              <input type="number" min="1" max="5" step="1" class="form-control" v-model.number="editRating" />
+              <div id="puntaje-estrellas">
+                <div class="rating-group">
+                    <label aria-label="1 star" class="rating__label" for="rating2-10"><i class="rating__icon rating__icon--star fa fa-star"></i></label>
+                    <input class="rating__input" name="rating" id="rating2-10" value=1 type="radio" required v-model.number="editRating">
+                    <label aria-label="2 stars" class="rating__label" for="rating2-20"><i class="rating__icon rating__icon--star fa fa-star"></i></label>
+                    <input class="rating__input" name="rating" id="rating2-20" value=2 type="radio"  v-model.number="editRating">
+                    <label aria-label="3 stars" class="rating__label" for="rating2-30"><i class="rating__icon rating__icon--star fa fa-star"></i></label>
+                    <input class="rating__input" name="rating" id="rating2-30" value=3 type="radio"  v-model.number="editRating">
+                    <label aria-label="4 stars" class="rating__label" for="rating2-40"><i class="rating__icon rating__icon--star fa fa-star"></i></label>
+                    <input class="rating__input" name="rating" id="rating2-40" value=4 type="radio"  v-model.number="editRating">
+                    <label aria-label="5 stars" class="rating__label" for="rating2-50"><i class="rating__icon rating__icon--star fa fa-star"></i></label>
+                    <input class="rating__input" name="rating" id="rating2-50" value=5 type="radio"  v-model.number="editRating">
+                </div>
+            </div>
             </div>
             <div class="mb-2">
               <label class="form-label">Comentario</label>

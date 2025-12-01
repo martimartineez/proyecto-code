@@ -33,7 +33,8 @@
   </div>
 
   <div id="sliders">
-    <div id="slide-novedades"><RouterLink :to="{name: 'sites', query: { order_by: 'fechaRegistro', order: 'desc'}}"> <p class="slider-title"> Novedades </p> </RouterLink>
+    <div id="slide-novedades"><RouterLink :to="{name: 'sites', query: { order_by: 'fechaRegistro', order: 'desc'}}" class="d-flex justify-content-center"> 
+      <p class="slider-title"> Novedades </p> </RouterLink>
         <div class="row">
             <div id="Novedades" class="carousel slide" data-ride="carousel" data-interval="0">
               <!-- slides -->
@@ -80,7 +81,8 @@
           </div>
       </div>
     </div>
-    <div id="slide-ratings"> <RouterLink :to="{name: 'sites', query: { order_by: 'rating', order: 'desc'}}"><p class="slider-title"> Mejor Puntuados </p> </RouterLink>
+    <div id="slide-ratings"> <RouterLink :to="{name: 'sites', query: { order_by: 'rating', order: 'desc'}}" class="d-flex justify-content-center">
+      <p class="slider-title"> Mejor Puntuados </p> </RouterLink>
         <div class="row">
             <div id="ratings" class="carousel slide" data-ride="carousel" data-interval="0">
               <!-- slides -->
@@ -127,7 +129,8 @@
           </div>
       </div>
     </div>
-      <div v-if="Favoritos[0]" id="slide-favoritos"><RouterLink :to="{ name: 'profile', query:{ tab: 'favoritos' }}"> <p class="slider-title"> Favoritos </p> </RouterLink>
+      <div v-if="Favoritos[0]" id="slide-favoritos"><RouterLink :to="{ name: 'profile', query:{ tab: 'favoritos' }}" class="d-flex justify-content-center"> 
+        <p class="slider-title"> Favoritos </p> </RouterLink>
         <div class="row">
             <div id="favoritos" class="carousel slide" data-ride="carousel" data-interval="0">
               <!-- slides -->
@@ -300,7 +303,7 @@ function sitiosPorFila(lista) {    //muestra de a 1 elemento en celular y 3 en p
     }
 
     .carousel-caption h5{
-        font-size: 25px;
+        font-size: 30px;
         font-weight: 500;
     }
 
@@ -339,15 +342,19 @@ function sitiosPorFila(lista) {    //muestra de a 1 elemento en celular y 3 en p
   }
 
   .slider-title{
-    font-size: 44px;
+    font-size: 50px;
     font-weight: bold;
     display: flex;
     align-content: center;
     justify-content: center;
     text-align: center;
     margin: 0px;
+    transition: font-size 0.2s ease-in;
   }
 
+  .slider-title:hover{
+    font-size: 53px;
+  }
 /* sliders */
   #sliders{
   
@@ -363,7 +370,8 @@ function sitiosPorFila(lista) {    //muestra de a 1 elemento en celular y 3 en p
     }
 
     h4{
-      font-size: 1.2rem;
+      font-size: 1.5rem;
+      font-weight: 550;
     }
 
     .col-md{
@@ -424,7 +432,7 @@ function sitiosPorFila(lista) {    //muestra de a 1 elemento en celular y 3 en p
       text-align: left;
       background: var(--pri-color);
       box-shadow: 0px 2px 2px rgba(0,0,0,0.1);
-      height: 100%;
+      height: 98%;
       width: 85%;
       justify-self: center;
     }
