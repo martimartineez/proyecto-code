@@ -17,7 +17,7 @@ from src.core.auth.usuario import favoritos_usuarios_sitios
 from src.core.entity.services import (
     obtener_sitio,
     registrar_evento_historial,
-    listar_imagenes_sitio
+    listar_imagenes_sitio,
 )
 from src.core.entity.services.feature_flags import get_flag
 from flask_jwt_extended import (
@@ -36,20 +36,33 @@ from flask_jwt_extended.exceptions import (
 
 from functools import wraps
 
+
 def require_reviews_enabled(f):
     """
     Decorador que verifica si el feature flag de reseñas está habilitado.
     """
+
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        reviews_flag = get_flag('reviews_enabled')
+        reviews_flag = get_flag("reviews_enabled")
         if not reviews_flag or not reviews_flag.valor:
-            return jsonify({
-                "error": "reviews_disabled",
-                "message": reviews_flag.mensaje if reviews_flag else "Las reseñas están temporalmente deshabilitadas."
-            }), 403
+            return (
+                jsonify(
+                    {
+                        "error": "reviews_disabled",
+                        "message": (
+                            reviews_flag.mensaje
+                            if reviews_flag
+                            else "Las reseñas están temporalmente deshabilitadas."
+                        ),
+                    }
+                ),
+                403,
+            )
         return f(*args, **kwargs)
+
     return decorated_function
+
 
 bp = Blueprint("site_api", __name__, url_prefix="/api")
 
@@ -82,7 +95,7 @@ def handle_jwt_errors(e):
         jsonify(
             {"error": {"code": "unauthorized", "message": "Authentication required"}}
         ),
-        401
+        401,
     )
 
 
@@ -111,18 +124,20 @@ def listar_sitios():
         or (per_page < 1)
     ):
         return (
-            jsonify({
-                "error": {
-                    "code": "invalid_query",
-                    "message": "Parameter validation failed",
-                    "details": {
-                        "lat": ["Must be a valid latitude"],
-                        "long": ["Must be a valid longitude"],
-                        "per_page": ["Must be between 1 and 100"]
+            jsonify(
+                {
+                    "error": {
+                        "code": "invalid_query",
+                        "message": "Parameter validation failed",
+                        "details": {
+                            "lat": ["Must be a valid latitude"],
+                            "long": ["Must be a valid longitude"],
+                            "per_page": ["Must be between 1 and 100"],
+                        },
                     }
                 }
-            }),
-            400
+            ),
+            400,
         )
 
     query = db.session.query(SitioHistorico).join(Ciudad).join(Provincia)
@@ -136,7 +151,7 @@ def listar_sitios():
         query = query.filter(
             or_(
                 SitioHistorico.nombre.ilike(f"%{q}%"),
-                SitioHistorico.descBreve.ilike(f"%{q}%")
+                SitioHistorico.descBreve.ilike(f"%{q}%"),
             )
         )
     else:
@@ -177,58 +192,86 @@ def listar_sitios():
             query = query.order_by(SitioHistorico.fechaRegistro)
         else:
             query = query.order_by(SitioHistorico.fechaRegistro.desc())
-   
+
     elif order_by == "rating":
-        query = query.order_by(SitioHistorico.nombre)  
+        query = query.order_by(SitioHistorico.nombre)
 
     total = query.count()
     offset = (page - 1) * per_page
     sitios = query.offset(offset).limit(per_page).all()
-    
+
     if not sitios:
-        return jsonify({"data": [], "meta": {"page": page, "per_page": per_page, "total": total}}), 200
-    
+        return (
+            jsonify(
+                {
+                    "data": [],
+                    "meta": {"page": page, "per_page": per_page, "total": total},
+                }
+            ),
+            200,
+        )
+
     sitio_ids = [s.id for s in sitios]
     print(f"[DEBUG] Site IDs for rating query: {sitio_ids}")
-    
+
     try:
-        ratings_query = db.session.query(
-            Reseña.id_sitio,
-            func.coalesce(func.avg(Reseña.puntaje), 0).label('avg_rating'),
-            func.count(Reseña.id).label('review_count')
-        ).filter(
-            Reseña.id_sitio.in_(sitio_ids) if sitio_ids else False,
-            Reseña.estado == 'aprobada'
-        ).group_by(Reseña.id_sitio)
+        ratings_query = (
+            db.session.query(
+                Reseña.id_sitio,
+                func.coalesce(func.avg(Reseña.puntaje), 0).label("avg_rating"),
+                func.count(Reseña.id).label("review_count"),
+            )
+            .filter(
+                Reseña.id_sitio.in_(sitio_ids) if sitio_ids else False,
+                Reseña.estado == "aprobada",
+            )
+            .group_by(Reseña.id_sitio)
+        )
         print("[DEBUG] Ratings query executed successfully")
-        
-        ratings = {r[0]: {'avg_rating': float(r[1]), 'review_count': r[2]} for r in ratings_query}
-        
+
+        ratings = {
+            r[0]: {"avg_rating": float(r[1]), "review_count": r[2]}
+            for r in ratings_query
+        }
+
         response_data = []
         for sitio in sitios:
             sitio_data = sitio.to_dict()
-            if sitio.id in ratings and ratings[sitio.id]['review_count'] > 0:
-                sitio_data.update({
-                    'avg_rating': ratings[sitio.id]['avg_rating'],
-                    'review_count': ratings[sitio.id]['review_count']
-                })
+            if sitio.id in ratings and ratings[sitio.id]["review_count"] > 0:
+                sitio_data.update(
+                    {
+                        "avg_rating": ratings[sitio.id]["avg_rating"],
+                        "review_count": ratings[sitio.id]["review_count"],
+                    }
+                )
             else:
-                sitio_data.update({
-                    'avg_rating': None,
-                    'review_count': 0
-                })
+                sitio_data.update({"avg_rating": None, "review_count": 0})
             response_data.append(sitio_data)
-        
+
         if order_by == "rating":
             print(f"[DEBUG] Sorting by rating, order: {order}")
             try:
                 if order == "asc":
-                    response_data.sort(key=lambda x: (x.get('avg_rating') is None, x.get('avg_rating') or 0, x.get('nombre', '')))
+                    response_data.sort(
+                        key=lambda x: (
+                            x.get("avg_rating") is None,
+                            x.get("avg_rating") or 0,
+                            x.get("nombre", ""),
+                        )
+                    )
                 else:
-                    response_data.sort(key=lambda x: (x.get('avg_rating') is None, -(x.get('avg_rating') or 0), x.get('nombre', '')))
+                    response_data.sort(
+                        key=lambda x: (
+                            x.get("avg_rating") is None,
+                            -(x.get("avg_rating") or 0),
+                            x.get("nombre", ""),
+                        )
+                    )
             except Exception as e:
                 print(f"[ERROR] Error during sorting: {str(e)}")
-                print(f"[DEBUG] First few items: {response_data[:2] if response_data else 'No items'}")
+                print(
+                    f"[DEBUG] First few items: {response_data[:2] if response_data else 'No items'}"
+                )
                 raise
 
         response = jsonify(
@@ -238,7 +281,7 @@ def listar_sitios():
             }
         )
         return response, 200
-        
+
     except Exception as e:
         return jsonify({"error": "Internal server error", "details": str(e)}), 500
 
@@ -260,7 +303,7 @@ def crear_sitio():
             ),
             400,
         )
-    
+
     data = request.get_json()
     errores = validar_datos_sitio(data)
     if errores:
@@ -306,7 +349,7 @@ def crear_sitio():
     db.session.commit()
     mail = get_jwt_identity()
     user = devolver_usuario_publico_por_email(mail)
-    
+
     registrar_evento_historial(
         id_sitio=sitio.id,
         id_usuario=user.id,
@@ -337,29 +380,31 @@ def check_favorite_status(id):
         )
 
     # El usuario está logueado (garantizado por @jwt_required)
-    user_email = get_jwt_identity() 
+    user_email = get_jwt_identity()
     user = db.session.query(Usuario).filter_by(email=user_email).first()
-    
+
     is_favorite = False
-    
+
     if user:
         # Consulta directa a la tabla de asociación para verificar el estado
-        is_favorite_record = db.session.query(favoritos_usuarios_sitios).filter_by(
-            usuario_id=user.id,
-            sitio_id=sitio.id
-        ).first()
-        
+        is_favorite_record = (
+            db.session.query(favoritos_usuarios_sitios)
+            .filter_by(usuario_id=user.id, sitio_id=sitio.id)
+            .first()
+        )
+
         if is_favorite_record:
             is_favorite = True
-            
+
     # Devolver un JSON simple con el estado
     return jsonify({"is_favorite": is_favorite}), 200
+
 
 @bp.route("/sites/<int:id>", methods=["GET"])
 def obtener_sitio_api(id):
     # Obtener el flag de reseñas
-    reviews_flag = get_flag('reviews_enabled')
-    
+    reviews_flag = get_flag("reviews_enabled")
+
     # Obtener el sitio
     sitio = obtener_sitio(id)
     if not sitio:
@@ -367,45 +412,51 @@ def obtener_sitio_api(id):
             jsonify({"error": {"code": "not_found", "message": "Site not found"}}),
             404,
         )
-    
+
     # calcular promedio y conteo de reseñas aprobadas
-    query_stats = db.session.query(
-        func.avg(Reseña.puntaje).label('rating_avg'),
-        func.count(Reseña.id).label('reviews_count')
-    ).filter(Reseña.id_sitio == id, Reseña.estado == 'aprobada').first() # Solo reseñas aprobadas
+    query_stats = (
+        db.session.query(
+            func.avg(Reseña.puntaje).label("rating_avg"),
+            func.count(Reseña.id).label("reviews_count"),
+        )
+        .filter(Reseña.id_sitio == id, Reseña.estado == "aprobada")
+        .first()
+    )  # Solo reseñas aprobadas
 
     imagenes = listar_imagenes_sitio(id)
 
-
-
     data = sitio.to_dict()
-    
+
     # añadir las estadísticas al diccionario
 
-    data['rating_avg'] = round(query_stats.rating_avg, 1) if query_stats.rating_avg else 'N/A'
-    data['reviews_count'] = query_stats.reviews_count if query_stats.reviews_count else 0
+    data["rating_avg"] = (
+        round(query_stats.rating_avg, 1) if query_stats.rating_avg else "N/A"
+    )
+    data["reviews_count"] = (
+        query_stats.reviews_count if query_stats.reviews_count else 0
+    )
 
     # añadir las imágenes al diccionario
-    data['images'] = [
-        {
-            "url": img.url_publica,
-            "alt": img.titulo_alt,
-            "portada": img.portada
-        } for img in imagenes
+    data["images"] = [
+        {"url": img.url_publica, "alt": img.titulo_alt, "portada": img.portada}
+        for img in imagenes
     ]
-    
+
     # Añadir feature flags
-    data['feature_flags'] = [
+    data["feature_flags"] = [
         {
             "name": "reviews_enabled",
             "valor": reviews_flag.valor if reviews_flag else False,
-            "message": reviews_flag.mensaje if reviews_flag else "Las reseñas están temporalmente deshabilitadas."
+            "message": (
+                reviews_flag.mensaje
+                if reviews_flag
+                else "Las reseñas están temporalmente deshabilitadas."
+            ),
         }
     ]
-    
-    data['is_favorite'] = False
 
-    
+    data["is_favorite"] = False
+
     return jsonify(data), 200
 
 
@@ -473,13 +524,13 @@ def listar_resenas_sitio(id):
             400,
         )
 
-    query = db.session.query(Reseña).filter_by(id_sitio=id, estado='aprobada')
+    query = db.session.query(Reseña).filter_by(id_sitio=id, estado="aprobada")
     query = query.options(joinedload(Reseña.usuario))
 
-    sort_column = Reseña.inserted_at 
+    sort_column = Reseña.inserted_at
     if order_by == "rating":
         sort_column = Reseña.puntaje
-    
+
     if order == "asc":
         query = query.order_by(sort_column.asc())
     else:
@@ -524,7 +575,13 @@ def crear_resena_sitio(id_sitio):
             404,
         )
 
-    if not texto or puntaje is None or float(puntaje) < 0.5 or float(puntaje) > 5 or len(texto) < 20:
+    if (
+        not texto
+        or puntaje is None
+        or float(puntaje) < 0.5
+        or float(puntaje) > 5
+        or len(texto) < 20
+    ):
         return (
             jsonify(
                 {
@@ -598,8 +655,12 @@ def obtener_resena_por_idSitio(id_sitio, id_resena):
         "site_id": resena.id_sitio,
         "rating": resena.puntaje,
         "comment": resena.texto,
-        "inserted_at": resena.inserted_at.isoformat() + "Z" if resena.inserted_at else None,
-        "updated_at": resena.updated_at.isoformat() + "Z" if resena.updated_at else None,
+        "inserted_at": (
+            resena.inserted_at.isoformat() + "Z" if resena.inserted_at else None
+        ),
+        "updated_at": (
+            resena.updated_at.isoformat() + "Z" if resena.updated_at else None
+        ),
     }
 
     return jsonify(data), 200
@@ -738,14 +799,19 @@ def validar_datos_sitio(data):
 
     return errores
 
-@bp.route('/google', methods=['POST', 'OPTIONS'])
+
+@bp.route("/google", methods=["POST", "OPTIONS"])
 def login_google():
 
     from flask import Blueprint, request, jsonify
     from google.oauth2 import id_token
     from google.auth.transport import requests
     from flask_jwt_extended import create_access_token, set_access_cookies
-    from src.core.auth import checkear_usuario_publico_existente, create_user, actualizar_usuario_publico
+    from src.core.auth import (
+        checkear_usuario_publico_existente,
+        create_user,
+        actualizar_usuario_publico,
+    )
 
     # Preflight CORS
     if request.method == "OPTIONS":
@@ -762,12 +828,12 @@ def login_google():
         info = id_token.verify_oauth2_token(
             token,
             requests.Request(),
-            "501426149813-3ldbtlaur9oodqe8eq5rhuqrecjn22s7.apps.googleusercontent.com"
+            "501426149813-3ldbtlaur9oodqe8eq5rhuqrecjn22s7.apps.googleusercontent.com",
         )
         print(info)
 
         # Crear o actualizar usuario en la base de datos
-        if (checkear_usuario_publico_existente(info["email"]) == False):
+        if checkear_usuario_publico_existente(info["email"]) == False:
             create_user(
                 nombre=info.get("given_name"),
                 email=info.get("email"),
@@ -775,30 +841,30 @@ def login_google():
                 activo=True,
                 esAdmin=False,
                 foto=info.get("picture"),
-                publico = True
+                publico=True,
             )
         else:
             actualizar_usuario_publico(info["email"], info)
-            
-        
+
         # Crear token propio (sesión)
         access_token = create_access_token(identity=info["email"])
         # Respuesta con cookie
-        resp = jsonify({
-            "success": True,
+        resp = jsonify(
+            {
+                "success": True,
             }
         )
 
         # 👉 Guarda la cookie en el navegador automáticamente
         set_access_cookies(resp, access_token)
-        
+
         return resp, 200
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 400
-    
 
-@bp.get('/perfil')
+
+@bp.get("/perfil")
 @jwt_required()
 def perfil():
 
@@ -808,10 +874,12 @@ def perfil():
     usuario = devolver_usuario_publico_por_email(email)
     return usuario.to_dict(), 200
 
-@bp.route('/boton', methods=['GET'])
+
+@bp.route("/boton", methods=["GET"])
 @jwt_required()
 def boton():
     return jsonify({"message": "¡La ruta de prueba funciona correctamente!"}), 200
+
 
 @bp.route("/logout", methods=["POST"])
 def logout():
@@ -822,7 +890,8 @@ def logout():
     unset_jwt_cookies(resp)  # 👈 esto borra las cookies access y refresh
     return resp, 200
 
-@bp.route('/reseñas_usuario', methods=['GET'])
+
+@bp.route("/reseñas_usuario", methods=["GET"])
 @jwt_required()
 @require_reviews_enabled
 def reseñas_usuario():
@@ -853,14 +922,13 @@ def reseñas_usuario():
 
     return jsonify({"reseñas": reseñas_json}), 200
 
-@bp.route('/favoritos_usuario', methods=['GET'])
+
+@bp.route("/favoritos_usuario", methods=["GET"])
 @jwt_required()
 def favoritos_usuario():
     from src.core.entity.services import listar_favoritos_usuario
     from src.core.auth import devolver_usuario_publico_por_email
     from src.core.auth.usuario import favoritos_usuarios_sitios
-
-
 
     print("Entrando en favoritos_usuario")  # Depuración
     user_email = get_jwt_identity()
@@ -869,21 +937,21 @@ def favoritos_usuario():
         return jsonify({"error": "Usuario no encontrado"}), 404
 
     favoritos = listar_favoritos_usuario(user)
-    #print("favoritos:", favoritos)  # Depuración    
+    # print("favoritos:", favoritos)  # Depuración
 
     favoritos_json = [
-    {
-        "id": sitio.id,
-        "nombre": sitio.nombre,
-        "fecha": inserted_at.isoformat() if inserted_at else None,
-        "desc_corta": sitio.descBreve,
-        "cover_url": sitio.to_dict()['cover_url'],
-    }
-    for sitio, inserted_at, updated_at in favoritos
-]
+        {
+            "id": sitio.id,
+            "nombre": sitio.nombre,
+            "fecha": inserted_at.isoformat() if inserted_at else None,
+            "desc_corta": sitio.descBreve,
+            "cover_url": sitio.to_dict()["cover_url"],
+        }
+        for sitio, inserted_at, updated_at in favoritos
+    ]
 
-    
     return jsonify({"favoritos": favoritos_json}), 200
+
 
 @bp.route("/sites/<int:id_sitio>/reviews/<int:id_resena>", methods=["PUT"])
 @jwt_required()
@@ -895,20 +963,32 @@ def editar_resena_sitio(id_sitio, id_resena):
 
     sitio = obtener_sitio(id_sitio)
     if not sitio:
-        return jsonify({"error": {"code": "not_found", "message": "Site not found"}}), 404
+        return (
+            jsonify({"error": {"code": "not_found", "message": "Site not found"}}),
+            404,
+        )
 
     resena = db.session.query(Reseña).filter_by(id=id_resena, id_sitio=id_sitio).first()
     if not resena:
-        return jsonify({"error": {"code": "not_found", "message": "Review not found"}}), 404
+        return (
+            jsonify({"error": {"code": "not_found", "message": "Review not found"}}),
+            404,
+        )
 
     # Validaciones de entrada
     try:
         puntaje_float = float(puntaje) if puntaje is not None else None
     except (ValueError, TypeError):
-        return jsonify({"error": {"code": "invalid_data", "message": "Invalid rating"}}), 400
+        return (
+            jsonify({"error": {"code": "invalid_data", "message": "Invalid rating"}}),
+            400,
+        )
 
     if texto is None or puntaje_float is None:
-        return jsonify({"error": {"code": "invalid_data", "message": "Missing fields"}}), 400
+        return (
+            jsonify({"error": {"code": "invalid_data", "message": "Missing fields"}}),
+            400,
+        )
 
     if puntaje_float < 0.5 or puntaje_float > 5 or (texto and len(texto) < 20):
         return (
@@ -917,7 +997,10 @@ def editar_resena_sitio(id_sitio, id_resena):
                     "error": {
                         "code": "invalid_data",
                         "message": "Invalid input data",
-                        "details": {"rating": ["Must be between 0.5 and 5"], "comment": ["Must be at least 20 characters"]},
+                        "details": {
+                            "rating": ["Must be between 0.5 and 5"],
+                            "comment": ["Must be at least 20 characters"],
+                        },
                     }
                 }
             ),
@@ -928,7 +1011,10 @@ def editar_resena_sitio(id_sitio, id_resena):
     email = get_jwt_identity()
     user = devolver_usuario_publico_por_email(email)
     if not user:
-        return jsonify({"error": {"code": "not_found", "message": "User not found"}}), 404
+        return (
+            jsonify({"error": {"code": "not_found", "message": "User not found"}}),
+            404,
+        )
 
     if resena.id_usuario != user.id:
         return (
@@ -946,7 +1032,7 @@ def editar_resena_sitio(id_sitio, id_resena):
     # Actualizar y guardar
     resena.texto = texto
     resena.puntaje = puntaje_float
-    resena.estado = 'pendiente'
+    resena.estado = "pendiente"
     db.session.commit()
 
     # Respuesta con el objeto actualizado
@@ -958,11 +1044,13 @@ def editar_resena_sitio(id_sitio, id_resena):
                 "puntaje": resena.puntaje,
                 "usuario_id": resena.id_usuario,
                 "sitio_id": resena.id_sitio,
-                "inserted_at": resena.inserted_at.isoformat() if resena.inserted_at else None,
-                "updated_at": resena.updated_at.isoformat() if resena.updated_at else None,
+                "inserted_at": (
+                    resena.inserted_at.isoformat() if resena.inserted_at else None
+                ),
+                "updated_at": (
+                    resena.updated_at.isoformat() if resena.updated_at else None
+                ),
             }
         ),
         200,
     )
-
-

@@ -17,6 +17,7 @@ def forbidden(e):
     )
     return render_template("error.html", error=error), 403
 
+
 def not_found(e):
     error = HTTPError(
         code=404,

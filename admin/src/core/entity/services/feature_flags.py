@@ -47,7 +47,13 @@ def get_flag(nombre: str) -> Optional[FeatureFlag]:
     return db.session.query(FeatureFlag).filter(FeatureFlag.nombre == nombre).first()
 
 
-def update_flag(nombre: str, *, valor: Optional[bool] = None, mensaje: Optional[str] = None, user_id: Optional[int] = None) -> FeatureFlag:
+def update_flag(
+    nombre: str,
+    *,
+    valor: Optional[bool] = None,
+    mensaje: Optional[str] = None,
+    user_id: Optional[int] = None,
+) -> FeatureFlag:
     flag = get_flag(nombre)
     if not flag:
         # autocreate if missing

@@ -4,11 +4,14 @@ from sqlalchemy import String, Integer, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.core.database import Base
 
+
 class SitioImagen(Base):
     __tablename__ = "sitios_imagenes"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    id_sitio: Mapped[int] = mapped_column(Integer, ForeignKey("sitios_historicos.id"), nullable=False)
+    id_sitio: Mapped[int] = mapped_column(
+        Integer, ForeignKey("sitios_historicos.id"), nullable=False
+    )
 
     # URL pública al archivo y nombre del objeto en MinIO
     url_publica: Mapped[str] = mapped_column(String(512), nullable=False)
@@ -30,4 +33,6 @@ class SitioImagen(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    sitio: Mapped["SitioHistorico"] = relationship("SitioHistorico", back_populates="imagenes")
+    sitio: Mapped["SitioHistorico"] = relationship(
+        "SitioHistorico", back_populates="imagenes"
+    )

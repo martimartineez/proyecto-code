@@ -1,6 +1,16 @@
 from src.core.entity import services
 from src.core.entity.services import EntityNotFoundError
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app, jsonify
+from flask import (
+    Blueprint,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session,
+    flash,
+    current_app,
+    jsonify,
+)
 from src.core.auth import Usuario
 from src.core.entity.sitio_historico import SitioHistorico
 from src.core.database import db
@@ -19,8 +29,8 @@ import uuid, mimetypes, os
 from werkzeug.utils import secure_filename
 
 
-
 bp = Blueprint("sitios_historicos", __name__, url_prefix="/sitioshistoricos")
+
 
 def _current_user_id() -> int | None:
     """Return authenticated user id. Prefer session['user_id']; fallback to email lookup for legacy sessions."""
@@ -55,7 +65,9 @@ def _label_es(campo: str) -> str:
     return mapping.get(campo, campo)
 
 
-def _fmt_value(campo: str, valor, ciudades_by_id: dict[int, str], categorias_by_id: dict[int, str]):
+def _fmt_value(
+    campo: str, valor, ciudades_by_id: dict[int, str], categorias_by_id: dict[int, str]
+):
     if valor is None or valor == "" or valor == {}:
         return "—"
     if campo == "idCiudad":
@@ -67,6 +79,7 @@ def _fmt_value(campo: str, valor, ciudades_by_id: dict[int, str], categorias_by_
     # Mostrar listas (ej: tags) como texto separado por comas
     try:
         from collections.abc import Iterable
+
         if isinstance(valor, list):
             # Si la lista es de strings, unirlas; si no, convertir cada item a str
             if len(valor) == 0:
@@ -76,7 +89,12 @@ def _fmt_value(campo: str, valor, ciudades_by_id: dict[int, str], categorias_by_
         pass
     # valores fecha en iso string
     try:
-        if isinstance(valor, str) and len(valor) >= 10 and valor[4] == "-" and valor[7] == "-":
+        if (
+            isinstance(valor, str)
+            and len(valor) >= 10
+            and valor[4] == "-"
+            and valor[7] == "-"
+        ):
             return valor[:16].replace("T", " ")
     except Exception:
         pass
@@ -101,7 +119,12 @@ def _to_local(dt: datetime | None) -> datetime | None:
         return dt
 
 
-def _build_historial_view(historial: dict, ciudades, categorias, usuarios_by_id: dict[int, Usuario] | dict[int, str] | None = None):
+def _build_historial_view(
+    historial: dict,
+    ciudades,
+    categorias,
+    usuarios_by_id: dict[int, Usuario] | dict[int, str] | None = None,
+):
     ciudades_by_id = {c.id: c.nombre for c in ciudades}
     categorias_by_id = {c.id: c.nombre for c in categorias}
     usuarios_by_id = usuarios_by_id or {}
@@ -116,11 +139,15 @@ def _build_historial_view(historial: dict, ciudades, categorias, usuarios_by_id:
             despues = new.get(campo)
             if antes == despues:
                 continue
-            cambios.append({
-                "campo": _label_es(campo),
-                "antes": _fmt_value(campo, antes, ciudades_by_id, categorias_by_id),
-                "despues": _fmt_value(campo, despues, ciudades_by_id, categorias_by_id),
-            })
+            cambios.append(
+                {
+                    "campo": _label_es(campo),
+                    "antes": _fmt_value(campo, antes, ciudades_by_id, categorias_by_id),
+                    "despues": _fmt_value(
+                        campo, despues, ciudades_by_id, categorias_by_id
+                    ),
+                }
+            )
         usuario_label = None
         try:
             u = usuarios_by_id.get(e.idUsuario)
@@ -132,15 +159,17 @@ def _build_historial_view(historial: dict, ciudades, categorias, usuarios_by_id:
             usuario_label = None
 
         fecha_local = _to_local(e.fechaAccion)
-        fecha_str = fecha_local.strftime('%Y-%m-%d %H:%M') if fecha_local else ""
-        items_view.append({
-            "fecha": fecha_local,
-            "usuario_id": e.idUsuario,
-            "usuario": usuario_label or f"#{e.idUsuario}",
-            "accion": e.accion,
-            "cambios": cambios,
-            "fecha_str": fecha_str,
-        })
+        fecha_str = fecha_local.strftime("%Y-%m-%d %H:%M") if fecha_local else ""
+        items_view.append(
+            {
+                "fecha": fecha_local,
+                "usuario_id": e.idUsuario,
+                "usuario": usuario_label or f"#{e.idUsuario}",
+                "accion": e.accion,
+                "cambios": cambios,
+                "fecha_str": fecha_str,
+            }
+        )
     return {
         "items": items_view,
         "total": historial["total"],
@@ -159,7 +188,7 @@ def agregar_sitio_get():
     Proporciona datos necesarios como provincias, ciudades, categorías y tags.
     """
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
-    hoy = date.today().strftime('%Y-%m-%d')
+    hoy = date.today().strftime("%Y-%m-%d")
     provincias = services.listar_provincias()
     ciudades = services.listar_ciudades()
     categorias = services.listar_categorias()
@@ -173,6 +202,7 @@ def agregar_sitio_get():
         next_url=next_url,
         today=hoy,
     )
+
 
 @bp.post("/nuevo")
 @login_required
@@ -191,18 +221,20 @@ def agregar_sitio_post():
         flash(f"Hubo errores de validación en el formulario: {full_error_msg}", "error")
         # To avoid code duplication, consider redirecting to the GET route
         return redirect(url_for("sitios_historicos.agregar_sitio_get", next=next_url))
-    
+
     try:
         nombre_sitio = services.crear_sitio(request.form, id_usuario=_current_user_id())
         if nombre_sitio:
             # Usamos el nombre devuelto en el mensaje flash
-            flash(f"El sitio histórico '{nombre_sitio.nombre}' ha sido agregado exitosamente.", "success")
+            flash(
+                f"El sitio histórico '{nombre_sitio.nombre}' ha sido agregado exitosamente.",
+                "success",
+            )
         return redirect(url_for("sitios_historicos.busqueda_avanzada"))
     except Exception as e:
         flash(f"Ocurrió un error al intentar agregar el sitio: {e}.", "error")
         # Redirect on error to avoid resubmission issues
         return redirect(url_for("sitios_historicos.agregar_sitio_get", next=next_url))
-
 
 
 @bp.get("/<int:sitio_id>/editar")
@@ -216,7 +248,7 @@ def editar_sitio_get(sitio_id):
     Maneja el caso donde el sitio no existe.
     """
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
-    hoy = date.today().strftime('%Y-%m-%d')
+    hoy = date.today().strftime("%Y-%m-%d")
     sitio = services.obtener_sitio(sitio_id)
     if not sitio:
         flash("Sitio histórico no encontrado.", "error")
@@ -246,10 +278,11 @@ def editar_sitio_get(sitio_id):
         usuarios = db.session.query(Usuario).filter(Usuario.id.in_(user_ids)).all()
     usuarios_by_id = {u.id: u for u in usuarios}
     usuarios_historial = [
-        {"id": u.id, "label": f"{u.nombre} {u.apellido} <{u.email}>"}
-        for u in usuarios
+        {"id": u.id, "label": f"{u.nombre} {u.apellido} <{u.email}>"} for u in usuarios
     ]
-    historial_view = _build_historial_view(historial, ciudades, categorias, usuarios_by_id)
+    historial_view = _build_historial_view(
+        historial, ciudades, categorias, usuarios_by_id
+    )
     tags = services.listar_tags()
     # Cargar las imágenes del sitio
     imagenes = services.listar_imagenes_sitio(sitio_id)
@@ -277,6 +310,7 @@ def editar_sitio_get(sitio_id):
         today=hoy,
     )
 
+
 @bp.post("/<int:sitio_id>/editar")
 @login_required
 @check("site_update")
@@ -289,17 +323,26 @@ def editar_sitio_post(sitio_id):
     """
     next_url = request.args.get("next", url_for("sitios_historicos.busqueda_avanzada"))
     errores = validar_sitio_historico(request.form)
-    
+
     if errores:
         full_error_msg = " | ".join(errores.values())
         flash(f"Hubo errores de validación en el formulario: {full_error_msg}", "error")
-        return redirect(url_for("sitios_historicos.editar_sitio_get", sitio_id=sitio_id, next=next_url))
-        
+        return redirect(
+            url_for(
+                "sitios_historicos.editar_sitio_get", sitio_id=sitio_id, next=next_url
+            )
+        )
+
     try:
-        nombre_sitio = services.editar_sitio(sitio_id, request.form, id_usuario=_current_user_id())
+        nombre_sitio = services.editar_sitio(
+            sitio_id, request.form, id_usuario=_current_user_id()
+        )
         if nombre_sitio:
             # Usamos el nombre devuelto en el mensaje flash
-            flash(f"El sitio histórico '{nombre_sitio.nombre}' ha sido editado exitosamente.", "success")
+            flash(
+                f"El sitio histórico '{nombre_sitio.nombre}' ha sido editado exitosamente.",
+                "success",
+            )
 
         return redirect(url_for("sitios_historicos.busqueda_avanzada"))
 
@@ -309,7 +352,11 @@ def editar_sitio_post(sitio_id):
         return redirect(url_for("sitios_historicos.busqueda_avanzada"))
     except Exception as e:
         flash(f"Ocurrió un error al intentar editar el sitio: {e}.", "error")
-        return redirect(url_for("sitios_historicos.editar_sitio_get", sitio_id=sitio_id, next=next_url))
+        return redirect(
+            url_for(
+                "sitios_historicos.editar_sitio_get", sitio_id=sitio_id, next=next_url
+            )
+        )
 
 
 @bp.post("/<int:sitio_id>/eliminar")
@@ -324,20 +371,27 @@ def eliminar_sitio(sitio_id):
     """
     try:
         # 💡 Capturamos el valor devuelto (el nombre del sitio o False)
-        nombre_sitio = services.eliminar_sitio(sitio_id, id_usuario=_current_user_id()) 
-        
+        nombre_sitio = services.eliminar_sitio(sitio_id, id_usuario=_current_user_id())
+
         if nombre_sitio:
             # Usamos el nombre devuelto en el mensaje flash
-            flash(f"El sitio histórico '{nombre_sitio.nombre}' ha sido eliminado exitosamente.", "success")
+            flash(
+                f"El sitio histórico '{nombre_sitio.nombre}' ha sido eliminado exitosamente.",
+                "success",
+            )
 
     except EntityNotFoundError:
         # Captura la excepción de "no encontrado"
-        flash("Error: El sitio histórico que intentaste eliminar no fue encontrado.", "error")
+        flash(
+            "Error: El sitio histórico que intentaste eliminar no fue encontrado.",
+            "error",
+        )
 
     except Exception as e:
         flash(f"Ocurrió un error al intentar eliminar el sitio: {e}.", "error")
-    
+
     return redirect(url_for("sitios_historicos.busqueda_avanzada"))
+
 
 @bp.route("/sitio/<int:sitio_id>")
 @login_required
@@ -377,10 +431,11 @@ def ver_sitio(sitio_id):
         usuarios = db.session.query(Usuario).filter(Usuario.id.in_(user_ids)).all()
     usuarios_by_id = {u.id: u for u in usuarios}
     usuarios_historial = [
-        {"id": u.id, "label": f"{u.nombre} {u.apellido} <{u.email}>"}
-        for u in usuarios
+        {"id": u.id, "label": f"{u.nombre} {u.apellido} <{u.email}>"} for u in usuarios
     ]
-    historial_view = _build_historial_view(historial, ciudades, categorias, usuarios_by_id)
+    historial_view = _build_historial_view(
+        historial, ciudades, categorias, usuarios_by_id
+    )
     imagenes = services.listar_imagenes_sitio(sitio_id)
     return render_template(
         "sitios_historicos/ver_sitio.html",
@@ -399,6 +454,7 @@ def ver_sitio(sitio_id):
         next_url=next_url,
     )
 
+
 # ==============================
 # Gestión de Imágenes (Privado)
 # ==============================
@@ -406,9 +462,11 @@ def ver_sitio(sitio_id):
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 
+
 def _allowed_file(filename: str) -> bool:
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
     return ext in ALLOWED_EXTENSIONS
+
 
 def _build_public_url(app, object_name: str) -> str:
     server = app.config["MINIO_SERVER"]
@@ -417,12 +475,17 @@ def _build_public_url(app, object_name: str) -> str:
     scheme = "https" if secure else "http"
     return f"{scheme}://{server}/{bucket}/{object_name}"
 
+
 def _put_object(client, bucket: str, object_name: str, file_storage) -> None:
     # Reset stream and determine length
     file_storage.stream.seek(0, os.SEEK_END)
     size = file_storage.stream.tell()
     file_storage.stream.seek(0)
-    content_type = file_storage.mimetype or mimetypes.guess_type(file_storage.filename)[0] or "application/octet-stream"
+    content_type = (
+        file_storage.mimetype
+        or mimetypes.guess_type(file_storage.filename)[0]
+        or "application/octet-stream"
+    )
     client.put_object(
         bucket,
         object_name,
@@ -430,6 +493,7 @@ def _put_object(client, bucket: str, object_name: str, file_storage) -> None:
         length=size,
         content_type=content_type,
     )
+
 
 @bp.post("/<int:sitio_id>/imagenes")
 @login_required
@@ -446,10 +510,14 @@ def subir_imagenes_sitio(sitio_id: int):
     metas = request.form  # titulo_alt_i, desc_i, portada_index opcional
     if not files:
         flash("No se seleccionaron archivos.", "error")
-        return redirect(url_for("sitios_historicos.editar_sitio_get", sitio_id=sitio_id))
+        return redirect(
+            url_for("sitios_historicos.editar_sitio_get", sitio_id=sitio_id)
+        )
     if total_actual + len(files) > 10:
         flash("Límite de 10 imágenes por sitio excedido.", "error")
-        return redirect(url_for("sitios_historicos.editar_sitio_get", sitio_id=sitio_id))
+        return redirect(
+            url_for("sitios_historicos.editar_sitio_get", sitio_id=sitio_id)
+        )
 
     portada_index = metas.get("portada_index")
     created = 0
@@ -481,7 +549,9 @@ def subir_imagenes_sitio(sitio_id: int):
                 errors.append(f"{filename}: título/alt es obligatorio")
                 continue
             descripcion = metas.get(f"descripcion_{idx}")
-            es_portada = str(idx) == str(portada_index) if portada_index is not None else False
+            es_portada = (
+                str(idx) == str(portada_index) if portada_index is not None else False
+            )
             services.agregar_imagen_sitio(
                 id_sitio=sitio_id,
                 url_publica=url_publica,
@@ -500,8 +570,10 @@ def subir_imagenes_sitio(sitio_id: int):
         flash(" | ".join(errors), "error")
     return redirect(url_for("sitios_historicos.editar_sitio_get", sitio_id=sitio_id))
 
+
 # Reemplaza estas rutas en tu sitios_historicos.py
 # Cambia los decoradores @bp.post a @bp.route con methods
+
 
 @bp.route("/<int:sitio_id>/imagenes/<int:imagen_id>/portada", methods=["GET", "POST"])
 @login_required
@@ -515,6 +587,7 @@ def set_portada(sitio_id: int, imagen_id: int):
     except Exception as e:
         flash(str(e), "error")
     return redirect(url_for("sitios_historicos.editar_sitio_get", sitio_id=sitio_id))
+
 
 @bp.route("/<int:sitio_id>/imagenes/<int:imagen_id>/eliminar", methods=["GET", "POST"])
 @login_required
@@ -541,6 +614,7 @@ def eliminar_imagen(sitio_id: int, imagen_id: int):
         flash(str(e), "error")
     return redirect(url_for("sitios_historicos.editar_sitio_get", sitio_id=sitio_id))
 
+
 # Para actualizar datos, debe ser POST
 @bp.route("/<int:sitio_id>/imagenes/<int:imagen_id>/actualizar", methods=["POST"])
 @login_required
@@ -549,16 +623,17 @@ def actualizar_data_imagen(sitio_id: int, imagen_id: int):
     try:
         titulo_alt = request.form.get("titulo_alt", "").strip()
         descripcion = request.form.get("descripcion", "").strip()
-        
+
         if not titulo_alt:
             return jsonify({"error": "El título/alt es obligatorio."}), 400
-        
+
         services.actualizar_data_imagen(sitio_id, imagen_id, titulo_alt, descripcion)
         return jsonify({"success": True, "message": "Datos actualizados"}), 200
     except EntityNotFoundError:
         return jsonify({"error": "Imagen no encontrada."}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @bp.post("/<int:sitio_id>/imagenes/orden")
 @login_required
@@ -572,7 +647,6 @@ def reordenar_imagenes(sitio_id: int):
     except Exception as e:
         flash(str(e), "error")
     return redirect(url_for("sitios_historicos.editar_sitio_get", sitio_id=sitio_id))
-
 
 
 def filtrar(filtros=None):
@@ -603,7 +677,9 @@ def filtrar(filtros=None):
     if categoria_id:
         query = query.filter(SitioHistorico.idCategoria == categoria_id)
     if estado_conservacion:
-        query = query.filter(SitioHistorico.estadoConservacion.ilike(f"%{estado_conservacion}%"))
+        query = query.filter(
+            SitioHistorico.estadoConservacion.ilike(f"%{estado_conservacion}%")
+        )
     if fecha_desde:
         query = query.filter(SitioHistorico.fechaRegistro >= fecha_desde)
     if fecha_hasta:
@@ -614,14 +690,15 @@ def filtrar(filtros=None):
         query = query.filter(SitioHistorico.visible == False)
     if buscar:
         from sqlalchemy import or_
+
         query = query.filter(
             or_(
                 SitioHistorico.nombre.ilike(f"%{buscar}%"),
-                SitioHistorico.descBreve.ilike(f"%{buscar}%")
+                SitioHistorico.descBreve.ilike(f"%{buscar}%"),
             )
         )
     query = query.filter(SitioHistorico.baja == False)
-    
+
     valid_sort_columns = {
         "fecha_registro": SitioHistorico.fechaRegistro,
         "nombre": SitioHistorico.nombre,
@@ -649,29 +726,27 @@ def busqueda_avanzada():
     categorias = services.listar_categorias()
     tags = services.listar_tags()
 
-
     per_page = 25
     page = request.args.get("page", 1, type=int)
 
     filtros = {
-    "provincia": request.args.get("provincia"),
-    "ciudad": request.args.get("ciudad"),
-    "categoria": request.args.get("categoria"),
-    "estado_conservacion": request.args.get("estado_conservacion"),
-    "fecha_desde": request.args.get("fecha_desde"),
-    "fecha_hasta": request.args.get("fecha_hasta"),
-    "visibilidad": request.args.get("visibilidad"),
-    "sort_by": request.args.get("sort_by"),
-    "order": request.args.get("order"),
-    "tags": request.args.getlist("tags", type=int),
-    "buscar": request.args.get("buscar"),
-}
-    query = filtrar(filtros);
-    
+        "provincia": request.args.get("provincia"),
+        "ciudad": request.args.get("ciudad"),
+        "categoria": request.args.get("categoria"),
+        "estado_conservacion": request.args.get("estado_conservacion"),
+        "fecha_desde": request.args.get("fecha_desde"),
+        "fecha_hasta": request.args.get("fecha_hasta"),
+        "visibilidad": request.args.get("visibilidad"),
+        "sort_by": request.args.get("sort_by"),
+        "order": request.args.get("order"),
+        "tags": request.args.getlist("tags", type=int),
+        "buscar": request.args.get("buscar"),
+    }
+    query = filtrar(filtros)
+
     total_results = query.count()
     total_pages = (total_results + per_page - 1) // per_page
     sitios = query.offset((page - 1) * per_page).limit(per_page).all()
-
 
     return render_template(
         "sitios_historicos/busquedaAvanzada.html",
@@ -684,7 +759,7 @@ def busqueda_avanzada():
         total_results=total_results,
         request_args=request.args,
         tags=tags,
-        date=date
+        date=date,
     )
 
 
@@ -696,32 +771,46 @@ def exportar_csv():
     Exporta los resultados filtrados de la búsqueda avanzada de sitios históricos a un archivo CSV.
     Aplica los mismos filtros que la búsqueda avanzada y genera un archivo CSV descargable.
     """
-    
+
     sitios = filtrar(request.args).all()
 
     data = []
     for s in sitios:
-        data.append({
-            "Nombre": s.nombre,
-            "Descripcion": s.descBreve or "",
-            "Ciudad": s.ciudad.nombre if s.ciudad else "",
-            "Provincia": s.ciudad.provincia.nombre if s.ciudad and s.ciudad.provincia else "",
-            "Estado": s.estadoConservacion or "",
-            "FechaRegistro": s.fechaRegistro.strftime("%Y-%m-%d"),
-            "Coordenadas": f"{s.latitud}, {s.longitud}" if s.latitud and s.longitud else "",
-            "Tags": ", ".join([t.nombre for t in s.tags])
-        })
+        data.append(
+            {
+                "Nombre": s.nombre,
+                "Descripcion": s.descBreve or "",
+                "Ciudad": s.ciudad.nombre if s.ciudad else "",
+                "Provincia": (
+                    s.ciudad.provincia.nombre if s.ciudad and s.ciudad.provincia else ""
+                ),
+                "Estado": s.estadoConservacion or "",
+                "FechaRegistro": s.fechaRegistro.strftime("%Y-%m-%d"),
+                "Coordenadas": (
+                    f"{s.latitud}, {s.longitud}" if s.latitud and s.longitud else ""
+                ),
+                "Tags": ", ".join([t.nombre for t in s.tags]),
+            }
+        )
     timestamp = datetime.now().strftime("%Y%m%d_%H%M")
     filename = f"sitios_{timestamp}.csv"
 
-
     output = io.StringIO()
-    fieldnames = ["Nombre", "Descripcion", "Ciudad", "Provincia", "Estado", "FechaRegistro", "Coordenadas", "Tags"]
+    fieldnames = [
+        "Nombre",
+        "Descripcion",
+        "Ciudad",
+        "Provincia",
+        "Estado",
+        "FechaRegistro",
+        "Coordenadas",
+        "Tags",
+    ]
     writer = csv.DictWriter(output, fieldnames=fieldnames)
     writer.writeheader()
     writer.writerows(data)
     return Response(
         output.getvalue(),
         mimetype="text/csv",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )

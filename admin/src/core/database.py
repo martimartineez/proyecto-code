@@ -6,7 +6,7 @@ db = SQLAlchemy()
 
 def init_db(app):
 
-    db.init_app(app) 
+    db.init_app(app)
 
     return db
 
@@ -36,4 +36,3 @@ def reset_db():
 
 class Base(DeclarativeBase):
     pass
-

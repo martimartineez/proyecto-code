@@ -31,21 +31,21 @@ session = Session()
 
 def create_app(env="development", static_folder="../../static"):
     app = Flask(__name__, static_folder=static_folder)
-    #app.run(ssl_context="adhoc") # Habilitar HTTPS para desarrollo local
+    # app.run(ssl_context="adhoc") # Habilitar HTTPS para desarrollo local
     app.config.from_object(config[env])
-    app.config['JSON_SORT_KEYS'] = False
+    app.config["JSON_SORT_KEYS"] = False
     app.config["JWT-SECRET-KEY"] = "miClaveJWTSecreta12345678"
 
     app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
-    app.config["JWT_COOKIE_SECURE"] = True          # en local cambiar a true para produccion
-    app.config["JWT_COOKIE_SAMESITE"] = "None"       # IMPORTANTE cambiar a none para produccion
+    app.config["JWT_COOKIE_SECURE"] = True  # en local cambiar a true para produccion
+    app.config["JWT_COOKIE_SAMESITE"] = (
+        "None"  # IMPORTANTE cambiar a none para produccion
+    )
     app.config["JWT_COOKIE_HTTPONLY"] = True
     app.config["JWT_COOKIE_CSRF_PROTECT"] = False
-    #app.config["JWT_COOKIE_DOMAIN"] = ".proyecto2025.linti.unlp.edu.ar"
-
+    # app.config["JWT_COOKIE_DOMAIN"] = ".proyecto2025.linti.unlp.edu.ar"
 
     jwt = JWTManager(app)
-    
 
     database.init_db(app)
     session.init_app(app)
@@ -54,15 +54,20 @@ def create_app(env="development", static_folder="../../static"):
     # CORS explícito para asegurar encabezados en todas las respuestas de /api/*
     # Incluye respuestas de error (404/500) y evita problemas de "CORS Missing Allow Origin"
     CORS(
-    app,
-    resources={r"/api/*": {
-        "origins": [ "https://grupo25.proyecto2025.linti.unlp.edu.ar","http://localhost:5173"],  # El frontend
-        "allow_headers": ["Content-Type", "Authorization"],
-        "expose_headers": ["Content-Type"],
-        "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    }},
-    supports_credentials=True,   # IMPORTANTÍSIMO
-)
+        app,
+        resources={
+            r"/api/*": {
+                "origins": [
+                    "https://grupo25.proyecto2025.linti.unlp.edu.ar",
+                    "http://localhost:5173",
+                ],  # El frontend
+                "allow_headers": ["Content-Type", "Authorization"],
+                "expose_headers": ["Content-Type"],
+                "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+            }
+        },
+        supports_credentials=True,  # IMPORTANTÍSIMO
+    )
 
     with app.app_context():
         try:
@@ -90,8 +95,8 @@ def create_app(env="development", static_folder="../../static"):
     app.register_blueprint(sites_api_bp)
     app.register_blueprint(feature_flags_api_bp)
 
-    app.jinja_env.globals['is_autenticated'] = is_autenticated
-    app.jinja_env.globals['check_permission'] = check_permission
+    app.jinja_env.globals["is_autenticated"] = is_autenticated
+    app.jinja_env.globals["check_permission"] = check_permission
 
     # Helper para usar flags en template
     def get_flag_value(nombre: str) -> bool:
@@ -102,41 +107,41 @@ def create_app(env="development", static_folder="../../static"):
         f = get_flag(nombre)
         return f.mensaje if f else None
 
-    app.jinja_env.globals['is_system_admin'] = is_system_admin
-    app.jinja_env.globals['get_flag_value'] = get_flag_value
-    app.jinja_env.globals['get_flag_message'] = get_flag_message
+    app.jinja_env.globals["is_system_admin"] = is_system_admin
+    app.jinja_env.globals["get_flag_value"] = get_flag_value
+    app.jinja_env.globals["get_flag_message"] = get_flag_message
     # Exponer helper "system admin" (booleano esAdmin) a Jinja
-    app.jinja_env.globals['is_system_admin'] = is_system_admin
+    app.jinja_env.globals["is_system_admin"] = is_system_admin
 
     @app.before_request
     def enforce_admin_maintenance():
         # Allow static and CLI
-        if request.endpoint in (None, 'static'):
+        if request.endpoint in (None, "static"):
             return None
         # Always allow auth and public api routes
-        if request.blueprint in ('auth', 'api'):
+        if request.blueprint in ("auth", "api"):
             return None
         # Permitir Feature Flags solo a administradores (esAdmin=True)
-        if request.blueprint == 'feature_flags':
+        if request.blueprint == "feature_flags":
             if is_system_admin():
                 return None
             # No administrador: si hay mantenimiento, se muestra mensaje y se redirige a login
-            flag = get_flag('admin_maintenance_mode')
+            flag = get_flag("admin_maintenance_mode")
             if flag and flag.valor:
-                msg = flag.mensaje or 'Sistema en mantenimiento.'
-                flash(msg, 'error')
-                return redirect(url_for('auth.login'))
+                msg = flag.mensaje or "Sistema en mantenimiento."
+                flash(msg, "error")
+                return redirect(url_for("auth.login"))
             # Si no hay mantenimiento, igualmente restringimos a admins por seguridad
-            flash('No tiene permisos para acceder a esta página', 'error')
-            return redirect(url_for('usuarios.index'))
+            flash("No tiene permisos para acceder a esta página", "error")
+            return redirect(url_for("usuarios.index"))
 
-        flag = get_flag('admin_maintenance_mode')
+        flag = get_flag("admin_maintenance_mode")
         if flag and flag.valor:
             # Solo administradores (esAdmin=True) pueden navegar el panel durante mantenimiento
             if not is_system_admin():
-                msg = flag.mensaje or 'Sistema en mantenimiento.'
-                flash(msg, 'error')
-                return redirect(url_for('auth.login'))
+                msg = flag.mensaje or "Sistema en mantenimiento."
+                flash(msg, "error")
+                return redirect(url_for("auth.login"))
             # Admins pueden navegar normalmente
             return None
         return None

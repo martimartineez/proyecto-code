@@ -104,7 +104,9 @@ def seed_geografia_completa() -> None:
             )
             r.raise_for_status()
         except Exception as exc:
-            print(f"[seed_geografia_completa] Error obteniendo localidades de {nombre_prov}: {exc}")
+            print(
+                f"[seed_geografia_completa] Error obteniendo localidades de {nombre_prov}: {exc}"
+            )
             continue
 
         localidades = r.json().get("localidades", [])
@@ -124,8 +126,10 @@ def seed_geografia_completa() -> None:
         db.session.commit()
 
     print(
-        "Seed completo GeoRef: provincias=", len(provincias_db),
-        ", nuevas ciudades=", creadas,
+        "Seed completo GeoRef: provincias=",
+        len(provincias_db),
+        ", nuevas ciudades=",
+        creadas,
     )
 
 

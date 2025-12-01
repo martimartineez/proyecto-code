@@ -5,16 +5,12 @@ class Config:
     TESTING = False
     SECRET_KEY = "secret-key"
     SESSION_TYPE = "filesystem"
-    CORS_RESOURCES = [
-        r"/api/*"
-    ]
-    CORS_ORIGINS = [
-        "*"
-    ]
+    CORS_RESOURCES = [r"/api/*"]
+    CORS_ORIGINS = ["*"]
     SQALCHEMY_ENGINE_OPTIONS = {
-        "pool_size" : 10,
-        "pool_recycle" : 60,
-        "pool_pre_ping" : True,
+        "pool_size": 10,
+        "pool_recycle": 60,
+        "pool_pre_ping": True,
     }
 
 
@@ -26,9 +22,7 @@ class ProductionConfig(Config):
     MINIO_BUCKET = "grupo25"
 
     SQLALCHEMY_ENGINES = {"default": environ.get("DATABASE_URL")}
-    CORS_ORIGINS = [
-        "https://grupo25.proytecto2025.linti.unlp.edu.ar/"
-    ]
+    CORS_ORIGINS = ["https://grupo25.proytecto2025.linti.unlp.edu.ar/"]
 
 
 class DevelopmentConfig(Config):

@@ -12,16 +12,23 @@ from src.core.entity.reseña import Reseña
 from src.core.entity.sitio_imagen import SitioImagen
 import re
 
-#definicion de excepciones personalizadas
+
+# definicion de excepciones personalizadas
 class EntityNotFoundError(Exception):
     """Excepción para indicar que una entidad requerida no fue encontrada."""
+
     pass
+
 
 class TagVinculadoError(Exception):
     """Excepción para indicar que un Tag no puede ser eliminado por estar asociado a sitios activos."""
-    def __init__(self, sitios_vinculados, message="El Tag está asociado a sitios activos."):
+
+    def __init__(
+        self, sitios_vinculados, message="El Tag está asociado a sitios activos."
+    ):
         self.sitios_vinculados = sitios_vinculados
         super().__init__(message)
+
 
 def _parse_float(value):
     """
@@ -52,6 +59,7 @@ def _parse_date(value):
     except Exception:
         return None
 
+
 def _generate_slug(text: str) -> str:
     """
     Genera un slug a partir de un texto usando solo librerías estándar.
@@ -59,10 +67,22 @@ def _generate_slug(text: str) -> str:
     """
     # 1. Mapeo de caracteres especiales a sus equivalentes sin acento
     replacements = {
-        'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u', 'ñ': 'n', 'ü': 'u',
-        'Á': 'a', 'É': 'e', 'Í': 'i', 'Ó': 'o', 'Ú': 'u', 'Ñ': 'n', 'Ü': 'u',
+        "á": "a",
+        "é": "e",
+        "í": "i",
+        "ó": "o",
+        "ú": "u",
+        "ñ": "n",
+        "ü": "u",
+        "Á": "a",
+        "É": "e",
+        "Í": "i",
+        "Ó": "o",
+        "Ú": "u",
+        "Ñ": "n",
+        "Ü": "u",
     }
-    
+
     # 2. Aplicar mapeo y convertir a minúsculas
     text = text.lower()
     for old, new in replacements.items():
@@ -70,15 +90,16 @@ def _generate_slug(text: str) -> str:
 
     # 3. Reemplazar caracteres no deseados (excepto a-z, 0-9 y guiones) con un guion.
     # Esto también manejará los espacios.
-    text = re.sub(r'[^a-z0-9\-]+', '-', text) 
-    
+    text = re.sub(r"[^a-z0-9\-]+", "-", text)
+
     # 4. Eliminar guiones duplicados (ej: 'sitio--historico' -> 'sitio-historico')
-    text = re.sub(r'-+', '-', text)
-    
+    text = re.sub(r"-+", "-", text)
+
     # 5. Eliminar guiones al inicio y al final de la cadena
-    text = text.strip('-')
-    
+    text = text.strip("-")
+
     return text
+
 
 def listar_sitios(page=1, per_page=25):
     """
@@ -93,11 +114,13 @@ def listar_sitios(page=1, per_page=25):
         .all()
     )
 
+
 def contar_sitios():
     """
     Cuenta los sitios historicos activos (baja=False).
     """
     return db.session.query(SitioHistorico).filter_by(baja=False).count()
+
 
 def listar_provincias():
     """
@@ -146,6 +169,7 @@ def crear_sitio_seed(form):
     db.session.commit()
     return nuevo
 
+
 def registrar_evento_historial(
     id_sitio: int,
     id_usuario: int,
@@ -163,6 +187,7 @@ def registrar_evento_historial(
     db.session.add(evento)
     db.session.commit()
     return evento
+
 
 def crear_sitio(form, id_usuario: int | None = None):
     """
@@ -186,9 +211,13 @@ def crear_sitio(form, id_usuario: int | None = None):
         baja=False,
     )
 
-    tag_ids = form.getlist("tags") # Obtener lista de IDs de tags
+    tag_ids = form.getlist("tags")  # Obtener lista de IDs de tags
     if tag_ids:
-        tags_seleccionados = db.session.query(Tag).filter(Tag.id.in_([_parse_int(tid) for tid in tag_ids])).all()
+        tags_seleccionados = (
+            db.session.query(Tag)
+            .filter(Tag.id.in_([_parse_int(tid) for tid in tag_ids]))
+            .all()
+        )
         nuevo.tags = tags_seleccionados
 
     db.session.add(nuevo)
@@ -234,7 +263,6 @@ def editar_sitio(sitio_id: int, form, id_usuario: int | None = None):
     sitio = obtener_sitio(sitio_id)
     if not sitio:
         raise EntityNotFoundError(f"Sitio Histórico no encontrado.")
-    
 
     # snapshot de valores anteriores relevantes
     prev = {
@@ -246,8 +274,16 @@ def editar_sitio(sitio_id: int, form, id_usuario: int | None = None):
         "latitud": sitio.latitud,
         "longitud": sitio.longitud,
         "estadoConservacion": sitio.estadoConservacion,
-        "anioInauguracion": sitio.anioInauguracion.isoformat() if getattr(sitio, "anioInauguracion", None) else None,
-        "fechaRegistro": sitio.fechaRegistro.isoformat() if getattr(sitio, "fechaRegistro", None) else None,
+        "anioInauguracion": (
+            sitio.anioInauguracion.isoformat()
+            if getattr(sitio, "anioInauguracion", None)
+            else None
+        ),
+        "fechaRegistro": (
+            sitio.fechaRegistro.isoformat()
+            if getattr(sitio, "fechaRegistro", None)
+            else None
+        ),
         "visible": sitio.visible,
         "baja": sitio.baja,
         # Snapshot de tags como lista de nombres para facilitar la visualización
@@ -280,11 +316,17 @@ def editar_sitio(sitio_id: int, form, id_usuario: int | None = None):
         sitio.fechaRegistro = fecha_reg
     # Checkbox HTML + hidden: se reciben 0, 1 o 2 valores. True si cualquiera es truthy
     vals_visible = form.getlist("visible")
-    sitio.visible = any(str(v).lower() in ("true", "1", "yes", "on", "t") for v in vals_visible)
-    
+    sitio.visible = any(
+        str(v).lower() in ("true", "1", "yes", "on", "t") for v in vals_visible
+    )
+
     tag_ids = form.getlist("tags")
     # Buscar los objetos Tag correspondientes a los IDs seleccionados
-    tags_seleccionados = db.session.query(Tag).filter(Tag.id.in_([_parse_int(tid) for tid in tag_ids])).all()
+    tags_seleccionados = (
+        db.session.query(Tag)
+        .filter(Tag.id.in_([_parse_int(tid) for tid in tag_ids]))
+        .all()
+    )
     # Asignar la nueva lista de tags. SQLAlchemy maneja la desvinculación de los anteriores.
     sitio.tags = tags_seleccionados
 
@@ -301,15 +343,25 @@ def editar_sitio(sitio_id: int, form, id_usuario: int | None = None):
         "latitud": sitio.latitud,
         "longitud": sitio.longitud,
         "estadoConservacion": sitio.estadoConservacion,
-        "anioInauguracion": sitio.anioInauguracion.isoformat() if getattr(sitio, "anioInauguracion", None) else None,
-        "fechaRegistro": sitio.fechaRegistro.isoformat() if getattr(sitio, "fechaRegistro", None) else None,
+        "anioInauguracion": (
+            sitio.anioInauguracion.isoformat()
+            if getattr(sitio, "anioInauguracion", None)
+            else None
+        ),
+        "fechaRegistro": (
+            sitio.fechaRegistro.isoformat()
+            if getattr(sitio, "fechaRegistro", None)
+            else None
+        ),
         "visible": sitio.visible,
         "baja": sitio.baja,
         "tags": [t.nombre for t in getattr(sitio, "tags", [])],
     }
     try:
         # Determinar acción específica: si cambiaron los tags => TAGS_CHANGED, si no => UPDATED
-        accion_evento = "TAGS_CHANGED" if prev.get("tags") != nuevos.get("tags") else "UPDATED"
+        accion_evento = (
+            "TAGS_CHANGED" if prev.get("tags") != nuevos.get("tags") else "UPDATED"
+        )
         registrar_evento_historial(
             id_sitio=sitio.id,
             id_usuario=id_usuario,
@@ -330,7 +382,6 @@ def eliminar_sitio(sitio_id: int, id_usuario: int | None = None):
     sitio = obtener_sitio(sitio_id)
     if not sitio:
         raise EntityNotFoundError(f"Sitio Histórico no encontrado.")
-    
 
     prev_baja = sitio.baja
     sitio.baja = True
@@ -350,7 +401,7 @@ def eliminar_sitio(sitio_id: int, id_usuario: int | None = None):
     except Exception:
         db.session.rollback()
         raise
-    #si todo salio bien retorno el nombre del sitio eliminado
+    # si todo salio bien retorno el nombre del sitio eliminado
     return sitio
 
 
@@ -395,9 +446,11 @@ def listar_historial_sitio(
         "pages": (total + per_page - 1) // per_page if per_page else 1,
     }
 
+
 # ==========================
 # Gestión de imágenes sitios
 # ==========================
+
 
 def listar_imagenes_sitio(id_sitio: int) -> list[SitioImagen]:
     return (
@@ -407,11 +460,16 @@ def listar_imagenes_sitio(id_sitio: int) -> list[SitioImagen]:
         .all()
     )
 
+
 def contar_imagenes_sitio(id_sitio: int) -> int:
-    return db.session.query(SitioImagen).filter(SitioImagen.id_sitio == id_sitio).count()
+    return (
+        db.session.query(SitioImagen).filter(SitioImagen.id_sitio == id_sitio).count()
+    )
+
 
 def obtener_imagen(id_imagen: int) -> SitioImagen | None:
     return db.session.get(SitioImagen, id_imagen)
+
 
 def agregar_imagen_sitio(
     id_sitio: int,
@@ -459,6 +517,7 @@ def agregar_imagen_sitio(
     db.session.commit()
     return nueva
 
+
 def set_portada_imagen(id_sitio: int, id_imagen: int) -> SitioImagen:
     img = obtener_imagen(id_imagen)
     if not img or img.id_sitio != id_sitio:
@@ -470,15 +529,19 @@ def set_portada_imagen(id_sitio: int, id_imagen: int) -> SitioImagen:
     db.session.commit()
     return img
 
+
 def eliminar_imagen_sitio(id_sitio: int, id_imagen: int) -> SitioImagen:
     img = obtener_imagen(id_imagen)
     if not img or img.id_sitio != id_sitio:
         raise EntityNotFoundError("Imagen no encontrada para el sitio.")
     if img.portada:
-        raise ValueError("No se puede eliminar la imagen de portada. Cambie la portada primero.")
+        raise ValueError(
+            "No se puede eliminar la imagen de portada. Cambie la portada primero."
+        )
     db.session.delete(img)
     db.session.commit()
     return img
+
 
 def reordenar_imagenes_sitio(id_sitio: int, ids_en_orden: list[int]) -> None:
     imgs = listar_imagenes_sitio(id_sitio)
@@ -491,7 +554,10 @@ def reordenar_imagenes_sitio(id_sitio: int, ids_en_orden: list[int]) -> None:
         img.orden = orden_map.get(img.id, img.orden)
     db.session.commit()
 
-def actualizar_data_imagen(id_sitio: int, id_imagen: int, titulo_alt: str, descripcion: str | None) -> SitioImagen:
+
+def actualizar_data_imagen(
+    id_sitio: int, id_imagen: int, titulo_alt: str, descripcion: str | None
+) -> SitioImagen:
     img = obtener_imagen(id_imagen)
     if not img or img.id_sitio != id_sitio:
         raise EntityNotFoundError("Imagen no encontrada para el sitio.")
@@ -500,20 +566,19 @@ def actualizar_data_imagen(id_sitio: int, id_imagen: int, titulo_alt: str, descr
     db.session.commit()
     return img
 
+
 def listar_tags(page=1, per_page=25, q=None, sort=None, order="asc"):
     """
     Lista los tags con paginacion, busqueda y ordenamiento.
     """
     query = db.session.query(Tag)
 
-    #Filtro excluir Tags con baja=True
-    query = query.filter(Tag.baja == False) 
+    # Filtro excluir Tags con baja=True
+    query = query.filter(Tag.baja == False)
 
     # Filtro de búsqueda
     if q:
         query = query.filter(Tag.nombre.ilike(f"%{q}%"))
-    
-    
 
     # Armamos lista de criterios de orden
     order_by_list = []
@@ -546,13 +611,12 @@ def contar_tags(q=None):
     """
     query = db.session.query(Tag)
 
-    #Filtro excluir Tags con baja=True
-    query = query.filter(Tag.baja == False) 
+    # Filtro excluir Tags con baja=True
+    query = query.filter(Tag.baja == False)
 
     if q:
         query = query.filter(Tag.nombre.ilike(f"%{q}%"))
     return query.count()
-
 
 
 def obtener_tag(tag_id: int):
@@ -569,7 +633,7 @@ def obtener_tag_existente_por_nombre(nombre_tag: str):
     """
     if not nombre_tag:
         return None
-    
+
     return db.session.query(Tag).filter(Tag.nombre == nombre_tag).first()
 
 
@@ -587,7 +651,7 @@ def procesar_o_crear_tag(nombre_tag: str):
         if existing_tag.baja:
             # Re-activar y retornar el tag existente
             existing_tag.baja = False
-            existing_tag.slug = _generate_slug(nombre_tag) 
+            existing_tag.slug = _generate_slug(nombre_tag)
             db.session.commit()
             return existing_tag
         else:
@@ -605,7 +669,7 @@ def crear_tag(nombre_tag: str, slug_tag: str):
     Se utiliza solo si el tag NO existe.
     Retorna: el Tag creado/modificado.
     """
-    nuevo_tag = Tag(nombre=nombre_tag, slug=slug_tag) 
+    nuevo_tag = Tag(nombre=nombre_tag, slug=slug_tag)
     db.session.add(nuevo_tag)
     db.session.commit()
     return nuevo_tag
@@ -614,21 +678,21 @@ def crear_tag(nombre_tag: str, slug_tag: str):
 def editar_tag(tag_id: int, nombre_nuevo: str):
     """
     Edita un tag existente.
-    
-    Lanza: 
+
+    Lanza:
         - IntegrityError si el nombre_nuevo ya existe en la DB (UNIQUE constraint).
         - Exception si el commit falla por otra razón (se propaga).
-    
+
     Retorna: El objeto Tag editado.
     """
     tag = obtener_tag(tag_id)
     if not tag:
         raise EntityNotFoundError(f"Tag no encontrado.")
-    
+
     # Asignar nuevos valores.
     tag.nombre = nombre_nuevo
     tag.slug = _generate_slug(nombre_nuevo)
-    
+
     # Intentar el commit. Si el nombre ya existe, la DB lanza IntegrityError.
     db.session.commit()
     return tag
@@ -642,19 +706,21 @@ def eliminar_tag(tag_id: int):
     tag = obtener_tag(tag_id)
     if not tag:
         return True  # Si no existe, consideramos que ya está "eliminado"
-    
+
     # 1. VERIFICAR VÍNCULOS CON SITIOS ACTIVOS
-    sitios_vinculados = db.session.query(SitioHistorico.nombre).join(
-        Tag.sitios
-    ).filter(
-        Tag.id == tag_id,
-        SitioHistorico.baja == False  # Solo sitios activos
-    ).all()
+    sitios_vinculados = (
+        db.session.query(SitioHistorico.nombre)
+        .join(Tag.sitios)
+        .filter(Tag.id == tag_id, SitioHistorico.baja == False)  # Solo sitios activos
+        .all()
+    )
 
     if sitios_vinculados:
         # Lanzar excepción con la lista de nombres
         nombres = [s[0] for s in sitios_vinculados]
-        raise TagVinculadoError(nombres, "El Tag no puede ser eliminado. Está asociado a sitios activos.")
+        raise TagVinculadoError(
+            nombres, "El Tag no puede ser eliminado. Está asociado a sitios activos."
+        )
 
     # 2. PROCEDER CON LA ELIMINACIÓN LÓGICA
     try:
@@ -675,15 +741,18 @@ def create_rol(nombre: str):
     db.session.commit()
     return nuevo
 
+
 def list_roles():
     from src.core.entity.rol import Rol
 
     return db.session.query(Rol).order_by(Rol.id).all()
 
+
 def get_rol_by_id(rol_id: int):
     from src.core.entity.rol import Rol
 
     return db.session.get(Rol, rol_id)
+
 
 def get_id_rol_admin():
     from src.core.entity.rol import Rol
@@ -754,7 +823,7 @@ def listar_favoritos_usuario(user):
         select(
             SitioHistorico,
             favoritos_usuarios_sitios.c.inserted_at,
-            favoritos_usuarios_sitios.c.updated_at
+            favoritos_usuarios_sitios.c.updated_at,
         )
         .join(
             favoritos_usuarios_sitios,

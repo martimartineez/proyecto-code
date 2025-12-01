@@ -14,6 +14,7 @@ NOMBRE_A_ETIQUETA = {
 
 bp = Blueprint("feature_flags", __name__, url_prefix="/feature_flags")
 
+
 @bp.get("/")
 @login_required
 def index():
@@ -26,30 +27,32 @@ def index():
         APP_TZ = timezone(timedelta(hours=-3))  # UTC-3 como reemplazo
     for f in flags:
         user_email = None
-        if getattr(f, 'idUsuarioModificacion', None):
+        if getattr(f, "idUsuarioModificacion", None):
             u = core_auth.get_user_by_id(f.idUsuarioModificacion)
             user_email = u.email if u else None
         # Convertir timestamp (UTC -> local) y formatear para mostrar
         ultima_local = None
         ultima_fmt = "-"
-        if getattr(f, 'ultimaModificacion', None):
+        if getattr(f, "ultimaModificacion", None):
             try:
                 ultima_local = f.ultimaModificacion.astimezone(tz)
-                ultima_fmt = ultima_local.strftime('%Y-%m-%d %H:%M:%S')
+                ultima_fmt = ultima_local.strftime("%Y-%m-%d %H:%M:%S")
             except Exception:
-                ultima_fmt = f.ultimaModificacion.strftime('%Y-%m-%d %H:%M:%S')
-        enriched.append({
-            'nombre': f.nombre,
-            'etiqueta': NOMBRE_A_ETIQUETA.get(f.nombre, f.nombre),
-            'descripcion': f.descripcion,
-            'valor': f.valor,
-            'mensaje': f.mensaje,
-            'ultimaModificacion': f.ultimaModificacion,
-            'ultimaModificacionLocal': ultima_local,
-            'ultimaModificacionFmt': ultima_fmt,
-            'idUsuarioModificacion': f.idUsuarioModificacion,
-            'usuarioEmail': user_email,
-        })
+                ultima_fmt = f.ultimaModificacion.strftime("%Y-%m-%d %H:%M:%S")
+        enriched.append(
+            {
+                "nombre": f.nombre,
+                "etiqueta": NOMBRE_A_ETIQUETA.get(f.nombre, f.nombre),
+                "descripcion": f.descripcion,
+                "valor": f.valor,
+                "mensaje": f.mensaje,
+                "ultimaModificacion": f.ultimaModificacion,
+                "ultimaModificacionLocal": ultima_local,
+                "ultimaModificacionFmt": ultima_fmt,
+                "idUsuarioModificacion": f.idUsuarioModificacion,
+                "usuarioEmail": user_email,
+            }
+        )
     return render_template("feature_flags/index.html", flags=enriched)
 
 
@@ -76,11 +79,18 @@ def update():
         return redirect(url_for("feature_flags.index"))
 
     # Require message when enabling maintenance modes
-    if nombre in ("admin_maintenance_mode", "portal_maintenance_mode") and new_valor and not mensaje:
-        flash("Debe especificar un mensaje de mantenimiento al habilitar este modo.", "error")
+    if (
+        nombre in ("admin_maintenance_mode", "portal_maintenance_mode")
+        and new_valor
+        and not mensaje
+    ):
+        flash(
+            "Debe especificar un mensaje de mantenimiento al habilitar este modo.",
+            "error",
+        )
         return redirect(url_for("feature_flags.index"))
 
-    uid = session.get('user_id')
+    uid = session.get("user_id")
     ff_service.update_flag(nombre, valor=new_valor, mensaje=mensaje, user_id=uid)
 
     estado = "ON" if new_valor else "OFF"

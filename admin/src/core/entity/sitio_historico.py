@@ -7,11 +7,13 @@ from src.core.database import Base
 from src.core.auth.usuario import favoritos_usuarios_sitios
 
 from collections import OrderedDict
+
 if TYPE_CHECKING:
     from src.core.entity.tag import Tag
     from src.core.entity.categoria_sitio import CategoriaSitio
     from src.core.entity.ciudad import Ciudad
     from src.core.entity.sitio_imagen import SitioImagen
+
 
 class SitioHistorico(Base):
     __tablename__ = "sitios_historicos"
@@ -68,16 +70,15 @@ class SitioHistorico(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
     favorited_by: Mapped[List["Usuario"]] = relationship(
-    secondary=favoritos_usuarios_sitios,
-    back_populates="favoritos"
-)
-
+        secondary=favoritos_usuarios_sitios, back_populates="favoritos"
+    )
 
     def __repr__(self):
         return (
             f"<SitioHistorico(id={self.id}, nombre={self.nombre}, ciudad={self.ciudad}, "
             f"latitud={self.latitud}, longitud={self.longitud}, baja={self.baja})>"
         )
+
     def to_dict(self):
         d = OrderedDict()
         d["id"] = self.id
@@ -85,21 +86,33 @@ class SitioHistorico(Base):
         d["short_description"] = self.descBreve
         d["description"] = self.descCompleta
         d["city"] = self.ciudad.nombre if self.ciudad else None
-        d["province"] = self.ciudad.provincia.nombre if self.ciudad and self.ciudad.provincia else None
+        d["province"] = (
+            self.ciudad.provincia.nombre
+            if self.ciudad and self.ciudad.provincia
+            else None
+        )
         d["lat"] = self.latitud
         d["long"] = self.longitud
         d["tags"] = [t.nombre for t in self.tags]
         # URL de portada si existe
         try:
-            portada = next((img for img in getattr(self, "imagenes", []) if getattr(img, "portada", False)), None)
+            portada = next(
+                (
+                    img
+                    for img in getattr(self, "imagenes", [])
+                    if getattr(img, "portada", False)
+                ),
+                None,
+            )
             d["cover_url"] = portada.url_publica if portada else None
             d["cover_alt"] = portada.titulo_alt if portada else None
         except Exception:
             d["cover_url"] = None
             d["cover_alt"] = None
         d["state_of_conservation"] = self.estadoConservacion
-        d["fechaRegistro"] = self.fechaRegistro.isoformat() if self.fechaRegistro else None
+        d["fechaRegistro"] = (
+            self.fechaRegistro.isoformat() if self.fechaRegistro else None
+        )
         d["inserted_at"] = self.inserted_at.isoformat() if self.inserted_at else None
         d["updated_at"] = self.updated_at.isoformat() if self.updated_at else None
         return d
-

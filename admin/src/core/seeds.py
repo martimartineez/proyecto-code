@@ -34,7 +34,6 @@ def run():
     except Exception as exc:
         print(f"Error en seed_categorias: {exc}")
 
-
     system_user = auth.create_user(
         nombre="System",
         apellido="User",
@@ -395,69 +394,69 @@ def run():
     rol_user = services.create_rol(nombre="Usuario")
     print("Created roles! 👍🏻")
 
-    print('Creando permisos..')
-    
+    print("Creando permisos..")
+
     PERMISSIONS = {
-    'editor': [
-        "site_index",
-        "site_show",
-        "site_new",
-        "site_create",
-        "site_edit",
-        "site_update",
-        "tag_index",
-        "tag_show",
-        "tag_new",
-        "tag_create",
-        "tag_edit",
-        "tag_update",
-        "tag_destroy",
-        "record_show",
-        "profile_show",
-        "profile_update",
-        "change_password",
-        "review_approve",
-        "review_reject",
-        "review_list",
-        "review_delete"
-    ],
-    'admin': [
-        "user_index",
-        "user_show",
-        "user_create",
-        "user_new",
-        "user_edit",
-        "user_update",
-        "user_destroy",
-        "user_activate",
-        "user_deactivate",
-        "site_index",
-        "site_show",
-        "site_new",
-        "site_create",
-        "site_edit",
-        "site_update",
-        "site_destroy",
-        "site_export",
-        "tag_index",
-        "tag_show",
-        "tag_new",
-        "tag_create",
-        "tag_edit",
-        "tag_update",
-        "tag_destroy",
-        "record_show",
-        "profile_show",
-        "profile_update",
-        "change_password",
-        "review_aprove",
-        "review_reject",
-        "review_list",
-        "review_delete"
-    ]
-}
+        "editor": [
+            "site_index",
+            "site_show",
+            "site_new",
+            "site_create",
+            "site_edit",
+            "site_update",
+            "tag_index",
+            "tag_show",
+            "tag_new",
+            "tag_create",
+            "tag_edit",
+            "tag_update",
+            "tag_destroy",
+            "record_show",
+            "profile_show",
+            "profile_update",
+            "change_password",
+            "review_approve",
+            "review_reject",
+            "review_list",
+            "review_delete",
+        ],
+        "admin": [
+            "user_index",
+            "user_show",
+            "user_create",
+            "user_new",
+            "user_edit",
+            "user_update",
+            "user_destroy",
+            "user_activate",
+            "user_deactivate",
+            "site_index",
+            "site_show",
+            "site_new",
+            "site_create",
+            "site_edit",
+            "site_update",
+            "site_destroy",
+            "site_export",
+            "tag_index",
+            "tag_show",
+            "tag_new",
+            "tag_create",
+            "tag_edit",
+            "tag_update",
+            "tag_destroy",
+            "record_show",
+            "profile_show",
+            "profile_update",
+            "change_password",
+            "review_aprove",
+            "review_reject",
+            "review_list",
+            "review_delete",
+        ],
+    }
     auth.crearPermisos(PERMISSIONS)
-    print('Permisos creados! 👍🏻')
+    print("Permisos creados! 👍🏻")
 
     print("Creating users...")
 
@@ -468,7 +467,7 @@ def run():
         email="a@gmail.com",
         activo=True,
         esAdmin=False,
-        roles=[rol_admin, rol_editor]
+        roles=[rol_admin, rol_editor],
     )
     user2 = auth.create_user(
         nombre="Moni",
@@ -477,7 +476,7 @@ def run():
         email="b@gmail.com",
         activo=True,
         esAdmin=False,
-        roles=[rol_admin, rol_editor]
+        roles=[rol_admin, rol_editor],
     )
     user3 = auth.create_user(
         nombre="Coqui",
@@ -486,7 +485,7 @@ def run():
         email="c@gmail.com",
         activo=True,
         esAdmin=False,
-        roles=[rol_admin, rol_editor]
+        roles=[rol_admin, rol_editor],
     )
 
     user4 = auth.create_user(
@@ -496,7 +495,7 @@ def run():
         email="paola.a@gmail.com",
         activo=False,
         esAdmin=False,
-        roles=[rol_admin, rol_editor]
+        roles=[rol_admin, rol_editor],
     )
 
     user5 = auth.create_user(
@@ -506,7 +505,7 @@ def run():
         email="dardo.f@empresa.com",
         activo=True,
         esAdmin=False,
-        roles=[rol_admin]
+        roles=[rol_admin],
     )
 
     user6 = auth.create_user(
@@ -516,7 +515,7 @@ def run():
         email="me.fuseneco@otro.com",
         activo=True,
         esAdmin=False,
-        roles=[rol_editor]
+        roles=[rol_editor],
     )
 
     user7 = auth.create_user(
@@ -526,7 +525,7 @@ def run():
         email="elviraroca@gmail.com",
         activo=True,
         esAdmin=False,
-        roles=[rol_admin]
+        roles=[rol_admin],
     )
 
     user8 = auth.create_user(
@@ -536,7 +535,7 @@ def run():
         email="roberto.g@mail.com",
         activo=True,
         esAdmin=False,
-        roles=[rol_admin]
+        roles=[rol_admin],
     )
 
     user9 = auth.create_user(
@@ -546,7 +545,7 @@ def run():
         email="ana.perez@dominio.net",
         activo=True,
         esAdmin=False,
-        roles=[rol_editor]
+        roles=[rol_editor],
     )
 
     user10 = auth.create_user(
@@ -556,7 +555,7 @@ def run():
         email="carlos.l@empresa.com",
         activo=True,
         esAdmin=False,
-        roles=[rol_admin]
+        roles=[rol_admin],
     )
 
     user11 = auth.create_user(
@@ -566,7 +565,7 @@ def run():
         email="laura.m@test.org",
         activo=False,
         esAdmin=False,
-        roles=[rol_admin]
+        roles=[rol_admin],
     )
 
     user12 = auth.create_user(
@@ -576,7 +575,7 @@ def run():
         email="jorge.r@system.io",
         activo=True,
         esAdmin=False,
-        roles=[rol_admin]
+        roles=[rol_admin],
     )
 
     user13 = auth.create_user(
@@ -586,7 +585,7 @@ def run():
         email="sofia.s@newmail.co",
         activo=True,
         esAdmin=False,
-        roles=[rol_editor]
+        roles=[rol_editor],
     )
 
     user14 = auth.create_user(
@@ -596,7 +595,7 @@ def run():
         email="martin.g@web.es",
         activo=True,
         esAdmin=False,
-        roles=[rol_admin]
+        roles=[rol_admin],
     )
 
     user15 = auth.create_user(
@@ -606,7 +605,7 @@ def run():
         email="v.diaz@mailserver.net",
         activo=True,
         esAdmin=False,
-        roles=[rol_editor]
+        roles=[rol_editor],
     )
 
     user16 = auth.create_user(
@@ -616,7 +615,7 @@ def run():
         email="d.h@pro.com",
         activo=True,
         esAdmin=False,
-        roles=[rol_admin]
+        roles=[rol_admin],
     )
 
     user17 = auth.create_user(
@@ -626,7 +625,7 @@ def run():
         email="florencia.r@temp.net",
         activo=True,
         esAdmin=False,
-        roles=[rol_admin]
+        roles=[rol_admin],
     )
 
     user18 = auth.create_user(
@@ -636,7 +635,7 @@ def run():
         email="emi.c@data.org",
         activo=False,
         esAdmin=False,
-        roles=[rol_admin]
+        roles=[rol_admin],
     )
 
     user19 = auth.create_user(
@@ -646,7 +645,7 @@ def run():
         email="camila.f@work.co",
         activo=True,
         esAdmin=False,
-        roles=[rol_editor]
+        roles=[rol_editor],
     )
 
     user20 = auth.create_user(
@@ -656,7 +655,7 @@ def run():
         email="lucas.m@mail.io",
         activo=True,
         esAdmin=False,
-        roles=[rol_admin]
+        roles=[rol_admin],
     )
 
     user21 = auth.create_user(
@@ -666,7 +665,7 @@ def run():
         email="andrea.v@sistema.com",
         activo=True,
         esAdmin=False,
-        roles=[rol_admin]
+        roles=[rol_admin],
     )
 
     user22 = auth.create_user(
@@ -676,7 +675,7 @@ def run():
         email="fede.b@email.net",
         activo=True,
         esAdmin=False,
-        roles=[rol_editor]
+        roles=[rol_editor],
     )
 
     user23 = auth.create_user(
@@ -686,7 +685,7 @@ def run():
         email="g.ramos@secure.org",
         activo=True,
         esAdmin=False,
-        roles=[rol_admin]
+        roles=[rol_admin],
     )
 
     user24 = auth.create_user(
@@ -696,7 +695,7 @@ def run():
         email="hernan.a@client.com",
         activo=False,
         esAdmin=False,
-        roles=[rol_admin]
+        roles=[rol_admin],
     )
 
     user25 = auth.create_user(
@@ -706,7 +705,7 @@ def run():
         email="lau@gmail.com",
         activo=False,
         esAdmin=False,
-        roles=[rol_admin]
+        roles=[rol_admin],
     )
 
     user26 = auth.create_user(
@@ -716,8 +715,7 @@ def run():
         email="martin@gmail.com",
         activo=False,
         esAdmin=False,
-        roles=[rol_admin]
+        roles=[rol_admin],
     )
 
     print("Created users! 👍🏻")
-

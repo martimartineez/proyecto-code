@@ -13,7 +13,7 @@ bp = Blueprint("usuarios", __name__, url_prefix="/manejo_usuarios")
 
 
 @bp.get("/")
-#Este es para que no te deje entrar si no estas logueado
+# Este es para que no te deje entrar si no estas logueado
 @login_required
 @check("user_index")
 def index():
@@ -29,7 +29,6 @@ def index():
     activo = request.args.get("activo", "")  # "" | "true" | "false"
     orden = request.args.get("orden", "asc")  # "asc" | "desc"
     rol_filtro = request.args.get("rol", "")  # <-- Nuevo filtro por rol
-
 
     # 3️⃣ Obtener todos los usuarios
     todos = auth.list_usuarios()  # lista completa de usuarios
@@ -73,7 +72,7 @@ def index():
         email=email,
         activo=activo,
         orden=orden,
-        rol_filtro=rol_filtro
+        rol_filtro=rol_filtro,
     )
 
 
@@ -81,17 +80,17 @@ def index():
 @login_required
 @check("user_destroy")
 def eliminar(usuario_id):
-    
+
     user = auth.get_user_by_id(usuario_id)
     # Proteger administradores del sistema: no permitir eliminar
-    es_admin_sistema = getattr(user, 'esAdmin', False)
+    es_admin_sistema = getattr(user, "esAdmin", False)
     if es_admin_sistema:
-        flash("No se puede eliminar un usuario administrador del sistema.", 'error')
+        flash("No se puede eliminar un usuario administrador del sistema.", "error")
         return redirect(url_for("usuarios.index"))
 
     auth.baja_logica_usuario(user)
 
-    flash(f"Se borro el usuario: '{user.nombre}'", 'success')
+    flash(f"Se borro el usuario: '{user.nombre}'", "success")
     return redirect(url_for("usuarios.index"))
 
 
@@ -100,17 +99,17 @@ def eliminar(usuario_id):
 @check("user_deactivate")
 def desactivar(usuario_id):
     """
-     Solo desactiva al usuario si no es admin
+    Solo desactiva al usuario si no es admin
     """
 
     user = auth.get_user_by_id(usuario_id)
     rolesUsuario = auth.listar_roles_usuario(user)
-    es_admin_sistema = getattr(user, 'esAdmin', False)
-    
-    if not "Admin" in rolesUsuario and not es_admin_sistema:  
+    es_admin_sistema = getattr(user, "esAdmin", False)
+
+    if not "Admin" in rolesUsuario and not es_admin_sistema:
         user.activo = False
         auth.db.session.commit()
-    flash(f"Se desactivo el usuario: '{user.nombre}'",'success')
+    flash(f"Se desactivo el usuario: '{user.nombre}'", "success")
     return redirect(url_for("usuarios.index"))
 
 
@@ -118,12 +117,12 @@ def desactivar(usuario_id):
 @login_required
 @check("user_activate")
 def activar(usuario_id):
-    
+
     user = auth.get_user_by_id(usuario_id)
     user.activo = True
     auth.db.session.commit()
 
-    flash(f"Se activo el usuario: '{user.nombre}'",'success')
+    flash(f"Se activo el usuario: '{user.nombre}'", "success")
     return redirect(url_for("usuarios.index"))
 
 
@@ -131,7 +130,7 @@ def activar(usuario_id):
 @check("user_new")
 @bp.get("/agregar_usuario")
 def agregar_usuario_get():
-    
+
     roles = services.list_roles()
     return render_template("manejo_usuarios/formAgregar.html", roles=roles)
 
@@ -144,7 +143,7 @@ def agregar_usuario_post():
     Agrega un nuevo usuario al sistema.
     Verifica que el email no exista y que todos los campos obligatorios estén completos.
     """
-    
+
     if auth.comprobar_email(request.form["email"]):
         flash("El email ya existe. Por favor, elija otro.", "error")
         return redirect(url_for("usuarios.agregar_usuario_get"))
@@ -155,7 +154,7 @@ def agregar_usuario_post():
     password = request.form["password"]
 
     if not nombre or not apellido or not email or not password:
-        flash('Todos los campos son obligatorios','error')
+        flash("Todos los campos son obligatorios", "error")
         return redirect(url_for("usuarios.agregar_usuario_get"))
 
     roles_ids = request.form.getlist("roles")
@@ -166,11 +165,12 @@ def agregar_usuario_post():
         apellido=apellido,
         activo=True,
         esAdmin=False,
-        roles=[services.get_rol_by_id(int(rol_id)) for rol_id in roles_ids]
+        roles=[services.get_rol_by_id(int(rol_id)) for rol_id in roles_ids],
     )
 
-    flash(f"Se agrego el usuario: '{nombre}'",'success')
+    flash(f"Se agrego el usuario: '{nombre}'", "success")
     return redirect(url_for("usuarios.index"))
+
 
 @bp.get("/modificar/<int:usuario_id>")
 @login_required
@@ -182,23 +182,28 @@ def modificar_get(usuario_id):
 
     user = auth.get_user_by_id(usuario_id)
     if user.esAdmin:
-        flash("No se puede modificar un usuario administrador del sistema.", 'error')
+        flash("No se puede modificar un usuario administrador del sistema.", "error")
         return redirect(url_for("usuarios.index"))
     rolesUsuario = auth.listar_roles_usuario(user)
     roles = services.list_roles()
-    return render_template("manejo_usuarios/modificar_usuario.html", usuario=user, roles=roles, rolesUsuario=rolesUsuario) 
+    return render_template(
+        "manejo_usuarios/modificar_usuario.html",
+        usuario=user,
+        roles=roles,
+        rolesUsuario=rolesUsuario,
+    )
 
 
 @bp.post("/modificar/<int:usuario_id>")
 @login_required
 @check("user_update")
 def modificar_post(usuario_id):
-    
+
     user = auth.get_user_by_id(usuario_id)
     if user.esAdmin:
-        flash("No se puede modificar un usuario administrador del sistema.", 'error')
+        flash("No se puede modificar un usuario administrador del sistema.", "error")
         return redirect(url_for("usuarios.index"))
-    return funcion_modificar(user,request.form)
+    return funcion_modificar(user, request.form)
 
 
 @bp.get("/modificar_mi_perfil")
@@ -209,24 +214,28 @@ def modificar_mi_perfil_get():
     Muestra el formulario para modificar el usuario logueado."
     """
 
-    user = auth.get_user_by_id(session['user_id'])
+    user = auth.get_user_by_id(session["user_id"])
     rolesUsuario = auth.listar_roles_usuario(user)
     roles = board.list_roles()
-    return render_template("manejo_usuarios/modificar_perfil.html", usuario=user, roles=roles, rolesUsuario=rolesUsuario) 
+    return render_template(
+        "manejo_usuarios/modificar_perfil.html",
+        usuario=user,
+        roles=roles,
+        rolesUsuario=rolesUsuario,
+    )
 
 
 @bp.post("/modificar_mi_perfil")
 @login_required
 @check("profile_update")
 def modificar_mi_perfil_post():
-    
-    user = auth.get_user_by_id(session['user_id'])
-    session['username'] = user.nombre
-    return funcion_modificar(user,request.form)
+
+    user = auth.get_user_by_id(session["user_id"])
+    session["username"] = user.nombre
+    return funcion_modificar(user, request.form)
 
 
-
-def funcion_modificar(user,form):
+def funcion_modificar(user, form):
     """
     Funcion que usa modificar y modificar perfil, toma el usuario y el form.
     Actualiza los datos del usuario y sus roles.
@@ -237,9 +246,9 @@ def funcion_modificar(user,form):
     email = form["email"]
 
     if not nombre or not apellido or not email:
-        flash('Todos los campos son obligatorios','error')
+        flash("Todos los campos son obligatorios", "error")
         return redirect(url_for("usuarios.index"))
-    
+
     user.nombre = nombre
     user.apellido = apellido
     user.email = email
@@ -249,7 +258,7 @@ def funcion_modificar(user,form):
 
     auth.db.session.commit()
 
-    flash(f"Se modifico: '{user.nombre}'",'success')
+    flash(f"Se modifico: '{user.nombre}'", "success")
     return redirect(url_for("usuarios.index"))
 
 
@@ -260,33 +269,34 @@ def ver_detalles(usuario_id):
 
     usuario = auth.get_user_by_id(usuario_id)
     roles = auth.listar_roles_usuario(usuario)
-    return render_template("manejo_usuarios/detalles_usuario.html", usuario=usuario, roles=roles)
+    return render_template(
+        "manejo_usuarios/detalles_usuario.html", usuario=usuario, roles=roles
+    )
+
 
 @bp.get("/miperfil")
 @login_required
 @check("profile_show")
 def ver_perfil():
 
-    usuario = auth.get_user_by_id(session['user_id'])
+    usuario = auth.get_user_by_id(session["user_id"])
     roles = auth.listar_roles_usuario(usuario)
 
-    return render_template("manejo_usuarios/mi_perfil.html", usuario=usuario, roles=roles)
-
-
-
+    return render_template(
+        "manejo_usuarios/mi_perfil.html", usuario=usuario, roles=roles
+    )
 
 
 @bp.route("/cambiar_contraseña/<int:usuario_id>", methods=["GET", "POST"])
 @login_required
 @check("change_password")
 def cambiar_contraseña(usuario_id):
-
     """
     Permite cambiar la contraseña de un usuario.
     Si el usuario es admin, puede cambiar la contraseña sin verificar la actual.
     Si no es admin, debe verificar la contraseña actual antes de cambiarla.
     """
-    
+
     user = auth.get_user_by_id(usuario_id)
     step = request.form.get("step")
 
@@ -296,7 +306,9 @@ def cambiar_contraseña(usuario_id):
     # Si es admin, no necesita verificar contraseña
     if es_admin and not step:
         # Renderiza directamente la parte del cambio
-        return render_template("manejo_usuarios/cambiar_contraseña.html", verified=True, usuario=user)
+        return render_template(
+            "manejo_usuarios/cambiar_contraseña.html", verified=True, usuario=user
+        )
 
     # Paso 1: verificar contraseña actual
     if step == "verify":
@@ -304,7 +316,9 @@ def cambiar_contraseña(usuario_id):
 
         if user and auth.check_password(user, contraseña_actual):
             flash("Contraseña actual verificada.", "success")
-            return render_template("manejo_usuarios/cambiar_contraseña.html", verified=True, usuario=user)
+            return render_template(
+                "manejo_usuarios/cambiar_contraseña.html", verified=True, usuario=user
+            )
         else:
             flash("La contraseña actual no es correcta.", "error")
 
@@ -315,14 +329,15 @@ def cambiar_contraseña(usuario_id):
 
         if nueva != repetir:
             flash("Las contraseñas no coinciden.", "error")
-            return render_template("manejo_usuarios/cambiar_contraseña.html", verified=True, usuario=user)
+            return render_template(
+                "manejo_usuarios/cambiar_contraseña.html", verified=True, usuario=user
+            )
 
         auth.update_password(usuario_id, nueva)
 
         flash("Contraseña actualizada correctamente.", "success")
         return redirect(url_for("home"))
 
-    
-    return render_template("manejo_usuarios/cambiar_contraseña.html", verified=False, usuario=user)
-
-
+    return render_template(
+        "manejo_usuarios/cambiar_contraseña.html", verified=False, usuario=user
+    )

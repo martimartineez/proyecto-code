@@ -11,6 +11,7 @@ from src.web.handlers.auth import login_required, check_permission, check
 
 bp = Blueprint("reseñas", __name__, url_prefix="/reseñas")
 
+
 @bp.route("/", methods=["GET"])
 @login_required
 @check("review_list")
@@ -22,12 +23,11 @@ def listar_reseñas():
     fecha_hasta = request.args.get("fecha_hasta")
     buscar = request.args.get("buscar")
 
-    sort_by = request.args.get("sort_by", "fecha") 
-    order = request.args.get("order", "asc") 
+    sort_by = request.args.get("sort_by", "fecha")
+    order = request.args.get("order", "asc")
 
     page = int(request.args.get("page", 1))
     per_page = 25
-
 
     query = db.session.query(Reseña)
     if estado:
@@ -43,28 +43,32 @@ def listar_reseñas():
     if buscar:
         pattern = f"%{buscar}%"
         query = query.join(Usuario).filter(
-        or_(
-            Reseña.texto.ilike(pattern),
-            Usuario.email.ilike(pattern)
+            or_(Reseña.texto.ilike(pattern), Usuario.email.ilike(pattern))
         )
-    )
-        
+
     order_func = asc if order == "asc" else desc
     if sort_by == "puntaje":
         query = query.order_by(order_func(Reseña.puntaje))
     else:
         query = query.order_by(order_func(Reseña.inserted_at))
 
-
     total_results = query.count()
     total_pages = (total_results + per_page - 1) // per_page
     resenas = query.offset((page - 1) * per_page).limit(per_page).all()
-    
+
     args = request.args.to_dict(flat=True)
     args.pop("page", None)
     sitios = listar_sitios()
-    return render_template("reseñas/index.html",resenas=resenas, sitios=sitios,total_results=total_results,date=date,request_args=args,total_pages=total_pages,page=page)
-
+    return render_template(
+        "reseñas/index.html",
+        resenas=resenas,
+        sitios=sitios,
+        total_results=total_results,
+        date=date,
+        request_args=args,
+        total_pages=total_pages,
+        page=page,
+    )
 
 
 @bp.route("/<int:resena_id>/aprobar", methods=["POST"])
@@ -75,9 +79,10 @@ def aprobar_reseña(resena_id):
     if reseña:
         reseña.estado = "aprobada"
         db.session.commit()
-    
+
     flash("¡La reseña ha sido aprobada correctamente!", "success")
     return redirect(url_for("reseñas.listar_reseñas"))
+
 
 @bp.route("/<int:resena_id>/eliminar", methods=["POST"])
 @login_required
@@ -89,7 +94,7 @@ def eliminar_reseña(resena_id):
         db.session.commit()
 
     flash("¡La reseña ha sido eliminada correctamente!", "success")
-    
+
     return redirect(url_for("reseñas.listar_reseñas"))
 
 
@@ -105,8 +110,9 @@ def rechazar_reseña(resena_id):
         db.session.commit()
 
     flash("¡La reseña ha sido rechazada correctamente!", "success")
-    
+
     return redirect(url_for("reseñas.listar_reseñas"))
+
 
 @bp.route("/reseña/<int:resena_id>", methods=["GET"])
 @login_required
@@ -119,4 +125,6 @@ def ver_detalles_reseña(resena_id):
     email = usuario.email if usuario else "Desconocido"
     sitio = db.session.query(SitioHistorico).get(reseña.id_sitio)
     nombre = sitio.nombre if sitio else "Desconocido"
-    return render_template("reseñas/detalles.html", resena=reseña,email=email,nombre=nombre)
+    return render_template(
+        "reseñas/detalles.html", resena=reseña, email=email, nombre=nombre
+    )

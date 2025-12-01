@@ -1,7 +1,8 @@
 from typing import List, TYPE_CHECKING
 from src.core.database import Base
 from src.core.entity.permiso import Permiso
-#from src.core.auth.usuario import Usuario
+
+# from src.core.auth.usuario import Usuario
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey, String, Table, Column
 
@@ -16,8 +17,6 @@ roles_permisos = Table(
 )
 
 
-
-
 class Rol(Base):
     __tablename__ = "roles"
 
@@ -25,8 +24,7 @@ class Rol(Base):
     nombre: Mapped[str] = mapped_column(String(100), nullable=False)
     permisos: Mapped[List["Permiso"]] = relationship(secondary=roles_permisos)
     usuario: Mapped[List["Usuario"]] = relationship(
-        secondary="roles_usuarios",
-        back_populates='roles'
+        secondary="roles_usuarios", back_populates="roles"
     )
 
     def __repr__(self):
