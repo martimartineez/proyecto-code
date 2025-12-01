@@ -31,8 +31,8 @@
                   <template v-if="profile">
                     <div class="nav-link me-3 profile-container">
                       <button class="profile-button profile-link me-3" data-bs-toggle="collapse" data-bs-target="#perfil-menu" :aria-expanded="menuOpen" aria-haspopup="true">
-                        <img :src="profile.foto || defaultAvatar" alt="avatar" class="avatar" />
-                        <span class="username">{{ profile.nombre || profile.name || profile?.given_name || 'Perfil' }}</span>
+                        <img :src="profile.foto" alt="avatar" class="avatar" />
+                        <span class="username">{{ profile.nombre}}</span>
                       </button>
                       <ul class= "collapse profile-menu" id="perfil-menu" role="menu">
                         <li role="none">
@@ -52,7 +52,7 @@
                     </div>
                   </template>
                   <template v-else>
-                    <RouterLink to="/login" class="nav-link d-none d-lg-flex me-5" @click="saveRedirectPath">Iniciar sesión</RouterLink>
+                    <RouterLink to="/login" class="nav-link d-none d-lg-flex me-5 " @click="saveRedirectPath">Iniciar sesión</RouterLink>
                   </template>
           </div>
         </div>
@@ -401,4 +401,5 @@ nav{
   margin: 6px 8px;
   border-radius: 1px;
 }
+
 </style>

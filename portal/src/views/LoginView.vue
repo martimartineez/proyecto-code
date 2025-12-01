@@ -11,17 +11,9 @@
 
       <div v-if="error" class="error">{{ error }}</div>
 
-      <div v-if="user" class="profile">
-        <h2>Usuario</h2>
-        <p><strong>Nombre:</strong> {{ user.name || user?.given_name }}</p>
-        <p><strong>Email:</strong> {{ user.email }}</p>
-        <pre class="payload">{{ user }}</pre>
-      </div>
-
       <button @click="router.back()" class="back-button">
          Volver
       </button>
-      <!-- <router-link to="/" class="back">Volver</router-link> -->
     </div>
   </main>
 </template>
@@ -29,7 +21,6 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-//import { jwtDecode } from 'jwt-decode' // named export
 
 const router = useRouter()
 const user = ref(null)
