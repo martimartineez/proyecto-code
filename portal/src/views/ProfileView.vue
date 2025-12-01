@@ -594,13 +594,14 @@ function scoreClass(p) {
 // Helper para extraer posible id del objeto reseña/favorito
 function extractSiteIdFromResena(r) {
   return (
-    r?.id ?? // <-- ahora también acepta 'id'
+    r?.sitio.id ||
     null
   );
 }
 
 async function openResena(reseña) {
   if (!reseña) return;
+
 
   // 1) Si tenemos id directo, navegar al detalle
   const sitioId = extractSiteIdFromResena(reseña);
