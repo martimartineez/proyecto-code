@@ -575,7 +575,8 @@ def reordenar_imagenes(sitio_id: int):
 
 
 
-def filtrar(filtros):
+def filtrar(filtros=None):
+    filtros = filtros or {}
     provincia_id = filtros.get("provincia")
     ciudad_id = filtros.get("ciudad")
     categoria_id = filtros.get("categoria")
@@ -696,7 +697,7 @@ def exportar_csv():
     Aplica los mismos filtros que la búsqueda avanzada y genera un archivo CSV descargable.
     """
     
-    sitios = filtrar(request).all()
+    sitios = filtrar(request.args).all()
 
     data = []
     for s in sitios:
